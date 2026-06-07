@@ -74,6 +74,70 @@ All subsequent rule detail file references (e.g., `common/process-overview.md`, 
 3. This should only be done ONCE at the start of a new workflow
 4. Do NOT load this file in subsequent interactions to save context space
 
+## MANDATORY: Conventional Commits at Stage Boundaries
+
+**CRITICAL**: After every approved AI-DLC stage that produces or modifies tracked artifacts (Markdown deliverables, configuration files, or — in Construction — application code), propose a **Conventional Commits (1.0.0)** formatted commit BEFORE proceeding to the next stage. Do not silently skip commits; if there is genuinely nothing to commit (e.g., Workspace Detection alone), state that explicitly.
+
+### Commit Format
+
+```
+<type>(<scope>): <subject in imperative mood, ≤ 72 chars>
+
+<optional body — explain WHY, not WHAT; reference stage and rationale>
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+```
+
+- `<type>` MUST be a canonical Conventional Commits type (`feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, `ci`, `perf`, `style`, `revert`).
+- `<scope>` SHOULD reflect the AI-DLC stage or unit name (e.g., `aidlc`, `requirements`, `topology`, `exporter`).
+- Subject line in imperative present tense, no trailing period.
+- Body explains the *why* — link to the stage that produced the change, key decisions, and any deferred items.
+- ALWAYS include the `Co-Authored-By` trailer when the commit is authored by Claude.
+
+### Stage → Commit Type/Scope Mapping
+
+| Stage | Type | Scope (example) | Notes |
+|---|---|---|---|
+| Workspace Detection | — | — | Usually no commit (only ephemeral state) |
+| Reverse Engineering | `docs` | `aidlc-reverse-eng` | Brownfield only |
+| Requirements Analysis | `docs` | `requirements` | Include verification answers + requirements.md |
+| User Stories | `docs` | `stories` | If executed |
+| Workflow Planning | `docs` | `plan` | Includes execution-plan.md |
+| Application Design | `docs` | `app-design` | |
+| Units Generation | `docs` | `units` | |
+| Functional Design (per unit) | `docs` | `<unit>` | e.g., `docs(topology): add functional design with testable properties` |
+| NFR Requirements (per unit) | `docs` | `<unit>` | |
+| NFR Design (per unit) | `docs` | `<unit>` | |
+| Infrastructure Design (per unit) | `docs` | `<unit>-infra` | If executed |
+| Code Generation — Planning | `docs` | `<unit>` | The `code-generation-plan.md` |
+| Code Generation — Generation | `feat` / `fix` / `refactor` / `test` | `<unit>` | Application code commits by Codex CLI / Cursor |
+| Build and Test | `build` / `ci` / `test` | `ci`, `build`, `test` | CI workflows, Docker compose, test harness |
+| Workflow / process changes | `chore` | `workflow` | Edits to CLAUDE.md, AGENTS.md, .cursor/rules/, etc. |
+| Cleanup / dependency bumps | `chore` | (relevant scope) | |
+
+### Commit Workflow at Stage Completion
+
+After the user explicitly approves a stage (e.g., "Approve & Continue"):
+
+1. Run `git status` to identify which files in `aidlc-docs/**` (and elsewhere) changed during this stage.
+2. Propose a Conventional Commits-formatted commit message to the user (do NOT auto-commit — match the existing repo convention of explicit user authorization).
+3. Once the user confirms, stage only the files relevant to this stage's deliverables (avoid `git add -A`).
+4. Create the commit using HEREDOC for clean multi-line formatting and include the `Co-Authored-By` trailer.
+5. Run `git status` after to verify the commit succeeded.
+6. Record the commit hash and message in `aidlc-docs/audit.md` under the corresponding stage entry.
+7. THEN proceed to the next stage.
+
+### Exceptions
+
+- **Code Generation — Generation** commits are produced by Codex CLI or Cursor Composer (not Claude). Claude does not author code commits. However, Claude SHOULD remind the user that the implementation agent should also follow the same Conventional Commits format when it finishes generating code.
+- For multi-unit batches in Construction, prefer **one commit per unit per stage** over a single mega-commit, to preserve traceability between the design doc and the matching code.
+
+### Why this matters
+
+- Traceability: each AI-DLC stage produces a discrete artifact set; tying it to a single commit makes `git log` a navigable index of the development process.
+- Reviewability: small, scoped commits are easier to review than one large bootstrap commit.
+- Automation: Conventional Commits feeds tools like changelog generators, semantic-release, and PR-lint workflows already present in this repo (`.github/workflows/pull-request-lint.yml`).
+
 # Adaptive Software Development Workflow
 
 ---
