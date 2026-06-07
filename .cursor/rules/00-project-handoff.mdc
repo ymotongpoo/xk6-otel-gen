@@ -21,8 +21,29 @@ alwaysApply: true
 4. **Single Source of Truth**: 仕様の正は `aidlc-docs/inception/requirements/requirements.md` および各ユニットの `aidlc-docs/construction/<unit>/code/code-generation-plan.md` です。コードと SSOT が食い違う場合は SSOT を優先。
 5. **書く場所**: アプリケーションコードは workspace root の Go パッケージツリー (`cmd/`, `internal/`, `pkg/`, `examples/`, `test/`)。`aidlc-docs/` 配下にコードを置かないこと。
 
+## セッション開始時に必ず確認する場所
+
+1. **`.agent-memory/MEMORY.md`** — 全エージェント共有メモリの索引。ユーザー設定 / フィードバック / 過去の決定事項。**毎セッション最初に読むこと**。
+2. **`AGENTS.md`** (ルート) — 全エージェント共通契約 (Claude / Codex CLI / Cursor の役割境界、ビルド/テストコマンド、Go 規約、PBT 義務、Done 判定基準)。
+3. **`aidlc-docs/inception/requirements/requirements.md`** — 要件の SSOT。
+4. 担当ユニットがあれば `aidlc-docs/construction/<unit>/code/code-generation-plan.md` を読み、その plan のチェックボックスに従う。
+
+## AI-DLC ルール (実装エージェントが参照する範囲)
+
+リポジトリ内 **`.aidlc-rule-details/`** に AI-DLC ワークフロー全体のルール定義があります。Cursor で作業する際、以下は **担当範囲に関連したら参照** してください:
+
+- `.aidlc-rule-details/construction/code-generation.md` — コード生成規約 / 完了基準
+- `.aidlc-rule-details/construction/build-and-test.md` — ビルド・テスト規約 (CI/Docker/テストハーネス)
+- `.aidlc-rule-details/extensions/testing/property-based/property-based-testing.md` — **PBT 規約 (本プロジェクトに必須適用)**
+- `.aidlc-rule-details/common/error-handling.md` — エラーハンドリング原則
+- `.aidlc-rule-details/common/content-validation.md` — Markdown / 図表の検証
+
+Inception 系ルール (`workspace-detection.md`, `requirements-analysis.md` 等) は Claude Code が実行する範囲なので、Cursor が自発的にこれらを実行する必要はありません。
+
 ## 参考: 詳細仕様
 
 - 全エージェント共通契約: ルートの `AGENTS.md`
-- AI-DLC ワークフロー: ルートの `CLAUDE.md`
+- AI-DLC ワークフロー (Claude 向けプロセス定義): ルートの `CLAUDE.md`
+- AI-DLC ルール本体: `.aidlc-rule-details/**`
+- 共有メモリ: `.agent-memory/**`
 - 監査ログ (作業記録): `aidlc-docs/audit.md`

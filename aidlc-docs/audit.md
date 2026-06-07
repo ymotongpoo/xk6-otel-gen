@@ -97,3 +97,11 @@
 **Context**: Workflow Planning — commit policy now part of project workflow. A second commit will be made for the CLAUDE.md change.
 
 ---
+
+## Workflow Planning — Make AI-DLC Skill & Shared Memory Accessible to All Agents
+**Timestamp**: 2026-06-07T00:01:30Z
+**User Input**: "Request Changes - いまのリポジトリの状態でCodexやCursorに引き継いだときにAI-DLCのスキルが使えるようになってないように見えます。使えるように設定してください。またMEMORY.mdに関しても、他のエージェントが見れなければ意味ないので、見れるように対策してください"
+**AI Response**: "Confirmed two gaps: (1) .aidlc-rule-details/ exists in repo but neither AGENTS.md nor .cursor/rules/ referenced it, so Codex/Cursor had no signpost to discover the AI-DLC ruleset; (2) Claude's local memory at ~/.claude/.../memory/ is unreachable by other agents. Resolved via AskUserQuestion (shared memory location=.agent-memory/, local memory mode=repo SSOT with local pointers). Actions taken: (a) Created repo-tracked .agent-memory/{MEMORY.md, user-tooling-preferences.md, feedback-conventional-commits.md} as the canonical shared memory. (b) Rewrote Claude's local memory files (~/.claude/.../memory/{MEMORY.md, user_tooling_preferences.md, feedback_conventional_commits.md}) to be brief pointers referencing the repo SSOT. (c) Extended AGENTS.md with new §3.1 'AI-DLC Rule Details — 実装エージェント向け抜粋' (lists specific .aidlc-rule-details/ files that implementation agents should consult, e.g., construction/code-generation.md, construction/build-and-test.md, extensions/testing/property-based/property-based-testing.md, common/error-handling.md, common/content-validation.md) and §3.2 'Shared Agent Memory'. (d) Extended .cursor/rules/00-project-handoff.mdc with 'セッション開始時に必ず確認する場所' (.agent-memory/MEMORY.md, AGENTS.md, requirements.md, code-generation-plan.md) and 'AI-DLC ルール (実装エージェントが参照する範囲)' sections. (e) Added new 'MANDATORY: Shared Agent Memory' section to CLAUDE.md explaining the SSOT + pointer model. Implementation agents now discover both AI-DLC rules and shared memory via their respective entry-point files (AGENTS.md, .cursor/rules/00-project-handoff.mdc)."
+**Context**: Workflow Planning — accessibility fixes for multi-agent setup. About to commit as `chore(workflow): wire AI-DLC rules and shared memory through to Codex/Cursor`.
+
+---

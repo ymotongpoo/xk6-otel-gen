@@ -74,6 +74,20 @@ All subsequent rule detail file references (e.g., `common/process-overview.md`, 
 3. This should only be done ONCE at the start of a new workflow
 4. Do NOT load this file in subsequent interactions to save context space
 
+## MANDATORY: Shared Agent Memory
+
+**CRITICAL**: This repository uses a **shared agent memory** model so that Claude Code, OpenAI Codex CLI, and Cursor Composer all read the same canonical memory files.
+
+- **SSOT location**: `.agent-memory/` in the repository (committed and shared)
+- **Index file**: `.agent-memory/MEMORY.md` — read this at the start of EVERY session
+- **Claude's local memory** (`~/.claude/projects/.../memory/`) contains only **pointers** to the repo files; do NOT store new content there. When adding/updating memory, edit the repo files first, then optionally update the local pointer.
+- Other agents (Codex CLI, Cursor) cannot read `~/.claude/.../memory/`. The repo location is the only way to share memory across the agent stack.
+
+When the auto-memory system would normally write to local memory, instead:
+1. Create/update the file in `.agent-memory/` (use the same `name/description/type` frontmatter as before).
+2. Update `.agent-memory/MEMORY.md` index with a one-line entry.
+3. If the local Claude memory file would be useful as a quick-recall hint, leave a brief pointer there (max ~10 lines) referencing the canonical location.
+
 ## MANDATORY: Conventional Commits at Stage Boundaries
 
 **CRITICAL**: After every approved AI-DLC stage that produces or modifies tracked artifacts (Markdown deliverables, configuration files, or — in Construction — application code), propose a **Conventional Commits (1.0.0)** formatted commit BEFORE proceeding to the next stage. Do not silently skip commits; if there is genuinely nothing to commit (e.g., Workspace Detection alone), state that explicitly.

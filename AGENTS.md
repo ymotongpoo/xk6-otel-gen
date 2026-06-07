@@ -38,6 +38,7 @@
 
 | 知りたいこと | 参照先 |
 |---|---|
+| **セッション開始時に必ず読む共有メモリ** | `.agent-memory/MEMORY.md` (全エージェント共通の索引) |
 | プロジェクト全体の要件 | `aidlc-docs/inception/requirements/requirements.md` |
 | 実行プラン (どのユニットが何の対象か) | `aidlc-docs/inception/plans/execution-plan.md` |
 | アプリケーション設計 (コンポーネント境界、I/F) | `aidlc-docs/inception/application-design/**` |
@@ -45,8 +46,26 @@
 | 各ユニットの機能設計 + テスタブル特性 | `aidlc-docs/construction/<unit-name>/functional-design/**` |
 | 各ユニットの NFR (性能・テスト戦略・依存) | `aidlc-docs/construction/<unit-name>/nfr-requirements/**`, `nfr-design/**` |
 | **各ユニットの実装計画 (これに従って実装)** | `aidlc-docs/construction/<unit-name>/code/code-generation-plan.md` |
-| プロセスルール (AI-DLC ワークフロー) | リポジトリルートの `CLAUDE.md` (主に Claude 用だが実装エージェントも参照可) |
+| プロセスルール (AI-DLC ワークフロー定義) | リポジトリルートの `CLAUDE.md` および `.aidlc-rule-details/**` (下記 §3.1 参照) |
 | 監査ログ (全エージェントの作業記録) | `aidlc-docs/audit.md` |
+
+### 3.1 AI-DLC Rule Details — 実装エージェント向け抜粋
+
+リポジトリ内の **`.aidlc-rule-details/`** ディレクトリには AI-DLC ワークフロー全体のルール定義が格納されており、すべてのエージェントが読み取れます。実装エージェント (Codex CLI / Cursor) は、自分の担当範囲に関連する以下のファイルを **必要に応じて参照** してください (全部を読む必要はなく、関連トピックのみ):
+
+| ファイル | 用途 |
+|---|---|
+| `.aidlc-rule-details/construction/code-generation.md` | コード生成ステージの規約。`code-generation-plan.md` の構造と完了基準を理解するため必読 |
+| `.aidlc-rule-details/construction/build-and-test.md` | ビルド・テストの規約。CI/Docker compose/テストハーネス生成時の参照 |
+| `.aidlc-rule-details/extensions/testing/property-based/property-based-testing.md` | **PBT 規約 (Full enforcement で本プロジェクトに必須適用)**。テスト実装時に必読 |
+| `.aidlc-rule-details/common/error-handling.md` | エラーハンドリングの一般原則 |
+| `.aidlc-rule-details/common/content-validation.md` | Markdown 等のコンテンツ検証ルール |
+
+実装エージェントは AI-DLC の **Inception 系ルール** (`workspace-detection.md`, `requirements-analysis.md` 等) を実行する必要はありません — それらは Claude Code の責任範囲です。
+
+### 3.2 Shared Agent Memory
+
+`.agent-memory/` ディレクトリには、全エージェント共通の永続メモリ (ユーザー設定、フィードバック、決定事項) が記録されています。**セッション開始時には必ず `.agent-memory/MEMORY.md` を読み**、関連するエントリを参照してから作業に入ってください。新しい知見を発見した場合は、Claude Code セッションでの追記を依頼するか、`aidlc-docs/audit.md` に "Implementation-time Insight" として追記してください (実装エージェントが直接 `.agent-memory/` を書き換えるのは避ける)。
 
 ---
 
