@@ -1,0 +1,28 @@
+---
+description: xk6-otel-gen のマルチエージェント協働における Cursor の役割と境界を定義する常時ルール
+alwaysApply: true
+---
+
+# xk6-otel-gen — Cursor の役割
+
+このリポジトリは AI-DLC ワークフローに従い、3 種のエージェントが**互いに重ならない役割**で開発します:
+
+| Agent | 役割 |
+|---|---|
+| Claude Code | プラン・設計・要件 (`aidlc-docs/**` の Markdown) |
+| OpenAI Codex CLI (gpt-5.5 xhigh) | 長時間・自律的バッチ実装 (1 ユニット丸ごとの Go コード/テスト生成) |
+| **Cursor Composer (あなた)** | **対話的編集・微調整・レビュー反映・デバッグ** |
+
+## あなた (Cursor) の遵守事項
+
+1. **設計ドキュメントを編集しない**: `aidlc-docs/**` の Markdown を改変してはいけません。`AGENTS.md`、`CLAUDE.md`、`.aidlc-rule-details/**` も同様。要件解釈の修正が必要なら、コードに `TODO(cursor): question — <内容>` とコメントを残し、ユーザーに口頭で報告するに留めます。
+2. **スコープを広げない**: ユーザーの依頼が「単一ファイルの修正」や「単一関数のリファクタ」であれば、それを越える変更 (関連ファイルの予防的修正、フォーマット一括変更、依存追加) は提案だけ行い、明示承認なしには実施しないこと。
+3. **大規模な新規実装は Cursor の仕事ではない**: 「1 ユニット丸ごとのコード生成」「テストファイルの一括生成」など長時間バッチが必要な作業は Codex CLI に任せます。ユーザーが Cursor で開始しても、規模が大きいと判断したら Codex に委ねる旨を提案してください。
+4. **Single Source of Truth**: 仕様の正は `aidlc-docs/inception/requirements/requirements.md` および各ユニットの `aidlc-docs/construction/<unit>/code/code-generation-plan.md` です。コードと SSOT が食い違う場合は SSOT を優先。
+5. **書く場所**: アプリケーションコードは workspace root の Go パッケージツリー (`cmd/`, `internal/`, `pkg/`, `examples/`, `test/`)。`aidlc-docs/` 配下にコードを置かないこと。
+
+## 参考: 詳細仕様
+
+- 全エージェント共通契約: ルートの `AGENTS.md`
+- AI-DLC ワークフロー: ルートの `CLAUDE.md`
+- 監査ログ (作業記録): `aidlc-docs/audit.md`

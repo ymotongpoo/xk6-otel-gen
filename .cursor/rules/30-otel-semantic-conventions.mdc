@@ -1,0 +1,56 @@
+---
+description: OpenTelemetry Semantic Conventions に準拠するための属性命名規則 — テレメトリ合成・属性付与コード編集時に参照
+globs:
+  - "internal/synth/**/*.go"
+  - "internal/exporter/**/*.go"
+  - "internal/journey/**/*.go"
+alwaysApply: false
+---
+
+# OpenTelemetry Semantic Conventions — 準拠ルール
+
+本プロジェクトは要件 FR-6 により、**主要部分のセマンティック規約に準拠** します (将来的な拡張可能性を残す)。
+
+## 必須 Resource 属性
+シグナル送信のたびに以下のリソース属性を付与すること:
+
+| 属性 | 値の例 | 出所 |
+|---|---|---|
+| `service.name` | YAML `services[].name` | 必須 |
+| `service.namespace` | YAML `services[].namespace` (任意) | 任意 |
+| `service.instance.id` | `service.name + "-" + index` (replicas) | replicas を表現 |
+| `service.version` | YAML `services[].version` | 任意 |
+| `telemetry.sdk.name` | `"xk6-otel-gen"` | 固定 |
+| `telemetry.sdk.language` | YAML `services[].language` または `"synthetic"` | デフォルト要検討 |
+| `telemetry.sdk.version` | 拡張のバージョン | go ldflags 等で |
+| `host.name` | 合成値で可 (`hostname-N`) | 必須 |
+
+## HTTP 属性 (HTTP プロトコルの span / metric / log)
+- `http.request.method` (GET/POST/...)
+- `http.response.status_code` (200, 404, 500 ...)
+- `url.path`, `url.scheme`
+- `server.address`, `server.port`
+- `network.peer.address` (client 側 span)
+
+## RPC 属性 (gRPC プロトコルの span / metric / log)
+- `rpc.system` = `"grpc"`
+- `rpc.service`, `rpc.method`
+- `rpc.grpc.status_code` (OK=0, ...)
+
+## エラー時の追加属性
+- `error.type` (例: `"http.client_error"`, `"timeout"`, `"upstream_failure"`)
+- `exception.type`, `exception.message` (例外として表現する場合)
+- Span Status = ERROR
+
+## 命名・型のルール
+- 属性名は OTel Spec のスネークケース/ドット階層に従う (例: `http.request.method`, **never** `httpMethod` や `HTTPMethod`)
+- 数値属性は Spec で定義された型 (int64 / float64) を尊重
+- enum-like な値は OTel Spec の正規表記 (例: `rpc.system="grpc"`、`network.transport="tcp"`)
+
+## 拡張性のための抽象化
+- 属性付与は `synth/attributes/` 配下の専用関数経由で行い、ハードコード散在を避ける
+- 将来 messaging / db / faas Semantic Conventions を追加できるよう、レイヤを抽象化する
+
+## 参考
+- 仕様詳細: `aidlc-docs/inception/requirements/requirements.md` §FR-6
+- OTel Semantic Conventions: <https://opentelemetry.io/docs/specs/semconv/>

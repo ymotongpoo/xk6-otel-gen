@@ -1,0 +1,59 @@
+---
+description: Go コード編集時のスタイル・命名・依存・エラー処理規約
+globs:
+  - "**/*.go"
+  - "go.mod"
+  - "go.sum"
+alwaysApply: false
+---
+
+# Go コード規約 (xk6-otel-gen)
+
+## ビルド対象
+- Go バージョン: 直近 stable + 1 つ前の minor。go.mod の `go` ディレクティブに準拠。
+- モジュールパス: `github.com/ymotongpoo/xk6-otel-gen`
+
+## フォーマット・静的解析
+- `gofmt` / `goimports` 準拠。CI で強制されるため、編集後は `goimports -w <file>` 相当を必ず通すこと。
+- `golangci-lint run` を可能であれば編集後に実行。
+
+## パッケージ構成 (暫定 — Units Generation で確定)
+| パス | 役割 |
+|---|---|
+| `internal/topology/` | YAML スキーマ・パーサ・グラフモデル |
+| `internal/journey/` | Critical User Journey エンジン |
+| `internal/synth/` | Signal Synthesizer (spans / metrics / logs 合成) |
+| `internal/exporter/` | OTLP/gRPC + OTLP/HTTP 送信パイプライン |
+| `pkg/k6otelgen/` | k6 JS モジュール (外部公開 API) |
+| `pkg/k6output/` | k6 Output モジュール |
+| `examples/` | サンプルトポロジー + k6 スクリプト |
+| `test/integration/` | Integration テスト + Docker compose |
+| `internal/testutil/generators/` | PBT 用ドメインジェネレータ (再利用) |
+
+## 命名規約
+- パッケージ名: 単数形・小文字・ハイフン無し (例: `topology`、`exporter`)
+- エクスポート識別子: GoDoc コメント付き (`// FunctionName does ...` 形式で始める)
+- インターフェースは "-er" suffix (Exporter, Parser, Synthesizer 等) を原則とする
+
+## エラー処理
+- `errors.Wrap` (pkg/errors) は使わず、`fmt.Errorf("...: %w", err)` を使う。
+- センチネルエラーは `errors.Is/As` で判定。`var ErrXxx = errors.New(...)` 形式で公開。
+- パニックは初期化エラーやテスト以外で使わない。
+
+## ロギング
+- k6 拡張内では `*lib.State` 経由のロガー、または `modules.VU.InitEnv().Logger` を使う。
+- 標準 `log` パッケージや `fmt.Println` でのログ出力はテストコード以外では避ける。
+
+## 依存ライブラリ
+- OTel SDK: `go.opentelemetry.io/otel`、`go.opentelemetry.io/otel/exporters/otlp/otlptrace/*`、`.../otlpmetric/*`、`.../otlplog/*`
+- OTLP Proto 直接アクセス: `go.opentelemetry.io/proto/otlp`
+- YAML: `gopkg.in/yaml.v3`
+- PBT: `pgregory.net/rapid`
+- k6 拡張 SDK: `go.k6.io/k6/js/modules`、`go.k6.io/k6/output`
+
+新しい主要依存を追加する場合は、`code-generation-plan.md` に明記済みであるか、ユーザー確認後に追加すること。
+
+## 並行処理
+- グローバル状態は避ける。State は構造体メンバとして保持し、k6 VU 単位の lifecycle に従う。
+- バッチ送信・キュー処理は `context.Context` を必ず受け取り、cancel に応答する。
+- race detector で問題が出ない設計を初期から心がける (`go test -race`)。

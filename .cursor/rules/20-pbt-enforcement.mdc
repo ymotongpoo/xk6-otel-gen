@@ -1,0 +1,49 @@
+---
+description: Property-Based Testing (PBT) を強制するルール — テストファイル編集時に適用
+globs:
+  - "**/*_test.go"
+  - "**/*_property_test.go"
+  - "internal/testutil/generators/**/*.go"
+alwaysApply: false
+---
+
+# Property-Based Testing 強制ルール
+
+このプロジェクトでは AI-DLC の Property-Based Testing 拡張が **Full enforcement** で有効化されています (全 PBT ルールがブロッキング制約)。テストコードを編集する際は以下を必ず遵守してください。
+
+## フレームワーク
+- 使用フレームワーク: `pgregory.net/rapid`
+- PBT のエントリポイント関数は `rapid.T` を受け取る形 (`rapid.Check(t, func(t *rapid.T) { ... })`)
+
+## 必須テストパターン
+
+### PBT-02: Round-trip
+ラウンドトリップが成立する操作 (serialize/deserialize、encode/decode、parse/format) には必ずラウンドトリップ PBT を書く。
+- YAML パーサ: `parse(serialize(topology)) == topology`
+- OTLP protobuf シリアライズ: `unmarshal(marshal(payload)) == payload`
+
+### PBT-03: Invariants
+- トポロジーグラフ: DAG 性質、reachability、依存閉包の整合性
+- 信号合成: 1 ジャーニー = 1 trace_id、`parent_span_id` の連鎖、metric サム保存則
+- レイテンシ分布生成器: p50 ≤ p95 単調性、正値性、分布パラメーター範囲
+
+### PBT-04: Idempotency
+- バリデータ呼び出し、デフォルト値適用、設定マージ等が冪等であること
+
+### PBT-07: Generator Quality
+- ドメイン特化ジェネレータは `internal/testutil/generators/` に集約し再利用
+- プリミティブ生成器 (`rapid.Int()`) をドメインオブジェクトに直接使わない
+- 境界値 (空コレクション、最大値、Unicode 文字列) を含むよう設計
+
+### PBT-08: Shrinking & Reproducibility
+- `rapid` の shrink を無効化しない
+- CI で `RAPID_SEED` をログ出力すること
+- 失敗時の minimal counterexample は通常の example-based test に追加する (回帰テスト化)
+
+### PBT-10: Complementary
+- 例ベーステストと PBT を別ファイルに分離する: `xxx_test.go` (example-based) と `xxx_property_test.go` (PBT)
+- ビジネスクリティカルなパスは PBT だけでなく example-based test も必ず持つ
+
+## 各ユニットの "Testable Properties"
+
+各ユニットの Functional Design 文書 (`aidlc-docs/construction/<unit-name>/functional-design/`) に "Testable Properties" セクションがあるはずです。実装前に必ず参照し、識別された特性をすべて PBT で実装してください。
