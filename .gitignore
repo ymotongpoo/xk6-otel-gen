@@ -8,3 +8,9 @@
 .env
 buildspec.yml
 codebuild_build.sh
+
+# Codex CLI / Cursor implementation-agent run logs
+logs/
+
+# Local profiling artifacts (go test -cpuprofile etc.)
+*.prof
