@@ -351,16 +351,16 @@
 
 ### Step 5.1 — Full verification battery
 
-- [ ] `go build ./...` — succeeds
-- [ ] `go test -race -count=1 ./...` — passes (all tests, including the panic-stub-skipped ones)
-- [ ] `go test -cover ./testutil/generators/...` — coverage ≥ 80%
-- [ ] `golangci-lint run ./...` — no warnings (if golangci-lint is not installed locally, document in audit.md and let CI in Build and Test stage handle it)
-- [ ] `go vet ./...` — no warnings
-- [ ] No `TODO(agent):` comments remain unless paired with an `audit.md` entry
+- [x] `go build ./...` — succeeds
+- [x] `go test -race -count=1 ./...` — passes (all tests, including the panic-stub-skipped ones)
+- [x] `go test -cover ./testutil/generators/...` — coverage ≥ 80%
+- [x] `golangci-lint run ./...` — no warnings (if golangci-lint is not installed locally, document in audit.md and let CI in Build and Test stage handle it)
+- [x] `go vet ./...` — no warnings
+- [x] No `TODO(agent):` comments remain unless paired with an `audit.md` entry
 
 ### Step 5.2 — Write Code Generation summary
 
-- [ ] Create `aidlc-docs/construction/u7-testutil/code/code-generation-summary.md` with:
+- [x] Create `aidlc-docs/construction/u7-testutil/code/code-generation-summary.md` with:
   - List of files created (paths)
   - Lines of code per file (rough)
   - `BenchmarkValidSchemaDraw` result (ns/op, B/op, allocs/op)
@@ -370,12 +370,12 @@
 
 ### Step 5.3 — Mark all checkboxes [x]
 
-- [ ] Mark all `[ ]` items in this document as `[x]` (including this one once everything above is done).
-- [ ] Update `aidlc-docs/aidlc-state.md` Current Status to "U7 Code Generation complete, ready for U1".
+- [x] Mark all `[ ]` items in this document as `[x]` (including this one once everything above is done).
+- [x] Update `aidlc-docs/aidlc-state.md` Current Status to "U7 Code Generation complete, ready for U1".
 
 ### Step 5.4 — Audit log entry
 
-- [ ] Append an entry to `aidlc-docs/audit.md` under a new section:
+- [x] Append an entry to `aidlc-docs/audit.md` under a new section:
   ```
   ## U7 testutil — Code Generation Complete (by implementation agent)
   **Timestamp**: <ISO 8601 now>

@@ -9,7 +9,7 @@ import (
 func ValidService(opts ...ServiceOption) *rapid.Generator[*topology.Service] {
 	o := applyServiceOptions(opts)
 	return rapid.Custom(func(t *rapid.T) *topology.Service {
-		kind := topology.KindApplication
+		var kind topology.ServiceKind
 		if o.fixedKind != nil {
 			kind = *o.fixedKind
 		} else {

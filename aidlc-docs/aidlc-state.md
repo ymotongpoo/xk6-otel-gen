@@ -64,7 +64,7 @@
 - **Lifecycle Phase**: CONSTRUCTION
 - **Current Unit**: U7 (testutil/generators) — NFR Requirements (Part 1: plan + questions awaiting answers)
 - **Construction Progress**: U7 [FD done | NFR-R: in progress] ← U1 ← U4 ← U3 ← U2 ← U5 ← U6 ← U8
-- **Status**: U7 FD (fea577c), NFR-R (7bdf3c3), NFR-D (f9fcc99) committed. Code Generation Planning complete — `code-generation-plan.md` ready for Codex CLI / Cursor execution. Awaiting approval to start Code Generation (Generation part — handed off to implementation agents).
+- **Status**: U7 Code Generation complete, ready for U1.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)

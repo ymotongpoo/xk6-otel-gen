@@ -104,6 +104,4 @@ type SeverityParams struct {
 }
 
 // FaultOverlay is an opaque computed fault lookup.
-type FaultOverlay struct {
-	lookup map[any]any
-}
+type FaultOverlay struct{}

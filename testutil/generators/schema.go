@@ -48,7 +48,7 @@ func buildServicesAndOperations(t *rapid.T, schema *topology.Schema, o schemaOpt
 
 	topoOrder := make([]*topology.Operation, 0, serviceCount*o.maxOpsPerService)
 	for svcIndex, name := range serviceNames {
-		kind := topology.KindApplication
+		var kind topology.ServiceKind
 		if o.fixedKind != nil {
 			kind = *o.fixedKind
 		} else {
