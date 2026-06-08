@@ -232,6 +232,14 @@
 
 ---
 
+## U7 testutil — Implementation-time Insight
+**Timestamp**: 2026-06-08T15:11:00Z
+**Implementation agent**: Codex CLI gpt-5.5 xhigh
+**Context**: Phase 0.1 Go module initialization
+**Insight**: Initialized `go.mod` with module path `github.com/ymotongpoo/xk6-otel-gen` and Go directive `go 1.24`, matching the installed toolchain line `go1.24.4`. Go commands in this sandbox require `GOCACHE=/tmp/go-build` because the default Go build cache path is not writable.
+
+---
+
 ## U7 testutil — Functional Design Answers Received & Artifacts Generated
 **Timestamp**: 2026-06-08T00:04:30Z
 **User Input** (raw, in u7-testutil-functional-design-plan.md):

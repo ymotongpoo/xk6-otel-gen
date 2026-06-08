@@ -48,17 +48,17 @@
 
 ### Step 0.1 — Initialize Go module (if not done)
 
-- [ ] From workspace root, verify `go.mod` exists. If not, run `go mod init github.com/ymotongpoo/xk6-otel-gen`.
-- [ ] Add Go directive: `go 1.23` (or the latest stable on your machine; record the value used in audit.md).
-- [ ] Run `go mod tidy` (will be a no-op if no source files yet).
+- [x] From workspace root, verify `go.mod` exists. If not, run `go mod init github.com/ymotongpoo/xk6-otel-gen`.
+- [x] Add Go directive: `go 1.23` (or the latest stable on your machine; record the value used in audit.md).
+- [x] Run `go mod tidy` (will be a no-op if no source files yet).
 
 ### Step 0.2 — Create `topology/` package directory
 
-- [ ] Create directory: `topology/` at workspace root.
+- [x] Create directory: `topology/` at workspace root.
 
 ### Step 0.3 — Write `topology/doc.go`
 
-- [ ] Create `topology/doc.go` with package-level documentation:
+- [x] Create `topology/doc.go` with package-level documentation:
   ```go
   // Package topology defines the schema and types for declarative
   // microservice topologies consumed by xk6-otel-gen.
@@ -74,19 +74,19 @@
 
 ### Step 0.4 — Write `topology/enums.go`
 
-- [ ] Create `topology/enums.go` with the enum types defined in `component-methods.md`:
+- [x] Create `topology/enums.go` with the enum types defined in `component-methods.md`:
   - `ServiceKind` (int-based with constants `KindApplication`, `KindDatabase`, `KindExternalAPI`, `KindCache`, `KindQueue`)
   - `Protocol` (constants `ProtocolHTTP`, `ProtocolGRPC`, `ProtocolMessaging`)
   - `ExhaustedAction` (constants `ExhaustedPropagate`, `ExhaustedReturnDefault`, `ExhaustedSucceedSilently`)
   - `FaultKind` (constants `FaultLatencyInflation`, `FaultErrorRateOverride`, `FaultDisconnect`, `FaultCrash`)
   - `TargetKind` (constants `TargetNode`, `TargetOperation`, `TargetEdge`)
   - `BackoffPolicy` (constants `BackoffExponential`, `BackoffLinear`, `BackoffConstant`)
-- [ ] Each enum should have a `String() string` method (use `stringer`-style switch).
-- [ ] GoDoc comment for each type.
+- [x] Each enum should have a `String() string` method (use `stringer`-style switch).
+- [x] GoDoc comment for each type.
 
 ### Step 0.5 — Write `topology/types.go`
 
-- [ ] Create `topology/types.go` containing **exactly** the type definitions from `component-methods.md` §C1:
+- [x] Create `topology/types.go` containing **exactly** the type definitions from `component-methods.md` §C1:
   - `ServiceID` (`type ServiceID string`)
   - `Schema` (struct with `Services map[ServiceID]*Service`, `Journeys map[string]*Journey`, `Faults []FaultSpec`)
   - `Service` (with `Name ServiceID`, `Kind ServiceKind`, `Replicas int`, `Language string`, `Framework string`, `Version string`, `Operations map[string]*Operation`)
@@ -101,12 +101,12 @@
   - `FaultSpec` (with `Target FaultTarget`, `Kind FaultKind`, `Severity SeverityParams`)
   - `SeverityParams` (struct — define minimally: `Probability float64`, `Multiplier float64`, `Add time.Duration`, `Value float64`; not all fields used by all FaultKind)
   - `FaultOverlay` (opaque — empty struct with an unexported `lookup` field can suffice; methods will be added by U1)
-- [ ] Add `// AUTOGEN-MARKER-U1` comment at the top of the file.
-- [ ] Use `gopkg.in/yaml.v3` struct tags (`yaml:"name"`) on fields that will be YAML-marshaled. NOTE: The `Parse`/`MarshalYAML` actual handling of `*Service`/`*Operation` pointer ↔ name string conversion is U1's responsibility; in this skeleton, just put the struct tags for the natural field names (e.g., `yaml:"name"`, `yaml:"protocol"`).
+- [x] Add `// AUTOGEN-MARKER-U1` comment at the top of the file.
+- [x] Use `gopkg.in/yaml.v3` struct tags (`yaml:"name"`) on fields that will be YAML-marshaled. NOTE: The `Parse`/`MarshalYAML` actual handling of `*Service`/`*Operation` pointer ↔ name string conversion is U1's responsibility; in this skeleton, just put the struct tags for the natural field names (e.g., `yaml:"name"`, `yaml:"protocol"`).
 
 ### Step 0.6 — Write top-level function stubs
 
-- [ ] Add to `topology/types.go` (or a new `topology/stubs.go`):
+- [x] Add to `topology/types.go` (or a new `topology/stubs.go`):
   ```go
   // Parse decodes a topology YAML from r.
   // AUTOGEN-MARKER-U1: implementation deferred to U1 Code Generation.
@@ -136,13 +136,13 @@
       return a == b
   }
   ```
-- [ ] Add similar stubs for `(*Schema).FindServiceByName`, `(*Schema).JourneyNames`, `(*Schema).ApplyFaults`, `(*Schema).ExportJSONSchema`, `(*Schema).MarshalYAML`. Each panics with `not yet implemented (U1 deferred)`.
+- [x] Add similar stubs for `(*Schema).FindServiceByName`, `(*Schema).JourneyNames`, `(*Schema).ApplyFaults`, `(*Schema).ExportJSONSchema`, `(*Schema).MarshalYAML`. Each panics with `not yet implemented (U1 deferred)`.
 
 ### Step 0.7 — Verify topology builds
 
-- [ ] Run `go build ./topology/...`. Must succeed (panic stubs are valid Go).
-- [ ] Run `go vet ./topology/...`. No warnings.
-- [ ] **Acceptance**: `topology/` compiles cleanly, all public identifiers have GoDoc, AUTOGEN-MARKER-U1 comments are visible in `types.go` and `stubs.go`.
+- [x] Run `go build ./topology/...`. Must succeed (panic stubs are valid Go).
+- [x] Run `go vet ./topology/...`. No warnings.
+- [x] **Acceptance**: `topology/` compiles cleanly, all public identifiers have GoDoc, AUTOGEN-MARKER-U1 comments are visible in `types.go` and `stubs.go`.
 
 ---
 
