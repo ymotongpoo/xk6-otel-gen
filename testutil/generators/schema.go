@@ -28,7 +28,7 @@ func AnySchema(opts ...SchemaOption) *rapid.Generator[*topology.Schema] {
 	o := applySchemaOptions(opts)
 	return rapid.Custom(func(t *rapid.T) *topology.Schema {
 		schema := ValidSchema(opts...).Draw(t, "valid_base")
-		if rapid.Float64Range(0, 1).Draw(t, "bias_roll") < o.biasValid {
+		if o.biasValid >= 1 || rapid.Float64Range(0, 1).Draw(t, "bias_roll") < o.biasValid {
 			return schema
 		}
 		mutators := schemaMutators()

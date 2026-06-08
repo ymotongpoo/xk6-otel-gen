@@ -29,6 +29,7 @@ func unresolveEdgeTarget(t *rapid.T, s *topology.Schema) *topology.Schema {
 	if len(edges) == 0 {
 		op := rapid.SampledFrom(ops).Draw(t, "unresolve_from")
 		op.Calls = append(op.Calls, &topology.CallNode{Edge: &topology.Edge{From: op, To: stale, Protocol: topology.ProtocolHTTP}})
+		op.Service = stale.Service
 		return clone
 	}
 	rapid.SampledFrom(edges).Draw(t, "unresolve_edge").To = stale
@@ -48,12 +49,8 @@ func introduceCycle(t *rapid.T, s *topology.Schema) *topology.Schema {
 		return clone
 	}
 	from := ops[0]
-	to := ops[0]
-	if len(ops) > 1 {
-		to = ops[1]
-	}
-	to.Calls = append(to.Calls, &topology.CallNode{
-		Edge: &topology.Edge{From: to, To: from, Protocol: topology.ProtocolHTTP},
+	from.Calls = append(from.Calls, &topology.CallNode{
+		Edge: &topology.Edge{From: from, To: from, Protocol: topology.ProtocolHTTP},
 	})
 	return clone
 }
@@ -98,7 +95,21 @@ func dropServiceMap(t *rapid.T, s *topology.Schema) *topology.Schema {
 	if len(services) == 0 {
 		return clone
 	}
-	delete(clone.Services, rapid.SampledFrom(services).Draw(t, "service_to_drop"))
+	id := rapid.SampledFrom(services).Draw(t, "service_to_drop")
+	dropped := clone.Services[id]
+	var orphan *topology.Operation
+	for _, op := range dropped.Operations {
+		orphan = op
+		break
+	}
+	delete(clone.Services, id)
+	if orphan != nil {
+		clone.Journeys["orphan-after-drop"] = &topology.Journey{
+			Name:   "orphan-after-drop",
+			Steps:  []*topology.Step{{Op: orphan}},
+			Weight: 1,
+		}
+	}
 	return clone
 }
 

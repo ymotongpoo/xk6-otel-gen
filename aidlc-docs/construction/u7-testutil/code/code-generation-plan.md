@@ -257,44 +257,44 @@
 
 ### Step 2.1 — Tests for primitives (`primitives_test.go`)
 
-- [ ] Create `testutil/generators/primitives_test.go`.
-- [ ] Add PBT for `ValidServiceID` matching `^[a-z][a-z0-9-]{2,30}$` (verify via `regexp`).
-- [ ] Add PBT for `ValidLatencyPair` enforcing `p95 >= p50` (TP-U7-6, R-DOM-1).
-- [ ] Add statistical PBT for `AnyServiceID`: 100 draws, expect at least one invalid (per R-A-3 / R-A-4).
-- [ ] Add PBT for each enum primitive (`ValidServiceKind`, `ValidProtocol`) ensuring the returned value is in the enumerated set.
-- [ ] Each test function calls `t.Parallel()`.
-- [ ] Each test function uses `rapid.Check(t, func(t *rapid.T) { ... })`.
+- [x] Create `testutil/generators/primitives_test.go`.
+- [x] Add PBT for `ValidServiceID` matching `^[a-z][a-z0-9-]{2,30}$` (verify via `regexp`).
+- [x] Add PBT for `ValidLatencyPair` enforcing `p95 >= p50` (TP-U7-6, R-DOM-1).
+- [x] Add statistical PBT for `AnyServiceID`: 100 draws, expect at least one invalid (per R-A-3 / R-A-4).
+- [x] Add PBT for each enum primitive (`ValidServiceKind`, `ValidProtocol`) ensuring the returned value is in the enumerated set.
+- [x] Each test function calls `t.Parallel()`.
+- [x] Each test function uses `rapid.Check(t, func(t *rapid.T) { ... })`.
 
 ### Step 2.2 — Tests for options (`options_test.go`)
 
-- [ ] Create `testutil/generators/options_test.go`.
-- [ ] Add PBT for TP-U7-4: `ValidSchema(MaxServices(N))` always produces `len(schema.Services) <= N`.
-- [ ] Add PBT for `MaxOpsPerService(N)` and `MaxCallsPerOp(N)` constraints.
-- [ ] Add example-based tests for clamp behavior: `MaxServices(-5)` produces ≥ 1 services, `BiasValid(2.0)` is clamped to 1.0 (always valid output for `AnySchema`).
+- [x] Create `testutil/generators/options_test.go`.
+- [x] Add PBT for TP-U7-4: `ValidSchema(MaxServices(N))` always produces `len(schema.Services) <= N`.
+- [x] Add PBT for `MaxOpsPerService(N)` and `MaxCallsPerOp(N)` constraints.
+- [x] Add example-based tests for clamp behavior: `MaxServices(-5)` produces ≥ 1 services, `BiasValid(2.0)` is clamped to 1.0 (always valid output for `AnySchema`).
 
 ### Step 2.3 — Tests for service generator (`service_test.go`)
 
-- [ ] Create `testutil/generators/service_test.go`.
-- [ ] PBT: `ValidService` output satisfies R-STR-2 (every Operation's `Service` back-pointer matches the parent Service).
-- [ ] PBT: `ValidService.Name` matches `ValidServiceID` regex.
-- [ ] PBT: `ValidService.Operations` is non-empty.
-- [ ] PBT: `ValidService(WithKind(KindDatabase))` always returns a Service whose `Kind == KindDatabase`.
+- [x] Create `testutil/generators/service_test.go`.
+- [x] PBT: `ValidService` output satisfies R-STR-2 (every Operation's `Service` back-pointer matches the parent Service).
+- [x] PBT: `ValidService.Name` matches `ValidServiceID` regex.
+- [x] PBT: `ValidService.Operations` is non-empty.
+- [x] PBT: `ValidService(WithKind(KindDatabase))` always returns a Service whose `Kind == KindDatabase`.
 
 ### Step 2.4 — Tests for schema generator (`schema_test.go`)
 
-- [ ] Create `testutil/generators/schema_test.go`.
-- [ ] Add `TestValidSchema_StructuralInvariants` (PBT): verify R-STR-1, R-STR-2, R-STR-3, R-STR-7, R-STR-8 (the ones checkable without `topology.Validate`).
-- [ ] Add `TestValidSchema_IsDAG` (PBT, TP-U7-2): topological sort the Operation graph and confirm no cycles. Implement an internal `isOperationDAG(s *topology.Schema) bool` test helper.
-- [ ] Add `TestAnySchema_ContainsInvalid_Statistical` (TP-U7-3, statistical PBT): draw 100 schemas; at least one must violate at least one R-STR-* rule (use a meta-validator that checks structural rules without calling `topology.Validate` since it's a panic stub).
-- [ ] Add `TestValidSchema_NotDegenerate_Statistical` (TP-U7-5): draw 20 schemas; ensure not all are byte-identical (verify by hashing serialized fingerprint).
-- [ ] NOTE: TP-U7-1 (`topology.Validate(s) == nil`) **cannot run until U1 implements Validate**. Add `t.Skip("U1: topology.Validate not implemented yet")` placeholder in the body and a `TODO(u1):` comment.
+- [x] Create `testutil/generators/schema_test.go`.
+- [x] Add `TestValidSchema_StructuralInvariants` (PBT): verify R-STR-1, R-STR-2, R-STR-3, R-STR-7, R-STR-8 (the ones checkable without `topology.Validate`).
+- [x] Add `TestValidSchema_IsDAG` (PBT, TP-U7-2): topological sort the Operation graph and confirm no cycles. Implement an internal `isOperationDAG(s *topology.Schema) bool` test helper.
+- [x] Add `TestAnySchema_ContainsInvalid_Statistical` (TP-U7-3, statistical PBT): draw 100 schemas; at least one must violate at least one R-STR-* rule (use a meta-validator that checks structural rules without calling `topology.Validate` since it's a panic stub).
+- [x] Add `TestValidSchema_NotDegenerate_Statistical` (TP-U7-5): draw 20 schemas; ensure not all are byte-identical (verify by hashing serialized fingerprint).
+- [x] NOTE: TP-U7-1 (`topology.Validate(s) == nil`) **cannot run until U1 implements Validate**. Add `t.Skip("U1: topology.Validate not implemented yet")` placeholder in the body and a `TODO(u1):` comment.
 
 ### Step 2.5 — Test verification
 
-- [ ] Run `go test -race ./testutil/generators/...`. Must pass.
-- [ ] Run `go test -cover ./testutil/generators/...`. Coverage ≥ 80% (NFR-U7-5).
-- [ ] If coverage < 80%, add additional unit tests for under-covered files (esp. `mutators.go` if needed — each mutator should have at least one example-based test).
-- [ ] **Acceptance**: race-free, coverage ≥ 80%.
+- [x] Run `go test -race ./testutil/generators/...`. Must pass.
+- [x] Run `go test -cover ./testutil/generators/...`. Coverage ≥ 80% (NFR-U7-5).
+- [x] If coverage < 80%, add additional unit tests for under-covered files (esp. `mutators.go` if needed — each mutator should have at least one example-based test).
+- [x] **Acceptance**: race-free, coverage ≥ 80%.
 
 ---
 
