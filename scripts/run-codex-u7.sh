@@ -6,9 +6,10 @@
 #     non-interactive mode.
 #   - Codex operates under workspace-write sandbox + network=enabled
 #     (defined in .codex/config.toml) and auto-approves all in-workspace
-#     operations (--ask-for-approval=never). Network is enabled so Codex
-#     can autonomously fetch Go modules (`go get`, `go mod tidy`). Aborts
-#     are still possible via Ctrl+C or `kill <pid>`.
+#     operations (approval_policy=never, set in config and re-asserted
+#     via -c). Network is enabled so Codex can autonomously fetch Go
+#     modules (`go get`, `go mod tidy`). Aborts are still possible via
+#     Ctrl+C or `kill <pid>`.
 #   - Logs are tee'd to logs/codex-u7-<timestamp>.log AND streamed to
 #     stdout so you can `tail -f` the file from another shell.
 #   - The script aborts before launching Codex if the working tree is
@@ -195,19 +196,22 @@ log "hard timeout: ${CODEX_TIMEOUT}s"
   echo
 } | tee -a "${LOG_FILE}"
 
-# Run codex exec. Flag rationale:
-#   --sandbox workspace-write    : confine writes to the workspace (matches .codex/config.toml)
-#   --ask-for-approval never     : fully unattended; trade-off accepted for long-running batch
-#   --skip-git-repo-check        : we already validated the git state above
-# The prompt is passed via stdin to avoid argv length and quoting concerns.
+# Run codex exec. Flag rationale (codex-cli >= 0.137):
+#   --sandbox workspace-write       : confine writes to the workspace
+#   -c approval_policy="never"      : fully unattended (re-asserts the config value)
+#   --skip-git-repo-check           : we already validated the git state above
+# The prompt is passed via stdin (`-` argument) to avoid argv length and
+# quoting concerns.
 #
-# If your codex version uses different flag names, adjust below or remove
-# unsupported flags. `codex --help` for reference.
+# If your codex version uses different flag names, run `codex exec --help`
+# and adjust below. The contract intended is "non-interactive,
+# workspace-write sandbox, no approval prompts, skip the redundant
+# git-clean-tree pre-check (we already did it ourselves)".
 set +e
 timeout --kill-after=30s "${CODEX_TIMEOUT}" \
   codex exec \
     --sandbox workspace-write \
-    --ask-for-approval never \
+    -c approval_policy="never" \
     --skip-git-repo-check \
     - < <(printf '%s' "${PROMPT}") \
   2>&1 | tee -a "${LOG_FILE}"

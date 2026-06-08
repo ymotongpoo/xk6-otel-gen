@@ -16,10 +16,11 @@ model_reasoning_effort = "xhigh"
 # ----------------------------------------------------------------------------
 # Sandbox / approval policy
 # ----------------------------------------------------------------------------
-# ファイル書き込みはワークスペース内に限定し、シェル実行は明示承認制とする。
+# ファイル書き込みはワークスペース内に限定し、長時間自律実行のため承認は不要。
 # (Codex CLI の sandbox 機構: workspace-write を推奨)
+# 利用者が明示的に自律実行の権限を付与している (scripts/run-codex-u7.sh)。
 sandbox_mode = "workspace-write"
-approval_policy = "on-request"
+approval_policy = "never"
 
 # ----------------------------------------------------------------------------
 # Project-specific guardrails

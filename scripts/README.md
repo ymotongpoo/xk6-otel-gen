@@ -90,15 +90,21 @@ If everything looks good, return to a Claude Code session and **Continue to Next
 
 ### Codex CLI flag compatibility
 
-The script invokes:
+The script targets **codex-cli >= 0.137** and invokes:
 
 ```bash
 codex exec \
   --sandbox workspace-write \
-  --ask-for-approval never \
+  -c approval_policy="never" \
   --skip-git-repo-check \
   -
 ```
+
+Note: codex-cli 0.137 removed the `--ask-for-approval` CLI flag.
+`approval_policy` is now only settable via config — either in
+`.codex/config.toml` (already `approval_policy = "never"` in this
+repo) or via `-c approval_policy="never"` to assert it on the CLI.
+The script does both to be defensive.
 
 If your Codex CLI version has different flag names (the CLI is under
 active development), `codex --help` and `codex exec --help` will show
