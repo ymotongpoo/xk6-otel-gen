@@ -331,17 +331,17 @@
 
 ### Step 4.1 — Example functions
 
-- [ ] Add `ExampleValidSchema` (in `schema_test.go` or a separate `example_test.go`).
+- [x] Add `ExampleValidSchema` (in `schema_test.go` or a separate `example_test.go`).
   - Uses `rapid.Check(&testing.T{}, func(t *rapid.T) { ... })`.
   - Demonstrates `MaxServices(3)`, `MaxOpsPerService(2)`.
   - No `// Output:` line (rapid example function has no deterministic output).
-- [ ] Add `ExampleValidService` showing `WithKind(KindDatabase)`.
-- [ ] Add `ExampleAnySchema` showing `BiasValid(0.0)` (always degraded).
+- [x] Add `ExampleValidService` showing `WithKind(KindDatabase)`.
+- [x] Add `ExampleAnySchema` showing `BiasValid(0.0)` (always degraded).
 
 ### Step 4.2 — GoDoc completeness review
 
-- [ ] Run `go doc -all ./testutil/generators/` and visually verify every public identifier has GoDoc.
-- [ ] Run `go doc -all ./topology/` and verify every public type/function has GoDoc (AUTOGEN-MARKER-U1 comments are acceptable for stubs).
+- [x] Run `go doc -all ./testutil/generators/` and visually verify every public identifier has GoDoc.
+- [x] Run `go doc -all ./topology/` and verify every public type/function has GoDoc (AUTOGEN-MARKER-U1 comments are acceptable for stubs).
 
 ---
 
