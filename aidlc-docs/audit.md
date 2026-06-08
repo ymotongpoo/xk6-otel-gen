@@ -329,3 +329,31 @@
 **Context**: U7 Code Generation Planning — Step 7 GATE (awaiting explicit approval before handing off the plan to Codex CLI / Cursor for execution).
 
 ---
+
+## U7 testutil — Final Approval; U1 topology Functional Design Plan Issued
+**Timestamp**: 2026-06-08T15:35:00Z
+**User Input**: "Continue to Next Stage" (after Codex completed U7 implementation)
+**AI Response**: "U7 verified clean: go build ✓, go test -race ✓ (9.5s), coverage 88.5% (target ≥80%), BenchmarkValidSchemaDraw 439616 ns/op = 0.44 ms/draw (target ≤1ms), golangci-lint 0 issues, all 90 plan checkboxes [x], 0 Implementation-time Questions, no TODO(agent) remaining. Codex's 2 documented deviations are improvements (schemaMutators as function avoids package-level mutable state; ServiceOption alias for SchemaOption since Go lacks function overloading). 3 TODO(u1) markers documented in code-generation-summary.md will be addressed in U1. Proceeding to U1 (topology) Functional Design. Created aidlc-docs/construction/plans/u1-topology-functional-design-plan.md with 13 [Answer]: questions covering: Parse error reporting style, YAML strictness, default value autofill, topological order, Equal semantics, Validate scope, FaultOverlay representation, cascade pre-compute boundary, JSON Schema spec version, ParseFile streaming, Parse performance target, additional PBT-01 testable properties, and U7 generator addition requests."
+**Context**: U1 topology Functional Design — Step 5 GATE (awaiting user answers). U7 has been formally closed in Construction order.
+
+
+## U1 topology — Functional Design Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-08T16:00:00Z
+**User Input** (raw, in u1-topology-functional-design-plan.md):
+- Q1=C (2-stage: fail-fast for YAML syntax, aggregated for reference resolution + Validate)
+- Q2=C (lax Parse + separate Lint API for unknown-fields warnings)
+- Q3=A (defaults applied at Parse time)
+- Q4=A (alphabetical Marshal order for maps; declaration order for sequences)
+- Q5=A (identifier-based strict Equal; order-preserving for Calls/Fallback/Steps/Faults; set equality for Services/Operations/Journeys maps)
+- Q6=B (structural R-STR-1..8 + domain D-1..D-14)
+- Q7=A (pointer-keyed FaultOverlay maps: map[*Service|*Operation|*Edge][]FaultSpec)
+- Q8=A (no cascade pre-compute; runtime resolution in Journey Engine)
+- Q9=A (JSON Schema Draft 2020-12 via static go:embed template)
+- Q10=A (io.ReadAll, no streaming)
+- Q11=A (Parse target: typical YAML <=10ms)
+- Q12=B (5 + idempotency + JSON Schema round-trip = 8 testable properties; jsonschema/v5 test-only dep added)
+- Q13=A (18 generators requested from U7: 9 Valid + 9 Any covering Operation/Edge/CallNode/RecoveryPolicy/Journey/Step/FaultSpec/FaultTarget/FaultOverlay)
+
+**AI Response**: "Generated 3 FD artifacts under aidlc-docs/construction/u1-topology/functional-design/: (1) business-logic-model.md — Parse 2-pass pipeline (yaml decode → buildSchema with defaults → resolveReferences with errors.Join → Validate); rawSchema/rawService/rawOperation/rawCallNode private types for YAML decoding; Lint API design (separate from Parse, returns []LintIssue); MarshalYAML returning rawSchema for yaml.v3 (alphabetical order for maps, declaration order for sequences); Equal with identifier-based comparison (identifyOp helper: <svc>.<op>); Validate aggregating R-STR-1..8 + D-1..D-14 via errors.Join; ApplyFaults returning *FaultOverlay with 3 pointer-keyed maps; ExportJSONSchema via //go:embed static template; FindServiceByName / JourneyNames; mermaid data flow diagram. (2) business-rules.md — default value table (Replicas=1, ErrorRate=0.0, Timeout=0, Retries=0, RetryBackoff=exponential, Distribution=constant, Weight=1.0, OnExhausted=propagate), Validate checklist (8 structural R-STR + 14 domain D), Equal ordering rules per field, performance target (10ms typical), Lint API spec (LintError/Warning), ParseError/ValidationError types, ApplyFaults idempotency contract, JSON Schema Draft 2020-12 structure with $defs for each type, all 8 testable properties TP-U1-1..8 with rapid.Check pseudocode (TP-U1-6 Validate idempotent, TP-U1-7 ApplyFaults idempotent, TP-U1-8 JSON Schema round-trip via santhosh-tekuri/jsonschema/v5 test dep). (3) domain-entities.md — contracts for each type (Schema/Service/Operation/CallNode/Edge/RecoveryPolicy/Journey/Step/FaultTarget/FaultSpec/FaultOverlay) with semantic meaning + invariants; contracts for all 10 public functions/methods (Parse/ParseFile/Validate/Equal/MarshalYAML/ApplyFaults/ExportJSONSchema/FindServiceByName/JourneyNames/Lint) with args/returns/side-effects/idempotency/thread-safety/error-patterns; new file layout under topology/ (raw.go, parse.go, validate.go, marshal.go, equal.go, faults.go, jsonschema.go, lint.go, errors.go, jsonschema/topology.schema.json embed) + 11 test files; dependency additions (jsonschema/v5 as test-only, 1-time AGENTS.md §2 relaxation); §6 U7 generator addition requests (18 functions: 9 Valid + 9 Any) per Q13=A; Out of Scope section. Awaiting user approval."
+**Context**: U1 topology Functional Design — Step 8 GATE (awaiting explicit approval before NFR Requirements for U1).
+
