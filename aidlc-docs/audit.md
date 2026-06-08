@@ -275,3 +275,30 @@
 **Context**: U7 NFR Requirements — Step 8 GATE (awaiting explicit approval before NFR Design for U7).
 
 ---
+
+## U7 testutil — NFR Requirements Approved & Committed; NFR Design Plan Issued
+**Timestamp**: 2026-06-08T00:06:00Z
+**User Input**: "コミットしてください" → then "同じセッションで進めていいです"
+**AI Response**: "U7 NFR-R committed as 7bdf3c3 (docs(u7-testutil): add NFR requirements and tech stack decisions) — 5 files, 563 insertions. Proceeding to U7 NFR Design. Created aidlc-docs/construction/plans/u7-testutil-nfr-design-plan.md with 10 [Answer]: questions covering rapid generator style (Custom-centric vs Combinator vs mixed), functional options pattern, DAG order construction algorithm, AnySchema degradation injection pattern, pre-U1 type skeleton location, benchmark granularity, memory budget verification, context/timeout policy, GoDoc Example functions, and API back-compat tooling."
+**Context**: U7 NFR Design — Step 5 GATE (awaiting user answers).
+
+---
+
+## U7 testutil — NFR Design Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-08T00:06:30Z
+**User Input** (raw, in u7-testutil-nfr-design-plan.md):
+- Q1=A (Custom-centric + primitives helpers)
+- Q2=A (`type Option func(*options)` with unexported struct)
+- Q3=A (topological order built-in, no Filter)
+- Q4=A (Valid baseline + probabilistic mutate for AnySchema)
+- Q5=A (write real `topology/` skeleton in Phase 0 of U7 CG)
+- Q6=A (only `BenchmarkValidSchemaDraw` initially)
+- Q7=A (implicit memory budget, no CI auto-check)
+- Q8=A (no per-test context/timeout, rely on `-timeout`)
+- Q9=A (Example function for top-level generators only)
+- Q10=A (Deprecated comment only, no automated diff tool yet)
+
+**AI Response**: "All answers were A — no ambiguities. Generated 2 NFR-D artifacts under aidlc-docs/construction/u7-testutil/nfr-design/: (1) nfr-design-patterns.md — 6 pattern groups (Performance P-PERF-1..6, Composition/Maintainability P-COMP-1..3, API P-API-1..3, Documentation P-DOC-1..2, Concurrency P-CONC-1..3, pre-U1 skeleton P-SKEL-1..4), each tied to specific NFRs via a final cross-reference table. (2) logical-components.md — 6 internal logical components (LC-0 doc.go, LC-1 options.go, LC-2 primitives.go, LC-3 service.go, LC-4 schema.go, LC-5 mutators.go) + 5 test logical components (LC-T1..T5) + pre-U1 topology/ skeleton, with file structure diagram; LC-4 schema.go describes the topological-order DAG builder algorithm in code-level detail; LC-5 mutators.go lists 8 named degradation functions (unresolveEdgeTarget, introduceCycle, misreferenceJourney, misreferenceFault, dropServiceMap, breakBackPointer, violateCallNodeVariant, misownFallback) corresponding to R-STR-1..8 violations; coverage strategy (650 LOC, 80% target) breakdown; mermaid dependency graph showing U7-U1 relationship; 4-phase construction plan (Phase 0 skeleton → Phase 1 logical components → Phase 2 bench/coverage → Phase 3 docs)."
+**Context**: U7 NFR Design — Step 8 GATE (awaiting explicit approval before Code Generation Planning for U7).
+
+---
