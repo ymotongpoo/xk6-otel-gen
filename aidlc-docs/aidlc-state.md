@@ -62,9 +62,9 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Unit**: U7 (testutil/generators) — Functional Design (Part 2: artifacts generated, awaiting approval)
-- **Construction Progress**: U7 ← U1 ← U4 ← U3 ← U2 ← U5 ← U6 ← U8
-- **Status**: U7 FD Q&A complete (all A). 3 FD artifacts under aidlc-docs/construction/u7-testutil/functional-design/. Awaiting approval to proceed to NFR Requirements for U7.
+- **Current Unit**: U7 (testutil/generators) — NFR Requirements (Part 1: plan + questions awaiting answers)
+- **Construction Progress**: U7 [FD done | NFR-R: in progress] ← U1 ← U4 ← U3 ← U2 ← U5 ← U6 ← U8
+- **Status**: U7 FD committed (fea577c). NFR Requirements Q&A complete (all A). 2 NFR-R artifacts generated under aidlc-docs/construction/u7-testutil/nfr-requirements/. Awaiting approval to proceed to NFR Design.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)

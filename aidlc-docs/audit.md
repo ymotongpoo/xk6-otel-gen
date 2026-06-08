@@ -248,3 +248,30 @@
 **Context**: U7 Functional Design — Step 8 GATE (awaiting explicit approval before NFR Requirements for U7).
 
 ---
+
+## U7 testutil — Functional Design Approved & Committed; NFR Requirements Plan Issued
+**Timestamp**: 2026-06-08T00:05:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "U7 FD approved. Committed as fea577c (docs(u7-testutil): add functional design for PBT generator unit) — 6 files, 882 insertions. Proceeding to U7 NFR Requirements. Created aidlc-docs/construction/plans/u7-testutil-nfr-requirements-plan.md with 10 [Answer]: questions: rapid version policy, per-test PBT iteration budget, CI seed strategy (PBT-08), t.Parallel() policy, U7 code coverage target, generator draw cost target, drawn-schema memory budget, thread-safety requirement, semver/back-compat policy, and explicit N/A enumeration for non-applicable NFRs. Plan emphasizes PBT-09 framework selection compliance and the limited applicability of typical NFRs (security/availability) for a test-support package."
+**Context**: U7 NFR Requirements — Step 5 GATE (awaiting user answers).
+
+---
+
+## U7 testutil — NFR Requirements Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-08T00:05:30Z
+**User Input** (raw, in u7-testutil-nfr-requirements-plan.md):
+- Q1=A (rapid latest-stable tracking with go.mod minimum-version)
+- Q2=A (rapid default ~100 iterations)
+- Q3=A (random seed + CI log output)
+- Q4=A (t.Parallel() everywhere)
+- Q5=A (80% coverage target)
+- Q6=A (1ms/draw target)
+- Q7=A (≤1 MB schema target)
+- Q8=A (fully thread-safe, no global state)
+- Q9=A (SemVer strict after v1.0.0; break OK pre-v1)
+- Q10=A (explicit N/A enumeration)
+
+**AI Response**: "All answers were A — no ambiguities. Generated 2 NFR-R artifacts under aidlc-docs/construction/u7-testutil/nfr-requirements/: (1) nfr-requirements.md — 10 applicable NFRs (NFR-U7-1..10 covering PBT-09 framework, PBT-08 reproducibility, test time budget, parallel exec, coverage, draw cost, memory, thread-safety, back-compat, maintainability/incremental extension) + 8 N/A categories with explicit rationale (scalability, availability/SLA, security/authz/data protection, compliance, i18n/a11y, production monitoring, backup/DR, license check — most because U7 is test-only with no runtime/network/data); project NFR traceability table (NFR-4.4 / NFR-4.2 as Primary); PBT compliance summary (PBT-01/07/08/09 compliant at this stage, PBT-02..06/10 deferred to U1-U6); 7-item DoD checklist for Construction completion. (2) tech-stack-decisions.md — pgregory.net/rapid selection rationale + MPL-2.0 license compatibility note + alternative comparison (vs gopter and self-rolled), version policy, iteration/seed/parallel runtime configuration, file structure (doc.go/options.go/primitives.go/schema.go/service.go + tests + bench), CI integration commands, U1-U7 dependency cycle resolution (pre-U1 type skeleton built during U7 CG), maintenance/evolution rules, PBT-09 explicit compliance statement."
+**Context**: U7 NFR Requirements — Step 8 GATE (awaiting explicit approval before NFR Design for U7).
+
+---
