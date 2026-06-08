@@ -304,8 +304,8 @@
 
 ### Step 3.1 — Implement `bench_test.go`
 
-- [ ] Create `testutil/generators/bench_test.go`.
-- [ ] Implement `BenchmarkValidSchemaDraw`:
+- [x] Create `testutil/generators/bench_test.go`.
+- [x] Implement `BenchmarkValidSchemaDraw`:
   ```go
   func BenchmarkValidSchemaDraw(b *testing.B) {
       gen := ValidSchema()
@@ -319,9 +319,9 @@
 
 ### Step 3.2 — Run benchmark, record baseline
 
-- [ ] Run `go test -bench=BenchmarkValidSchemaDraw -benchmem ./testutil/generators/...`.
-- [ ] Append the result (ns/op and allocs/op) to `aidlc-docs/construction/u7-testutil/code/code-generation-summary.md` (created in Step 5.2). Verify target ≤ 1,000,000 ns/op (= 1 ms/draw) on commodity hardware.
-- [ ] If above target, profile via `go test -bench=BenchmarkValidSchemaDraw -cpuprofile=cpu.prof ...` and add findings to `audit.md` under a new "Implementation-time Insight" entry. Do not aggressively refactor without a separate user-approved change.
+- [x] Run `go test -bench=BenchmarkValidSchemaDraw -benchmem ./testutil/generators/...`.
+- [x] Append the result (ns/op and allocs/op) to `aidlc-docs/construction/u7-testutil/code/code-generation-summary.md` (created in Step 5.2). Verify target ≤ 1,000,000 ns/op (= 1 ms/draw) on commodity hardware.
+- [x] If above target, profile via `go test -bench=BenchmarkValidSchemaDraw -cpuprofile=cpu.prof ...` and add findings to `audit.md` under a new "Implementation-time Insight" entry. Do not aggressively refactor without a separate user-approved change.
 
 ---
 
