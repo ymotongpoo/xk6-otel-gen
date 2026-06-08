@@ -302,3 +302,11 @@
 **Context**: U7 NFR Design — Step 8 GATE (awaiting explicit approval before Code Generation Planning for U7).
 
 ---
+
+## U7 testutil — Code Generation Planning Complete (Claude-authored plan ready for Codex/Cursor)
+**Timestamp**: 2026-06-08T00:07:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "U7 NFR-D approved and committed (f9fcc99). Infrastructure Design is SKIP per execution-plan.md so proceeding directly to Code Generation Planning. Wrote aidlc-docs/construction/u7-testutil/code/code-generation-plan.md — the single source of truth for the implementation agents (Codex CLI gpt-5.5 xhigh + Cursor Composer 2.5). Plan structure: 6 phases with checkbox-tracked steps. Phase 0 (Topology Type Skeleton) — 7 steps creating topology/ package with types, enums, and panic-stub methods carrying AUTOGEN-MARKER-U1 comments. Phase 1 (Logical Components) — 7 steps implementing options.go, primitives.go, service.go, schema.go, mutators.go per logical-components.md mapping. Phase 2 (Tests) — 5 steps covering primitives_test, options_test, service_test, schema_test, all with t.Parallel() and rapid.Check; TP-U7-1 explicitly marked t.Skip with TODO(u1) since topology.Validate is a panic stub. Phase 3 (Benchmark) — 2 steps to write and run BenchmarkValidSchemaDraw verifying NFR-U7-6 (≤1ms/draw). Phase 4 (Docs) — Example functions for top-level generators per P-DOC-1. Phase 5 (DoD verification + summary + checkbox finalization + audit log). Document explicitly lists Boundaries (no aidlc-docs edits, no extra deps, no global state) and Out of Scope (U1 methods, U2-U6 generators added later, CI integration, release config). Files inventory at the end totals ~650 LOC production + ~400-500 LOC test."
+**Context**: U7 Code Generation Planning — Step 7 GATE (awaiting explicit approval before handing off the plan to Codex CLI / Cursor for execution).
+
+---
