@@ -61,10 +61,10 @@
 - [ ] Operations — PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: INCEPTION
-- **Current Stage**: Units Generation (Part 2: artifacts generated, awaiting approval)
-- **Next Stage**: Construction phase (per-unit loop starting with U7 testutil skeleton, then U1 topology)
-- **Status**: Application Design approved 2026-06-08 (commit ad9cc8a). Units Generation Q&A complete (all A). 3 artifacts generated under aidlc-docs/inception/application-design/. Awaiting approval to commit and proceed to Construction.
+- **Lifecycle Phase**: CONSTRUCTION
+- **Current Unit**: U7 (testutil/generators) — Functional Design (Part 2: artifacts generated, awaiting approval)
+- **Construction Progress**: U7 ← U1 ← U4 ← U3 ← U2 ← U5 ← U6 ← U8
+- **Status**: U7 FD Q&A complete (all A). 3 FD artifacts under aidlc-docs/construction/u7-testutil/functional-design/. Awaiting approval to proceed to NFR Requirements for U7.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)

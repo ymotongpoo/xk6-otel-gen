@@ -223,3 +223,28 @@
 **Context**: Units Generation — Step 16 GATE (awaiting explicit approval before Construction phase begins).
 
 ---
+
+## Units Generation — User Approval & Commit; Construction Phase Begins
+**Timestamp**: 2026-06-08T00:04:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: "Units Generation approved. Created commit 64e1f5d (docs(units): decompose system into 8 units of work) — 6 files changed, 700 insertions, all 3 unit-of-work artifacts plus the answered unit-of-work-plan.md and audit/state updates. Inception phase complete. Starting Construction phase with U7 (testutil/generators) FD per the agreed order (U7 → U1 → U4 → U3 → U2 → U5 → U6 → U8). Created aidlc-docs/construction/plans/u7-testutil-functional-design-plan.md with 8 [Answer]: tagged questions covering: initial scope (minimal skeleton vs U1-types full vs U1-U4 anticipated), Valid/Any generator split, composition strategy (atomic + composed vs top-level only), parameterization (functional options vs args), naming convention, range realism (PBT-07 domain-specific), boundary value handling (rapid default vs explicit weighting), and the cross-unit incremental-addition process for U7."
+**Context**: Construction phase Unit 1/8 (U7 testutil). Step 5 GATE (awaiting user answers).
+
+---
+
+## U7 testutil — Functional Design Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-08T00:04:30Z
+**User Input** (raw, in u7-testutil-functional-design-plan.md):
+- Q1=A (minimal skeleton: Schema + Service only)
+- Q2=A (Valid/Any both, prefix-named)
+- Q3=A (atomic + composed, all public)
+- Q4=A (functional options pattern)
+- Q5=A (`<TypeName>()` naming)
+- Q6=A (realistic ranges by default)
+- Q7=A (rely on rapid defaults for boundary values)
+- Q8=A (each unit FD adds incrementally to U7 plan)
+
+**AI Response**: "All answers were A — no ambiguities or contradictions detected. Generated 3 Functional Design artifacts under aidlc-docs/construction/u7-testutil/functional-design/: (1) business-logic-model.md — 7 design principles, package skeleton (options.go/primitives.go/topology.go/topology_invariants.go), composition pattern (atomic → composed), functional options pattern, Valid/Any relationship, evolution model (U7 grows alongside U1-U6 FDs), test framework spec, data flow diagram. (2) business-rules.md — universal Valid invariants (R-V-1..5), universal Any invariants (R-A-1..4), domain value ranges per PBT-07, value-level invariants (R-DOM-1..6 enum), structural invariants for U1 types (R-STR-1..8 covering back-pointers/DAG/reference resolution/CallNode variant/RecoveryPolicy fallback ownership), PBT-07/08/09/10 compliance section, U7 own testable properties (TP-U7-1..6). (3) domain-entities.md — initial generator catalog: primitives (ValidServiceID, ValidOperationName, ValidProbability, ValidReplicaCount, ValidLatencyPair, ValidTimeout, ValidServiceKind, ValidProtocol) + top-level (ValidService/AnyService, ValidSchema/AnySchema) with ServiceOption/SchemaOption functional options; reference implementation sketches for ValidSchema (4-step assembly: services → operations → DAG-ordered calls → journeys+faults) and AnySchema (degradation injection); list of generators DEFERRED to later unit FDs (Operation/Edge/CallNode/RecoveryPolicy/Journey/Step/FaultSpec for U1; Config for U4; Plan/Outcome for U2; SpanInput/MetricInput/LogInput for U3); GoDoc requirements; placeholder section for cross-unit U7 requests."
+**Context**: U7 Functional Design — Step 8 GATE (awaiting explicit approval before NFR Requirements for U7).
+
+---
