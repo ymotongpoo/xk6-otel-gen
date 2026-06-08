@@ -189,3 +189,37 @@
 **Context**: Application Design — pedagogical refinement only (no type/structural changes). The model itself already supported all these cases; documentation now makes them explicit upfront.
 
 ---
+
+## Application Design — Final User Approval & Commit
+**Timestamp**: 2026-06-08T00:03:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: "Application Design approved. Created commit ad9cc8a (docs(app-design): add application design with operation-tree topology and recovery flows) — 13 files changed, 2005 insertions. Includes 6 application design artifacts (components.md, component-methods.md, services.md, component-dependency.md, application-design.md, topology-yaml-schema.md), the answered application-design-plan.md, plus aligned updates to AGENTS.md and .cursor/rules/*.mdc for the top-level public package layout. Marked Application Design stage complete and proceeding to Units Generation."
+**Context**: Application Design complete. Proceeding to Units Generation.
+
+---
+
+## Units Generation — Part 1: Plan + Questions Issued
+**Timestamp**: 2026-06-08T00:03:10Z
+**User Input**: (none yet — awaiting answers)
+**AI Response**: "Loaded inception/units-generation.md rules. Noted that User Stories was skipped (Workflow Planning decision), so the mandatory `unit-of-work-story-map.md` artifact is replaced by `unit-of-work-traceability.md` mapping FR/NFR (and optionally PBT rules) to units. Created aidlc-docs/inception/plans/unit-of-work-plan.md with 9 [Answer]: tagged questions covering: (Q1) confirm 6 units vs merge/split, (Q2) construction order (dependency bottom-up vs business-first vs risk-first), (Q3) sequential vs partial-parallel execution, (Q4) testutil/generators placement, (Q5) registry/ placement (own unit vs absorbed into exporter), (Q6) examples/distribution placement, (Q7) Definition of Done criteria, (Q8) traceability granularity, (Q9) sub-package commitment level. Tentative unit table provided as the starting point. Awaiting user answers."
+**Context**: Units Generation — Part 1 Step 6 GATE (awaiting user answers).
+
+---
+
+## Units Generation — User Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-08T00:03:30Z
+**User Input** (raw, in unit-of-work-plan.md):
+- Q1=A (6 main units as-is)
+- Q2=A (dependency bottom-up: U1 → U4 → U3 → U2 → U5 → U6)
+- Q3=A (fully sequential, 1 unit at a time through approval gates)
+- Q4=A (testutil/generators as independent unit U7, skeleton early, expanded alongside FD of each unit)
+- Q5=A (registry absorbed into U4 exporter as internal API; no separate package)
+- Q6=A (examples/distribution as U8 at Construction tail)
+- Q7=A (DoD = AGENTS.md §7)
+- Q8=A (FR/NFR-granularity traceability)
+- Q9=A (sub-modules deferred to Functional Design)
+
+**AI Response**: "All answers were A — no ambiguities or contradictions detected. Generated 3 artifacts under aidlc-docs/inception/application-design/: (1) unit-of-work.md — 8 units (U1 topology, U2 journey, U3 synth, U4 exporter incl. shared Pipeline holder, U5 k6otelgen, U6 k6output, U7 testutil/generators, U8 samples+distribution); workspace directory layout; per-unit responsibility summaries; DoD adopting AGENTS.md §7; sub-module deferral note. (2) unit-of-work-dependency.md — full dependency matrix (8x8), Clean Architecture layer view, Mermaid graph showing U7 as 'Support' band and U8 as 'Distribution' band, recommended build order narrative ('U7 first as scaffold, then U1 → U4 → U3 → U2 → U5 → U6 → U8'), cycle/abstraction-violation check. (3) unit-of-work-traceability.md — FR-1.1..FR-9.3 mapped to units with P (Primary) / S (Supporting); NFR-1.1..NFR-6.2 mapped similarly; PBT-01..PBT-10 application hint per unit (Functional Design will finalize); cross-cutting requirements section. All FRs and NFRs have at least one Primary; no orphans. Awaiting user approval to commit and proceed to Construction phase."
+**Context**: Units Generation — Step 16 GATE (awaiting explicit approval before Construction phase begins).
+
+---

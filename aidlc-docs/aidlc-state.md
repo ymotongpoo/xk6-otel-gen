@@ -62,6 +62,19 @@
 
 ## Current Status
 - **Lifecycle Phase**: INCEPTION
-- **Current Stage**: Application Design (Part 2: artifacts generated, awaiting approval)
-- **Next Stage**: Units Generation
-- **Status**: Workflow Planning approved 2026-06-08; Application Design Q&A complete and 5 artifacts generated under aidlc-docs/inception/application-design/. Awaiting approval to proceed to Units Generation.
+- **Current Stage**: Units Generation (Part 2: artifacts generated, awaiting approval)
+- **Next Stage**: Construction phase (per-unit loop starting with U7 testutil skeleton, then U1 topology)
+- **Status**: Application Design approved 2026-06-08 (commit ad9cc8a). Units Generation Q&A complete (all A). 3 artifacts generated under aidlc-docs/inception/application-design/. Awaiting approval to commit and proceed to Construction.
+
+## Unit Inventory
+- **U1**: Topology Schema & Parser (`topology/`)
+- **U2**: Journey Engine (`journey/`)
+- **U3**: Signal Synthesizer (`synth/`)
+- **U4**: OTLP Exporter Pipeline incl. shared Pipeline holder (`exporter/`)
+- **U5**: k6 JS Module (`k6otelgen/`)
+- **U6**: k6 Output Module (`k6output/`)
+- **U7**: PBT Test Utilities (`testutil/generators/`)
+- **U8**: Samples & Distribution (`examples/`, `cmd/`, build config)
+
+## Construction Order
+U7 (skeleton) → U1 → U4 → U3 → U2 → U5 → U6 → U8 (Q2=A bottom-up + Q4=A U7 先行 + Q6=A U8 末尾 + Q3=A 完全逐次)
