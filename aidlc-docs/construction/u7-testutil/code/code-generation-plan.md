@@ -152,34 +152,34 @@
 
 ### Step 1.1 — Create `testutil/generators/` directory and `doc.go` (LC-0)
 
-- [ ] Create directory: `testutil/generators/` at workspace root.
-- [ ] Create `testutil/generators/doc.go`. Copy the package-level documentation from `logical-components.md` §2 [LC-0].
+- [x] Create directory: `testutil/generators/` at workspace root.
+- [x] Create `testutil/generators/doc.go`. Copy the package-level documentation from `logical-components.md` §2 [LC-0].
 
 ### Step 1.2 — Implement `options.go` (LC-1)
 
-- [ ] Create `testutil/generators/options.go`.
-- [ ] Declare:
+- [x] Create `testutil/generators/options.go`.
+- [x] Declare:
   - `type SchemaOption func(*schemaOptions)`
   - `type ServiceOption func(*serviceOptions)`
   - unexported `schemaOptions` struct with fields: `maxServices`, `maxOpsPerService`, `maxCallsPerOp`, `maxFaults`, `biasValid`
   - unexported `serviceOptions` struct with fields: `maxOpsPerService`, `fixedKind *topology.ServiceKind`
   - `defaultSchemaOptions() schemaOptions` returning struct literal with defaults from `business-rules.md` §3
   - `defaultServiceOptions() serviceOptions`
-- [ ] Implement option constructors:
+- [x] Implement option constructors:
   - `MaxServices(n int) SchemaOption` (clamp n ≥ 1)
   - `MaxOpsPerService(n int) SchemaOption` (clamp n ≥ 1)
   - `MaxCallsPerOp(n int) SchemaOption` (clamp n ≥ 0)
   - `MaxFaults(n int) SchemaOption` (clamp n ≥ 0)
   - `BiasValid(p float64) SchemaOption` (clamp p ∈ [0, 1])
   - `WithKind(k topology.ServiceKind) ServiceOption`
-- [ ] Each option function has a GoDoc one-liner.
-- [ ] All Option constructors must be **side-effect free** apart from the closure they return.
+- [x] Each option function has a GoDoc one-liner.
+- [x] All Option constructors must be **side-effect free** apart from the closure they return.
 
 ### Step 1.3 — Implement `primitives.go` (LC-2)
 
-- [ ] Create `testutil/generators/primitives.go`.
-- [ ] Define the helper struct: `type LatencyPair struct { P50, P95 time.Duration }`.
-- [ ] Implement each primitive generator listed in `logical-components.md` §2 [LC-2]:
+- [x] Create `testutil/generators/primitives.go`.
+- [x] Define the helper struct: `type LatencyPair struct { P50, P95 time.Duration }`.
+- [x] Implement each primitive generator listed in `logical-components.md` §2 [LC-2]:
   - `ValidServiceID()` — `rapid.StringMatching(`^[a-z][a-z0-9-]{2,30}$`)` cast to `topology.ServiceID`
   - `AnyServiceID()` — wider regex or pure `rapid.String()` cast (may include uppercase / empty / over-length)
   - `ValidOperationName()` — UTF-8 string 1–120 chars; mix of plain words, HTTP-path-like (`GET /products/{id}`), RPC method names
@@ -194,42 +194,42 @@
   - `AnyTimeout()` — wider range including 0 / negative
   - `ValidServiceKind()` — `rapid.SampledFrom([]topology.ServiceKind{KindApplication, KindDatabase, KindExternalAPI, KindCache, KindQueue})`
   - `ValidProtocol()` — `rapid.SampledFrom([]topology.Protocol{ProtocolHTTP, ProtocolGRPC, ProtocolMessaging})`
-- [ ] All return `*rapid.Generator[T]` built via `rapid.Custom` (P-PERF-1) where useful labels can be added with `Draw(t, "label")`.
-- [ ] GoDoc one-liner per generator with a reference to the relevant rule (e.g., `// See business-rules.md §3.`).
+- [x] All return `*rapid.Generator[T]` built via `rapid.Custom` (P-PERF-1) where useful labels can be added with `Draw(t, "label")`.
+- [x] GoDoc one-liner per generator with a reference to the relevant rule (e.g., `// See business-rules.md §3.`).
 
 ### Step 1.4 — Implement `service.go` (LC-3)
 
-- [ ] Create `testutil/generators/service.go`.
-- [ ] Implement `ValidService(opts ...ServiceOption) *rapid.Generator[*topology.Service]` following the sketch in `logical-components.md` §2 [LC-3]:
+- [x] Create `testutil/generators/service.go`.
+- [x] Implement `ValidService(opts ...ServiceOption) *rapid.Generator[*topology.Service]` following the sketch in `logical-components.md` §2 [LC-3]:
   - Set Name from `ValidServiceID()`
   - Set Kind from `o.fixedKind` if non-nil, else `ValidServiceKind()`
   - Set Replicas from `ValidReplicaCount()`
   - Set `Operations` to a fresh map
   - Draw 1..`o.maxOpsPerService` operation names with `rapid.SliceOfNDistinct`
   - For each, create `*topology.Operation` with `Service: svc` back-pointer; leave `Calls` nil (caller — `ValidSchema` — fills these in)
-- [ ] Implement `AnyService(opts ...ServiceOption) *rapid.Generator[*topology.Service]`:
+- [x] Implement `AnyService(opts ...ServiceOption) *rapid.Generator[*topology.Service]`:
   - Start from `ValidService` output but **may set Name from `AnyServiceID()` or omit/scramble the back-pointer with low probability** (use `rapid.Float64Range(0, 1)` to gate destructive paths)
-- [ ] GoDoc for both functions.
+- [x] GoDoc for both functions.
 
 ### Step 1.5 — Implement `schema.go` (LC-4)
 
-- [ ] Create `testutil/generators/schema.go`.
-- [ ] Implement `ValidSchema(opts ...SchemaOption) *rapid.Generator[*topology.Schema]` per `logical-components.md` §2 [LC-4]:
+- [x] Create `testutil/generators/schema.go`.
+- [x] Implement `ValidSchema(opts ...SchemaOption) *rapid.Generator[*topology.Schema]` per `logical-components.md` §2 [LC-4]:
   - `buildServicesAndOperations(t, schema, o) []*topology.Operation` — generate services and their operations, return all operations in topological order (lexicographic by service-index, then operation-index)
   - `buildEdges(t, topoOrder, o)` — for each operation, draw 0..`o.maxCallsPerOp` target operations from `topoOrder[i+1:]` (strictly downstream, see P-PERF-2). Each becomes a single-Edge `CallNode`. With some probability (say 20%), wrap multiple calls in a `Parallel` group.
   - `buildJourneys(t, schema, topoOrder, o)` — draw 1..3 journeys; each is a sequence of 1..3 steps pointing to random operations (preferably ones with shallow downstream depth).
   - `buildFaults(t, schema, topoOrder, o)` — draw 0..`o.maxFaults` faults; each randomly targets an existing Service / Operation / Edge.
-- [ ] Implement `AnySchema(opts ...SchemaOption) *rapid.Generator[*topology.Schema]` per P-COMP-3:
+- [x] Implement `AnySchema(opts ...SchemaOption) *rapid.Generator[*topology.Schema]` per P-COMP-3:
   - Draw a `ValidSchema(opts...)` output as baseline
   - Draw a `Float64Range(0, 1)` and compare against `o.biasValid` (default 0.5). If below, return the valid schema unchanged.
   - Otherwise, pick a random mutator from `schemaMutators` (from `mutators.go`) and apply it.
-- [ ] GoDoc for both functions.
+- [x] GoDoc for both functions.
 
 ### Step 1.6 — Implement `mutators.go` (LC-5)
 
-- [ ] Create `testutil/generators/mutators.go`.
-- [ ] Define `type mutator func(t *rapid.T, s *topology.Schema) *topology.Schema` and the package-level `var schemaMutators = []mutator{ ... }` containing the 8 mutators listed in `logical-components.md` §2 [LC-5].
-- [ ] Implement each mutator:
+- [x] Create `testutil/generators/mutators.go`.
+- [x] Define `type mutator func(t *rapid.T, s *topology.Schema) *topology.Schema` and the package-level `var schemaMutators = []mutator{ ... }` containing the 8 mutators listed in `logical-components.md` §2 [LC-5].
+- [x] Implement each mutator:
   - `unresolveEdgeTarget` — pick a random Edge and set `Edge.To` to a freshly-allocated `*topology.Operation` not registered in `schema.Services`
   - `introduceCycle` — pick two operations A → B (existing edge) and add a reverse edge B → A
   - `misreferenceJourney` — pick a journey, set one Step.Op to a freshly-allocated unregistered Operation
@@ -238,14 +238,14 @@
   - `breakBackPointer` — pick an Operation, change its `Service` back-pointer to another Service in the schema
   - `violateCallNodeVariant` — pick a `*CallNode` with non-nil Edge and also set `Parallel` to a non-empty slice (violates R-STR-7)
   - `misownFallback` — pick an Edge with non-nil OnFailure, change the first fallback's `From` to a different Operation
-- [ ] Each mutator must operate on a **deep-copy** of the input schema to avoid test cross-contamination. Provide an unexported `cloneSchema(*topology.Schema) *topology.Schema` helper (use whatever depth is necessary — for these mutators, top-level map copies plus per-Operation copies are sufficient).
-- [ ] GoDoc one-liner for each mutator referencing the R-STR-* rule it violates.
+- [x] Each mutator must operate on a **deep-copy** of the input schema to avoid test cross-contamination. Provide an unexported `cloneSchema(*topology.Schema) *topology.Schema` helper (use whatever depth is necessary — for these mutators, top-level map copies plus per-Operation copies are sufficient).
+- [x] GoDoc one-liner for each mutator referencing the R-STR-* rule it violates.
 
 ### Step 1.7 — Build verification
 
-- [ ] Run `go build ./...`. Must succeed.
-- [ ] Run `go vet ./...`. No warnings.
-- [ ] **Acceptance**: All `testutil/generators/` files compile, no `// TODO(agent):` comments remain unless explicitly intentional with a paired audit.md note.
+- [x] Run `go build ./...`. Must succeed.
+- [x] Run `go vet ./...`. No warnings.
+- [x] **Acceptance**: All `testutil/generators/` files compile, no `// TODO(agent):` comments remain unless explicitly intentional with a paired audit.md note.
 
 ---
 
