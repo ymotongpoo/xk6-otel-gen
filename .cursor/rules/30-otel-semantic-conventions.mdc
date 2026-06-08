@@ -1,9 +1,9 @@
 ---
 description: OpenTelemetry Semantic Conventions に準拠するための属性命名規則 — テレメトリ合成・属性付与コード編集時に参照
 globs:
-  - "internal/synth/**/*.go"
-  - "internal/exporter/**/*.go"
-  - "internal/journey/**/*.go"
+  - "synth/**/*.go"
+  - "exporter/**/*.go"
+  - "journey/**/*.go"
 alwaysApply: false
 ---
 

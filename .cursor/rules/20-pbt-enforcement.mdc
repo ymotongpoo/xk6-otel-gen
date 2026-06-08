@@ -3,7 +3,7 @@ description: Property-Based Testing (PBT) を強制するルール — テスト
 globs:
   - "**/*_test.go"
   - "**/*_property_test.go"
-  - "internal/testutil/generators/**/*.go"
+  - "testutil/generators/**/*.go"
 alwaysApply: false
 ---
 
@@ -31,7 +31,7 @@ alwaysApply: false
 - バリデータ呼び出し、デフォルト値適用、設定マージ等が冪等であること
 
 ### PBT-07: Generator Quality
-- ドメイン特化ジェネレータは `internal/testutil/generators/` に集約し再利用
+- ドメイン特化ジェネレータは `testutil/generators/` に集約し再利用 (公開パッケージ — 下流テストでも再利用可)
 - プリミティブ生成器 (`rapid.Int()`) をドメインオブジェクトに直接使わない
 - 境界値 (空コレクション、最大値、Unicode 文字列) を含むよう設計
 

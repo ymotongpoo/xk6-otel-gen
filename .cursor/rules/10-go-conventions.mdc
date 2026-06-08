@@ -17,18 +17,21 @@ alwaysApply: false
 - `gofmt` / `goimports` 準拠。CI で強制されるため、編集後は `goimports -w <file>` 相当を必ず通すこと。
 - `golangci-lint run` を可能であれば編集後に実行。
 
-## パッケージ構成 (暫定 — Units Generation で確定)
+## パッケージ構成 (Application Design で確定 — 全パッケージをトップレベル公開)
 | パス | 役割 |
 |---|---|
-| `internal/topology/` | YAML スキーマ・パーサ・グラフモデル |
-| `internal/journey/` | Critical User Journey エンジン |
-| `internal/synth/` | Signal Synthesizer (spans / metrics / logs 合成) |
-| `internal/exporter/` | OTLP/gRPC + OTLP/HTTP 送信パイプライン |
-| `pkg/k6otelgen/` | k6 JS モジュール (外部公開 API) |
-| `pkg/k6output/` | k6 Output モジュール |
+| `topology/` | YAML スキーマ・パーサ・グラフモデル (公開) |
+| `journey/` | Critical User Journey エンジン (公開) |
+| `synth/` | Signal Synthesizer (spans / metrics / logs 合成) (公開) |
+| `exporter/` | OTLP/gRPC + OTLP/HTTP 送信パイプライン (公開) |
+| `k6otelgen/` | k6 JS モジュール (k6 register) |
+| `k6output/` | k6 Output モジュール (k6 register) |
+| `testutil/generators/` | PBT 用ドメインジェネレータ (公開・再利用) |
 | `examples/` | サンプルトポロジー + k6 スクリプト |
 | `test/integration/` | Integration テスト + Docker compose |
-| `internal/testutil/generators/` | PBT 用ドメインジェネレータ (再利用) |
+| `registry/` (候補, NFR Design で確定) | `k6otelgen` と `k6output` が共有する Pipeline holder |
+
+レイヤ規律 (Boundary→Application→Domain / Boundary→Infrastructure) は `internal/` による物理強制ではなく、レビューと依存マトリクスで担保 (`aidlc-docs/inception/application-design/component-dependency.md` 参照)。
 
 ## 命名規約
 - パッケージ名: 単数形・小文字・ハイフン無し (例: `topology`、`exporter`)

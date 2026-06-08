@@ -105,3 +105,87 @@
 **Context**: Workflow Planning — accessibility fixes for multi-agent setup. About to commit as `chore(workflow): wire AI-DLC rules and shared memory through to Codex/Cursor`.
 
 ---
+
+## Workflow Planning — User Approval (final)
+**Timestamp**: 2026-06-08T00:00:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: "Workflow Planning approved. Marked stage complete in aidlc-state.md. Proceeding to Application Design (Part 1: plan + questions). Created aidlc-docs/inception/plans/application-design-plan.md with 11 questions covering: component granularity, YAML schema philosophy, k6 output module role, JS API ergonomics, OTel Go SDK strategy, real-vs-virtual time, intra-journey concurrency, failure injection placement, configuration precedence, distribution model, and Go module path."
+**Context**: Workflow Planning complete. Application Design started. Note per Conventional Commits policy: Workflow Planning produced commits 7b60984, 98e7b37, 6c931c7 (the third addressing the Request Changes feedback). A separate `docs(plan)` commit can be made for the application-design-plan.md once answers are filled, OR a single `docs(app-design)` commit can wrap plan + final artifacts at stage completion — to be decided.
+
+---
+
+## Application Design — Plan + Questions Issued
+**Timestamp**: 2026-06-08T00:00:01Z
+**User Input**: (none yet — awaiting answers in plan file)
+**AI Response**: "Issued application-design-plan.md with 11 [Answer]: tagged questions. Mandatory artifacts to be generated post-approval: components.md, component-methods.md, services.md, component-dependency.md, application-design.md (consolidated). Stage gates: (a) wait for all [Answer]: tags filled, (b) analyze for ambiguity/contradiction, (c) follow-up questions if needed, (d) generate artifacts, (e) explicit approval gate before Units Generation."
+**Context**: Application Design — Step 6 GATE (awaiting user answers).
+
+---
+
+## Application Design — User Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-08T00:00:30Z
+**User Input** (raw, in application-design-plan.md, plus chat "完了しました"):
+- Q1=A (6 ユニットそのまま採用)
+- Q2=A (シンプル単一ファイル YAML)
+- Q3=C ("合成シグナルのegressは本来の目的からして必要です。負荷テスト結果は、テレメトリー生成は長期間（最低でも10分とか）動かし続けないといけないので、k6の動作状況を理解するために必要です。")
+- Q4=A with note ("ただジャーニーの定義をどこで書いておくかがよくわからない")
+- Q5=A (OTel Go SDK フル活用)
+- Q6=A with TODO ("大抵の場合受け付けるバックエンド側が過去のテレメトリーの再生機能を持っているわけではないので、まずはMVPとして実時間のみで良い。今後データ分析用の過去のテレメトリーシグナルを生成するような機能を作るなら、仮想時間に対応する必要があるが、それはTODOとして積んでおいて良い。")
+- Q7=X ("基本的に１ジャーニーは1つのgoroutineで実施するほうがユーザーの振る舞いに近いのでそうしたい。ただ、たとえばあるサービス内で並行してリクエストを投げるようなシナリオもあると思うので、そのような状況には対応してほしい。")
+- Q8=A with elaboration ("トポロジーの定義とは別に、障害がトポロジー内のどのノードあるいはエッジでどのような問題が起きるか（ノード内ならレイテンシーの増加、エッジなら切断など）を定義できるようにしたい。また1つの定義でカスケード障害も自動で発生できると嬉しい")
+- Q9=A
+- Q10=B with security note ("ただし昨今起きているリポジトリのCIを乗っ取ってマルウェア化するインシデントの多さを鑑みて、バイナリはあくまで補助であり、自分でビルドすることを推奨するとREADMEに明記。")
+- Q11=A
+
+**AI Response**: "Analyzed answers. Resolved 3 residual ambiguities by documenting interpretations in artifacts (rather than another follow-up round): (1) Journey definitions live as top-level `journeys:` section in the same YAML; (2) Intra-service parallel modeled as `parallel:` block within journey steps with goroutine fan-out + WaitGroup join; (3) Failure spec lives as top-level `faults:` section in the same YAML, parsed into a FaultOverlay with cascade pre-computed at load time. Generated 5 artifacts under aidlc-docs/inception/application-design/: components.md (7 components incl. C1-C6 + samples), component-methods.md (Go pseudocode signatures), services.md (5 services + orchestration flow + 5 contracts O-1..O-6), component-dependency.md (matrix + Clean Architecture 4-layer + Mermaid graph), application-design.md (consolidated master with FR/NFR traceability + PBT-01 prep + TODOs). Awaiting user approval."
+**Context**: Application Design — Step 12 GATE (awaiting explicit approval before Units Generation).
+
+---
+
+## Application Design — Clarification: End-of-run Summary Is Out of Scope for C6
+**Timestamp**: 2026-06-08T00:00:40Z
+**User Input**: "Request Changes - これはk6アウトプットはk6実行中のメトリクスはOTLPで一緒にエンドポイントに流してもらっていいんですが、実行完了時のレポートは別の出力先（標準出力やファイル）にするということは可能ですか？"
+**AI Response**: "Confirmed: yes, possible by design — and automatic. k6 architecture sends Output.AddMetricSamples (streaming) and the end-of-run Summary through two completely separate mechanisms. Output modules NEVER receive Summary data. Users can simultaneously use --out otel-gen=... (streaming → OTLP) and the default stdout summary, --summary-export=summary.json (file export), or handleSummary(data) in JS (custom formatter to arbitrary file/format) without any additional configuration. Updated docs: components.md C6 (added '責務外' section explicitly stating Summary is not handled), services.md (Phase 5 expanded to describe k6 Summary as an independent k6 mechanism), application-design.md (Q3 row in the principles table noted Summary is out of scope)."
+**Context**: Application Design — clarification absorbed. Back at the Step 12 GATE.
+
+---
+
+## Application Design — Change Request: Conditional Cascade with Recovery Flows
+**Timestamp**: 2026-06-08T00:00:50Z
+**User Input**: "Request Changes - application-design.md を読んでいて思ったのはカスケード障害が発生するのが確定的になってしまっているということです。例えば最新データを取得するためのデータベース接続が切れてしまっていても、キャッシュで対応可能であればそれは障害にはならないので、ジャーニー内のコンポーネントの依存によってカスケードが起きるか起きないかが変わってしまいます。依存するエッジやノードを定義するときに、そのようなリカバリーフローも定義したいです。（あればエラー時にはそちらへのリクエストが増え、なければ即カスケード障害）"
+**AI Response**: "Excellent catch. Replaced the deterministic-cascade model with a conditional-cascade model driven by per-edge RecoveryPolicy. Changes spanning 4 design docs: (1) components.md — Edge type gains OnFailure *RecoveryPolicy; new RecoveryPolicy type with Fallback []*Edge ordered chain and OnExhausted ExhaustedAction (propagate | return_default | succeed_silently); FaultSpec no longer pre-computes cascade — that's now resolved at runtime; C2 responsibilities now include recovery flow execution and conditional cascade propagation; Open Design Decisions list grew with 5 recovery-specific items. (2) component-methods.md — added RecoveryPolicy struct, ExhaustedAction enum; FaultSpec lost the Cascade field; Outcome gained PrimaryFailed/FallbackAttempts/FallbackUsed/DefaultUsed/SilentlySucceeded fields. (3) services.md — Phase 2 step 10 rewrote the per-Node execution sequence to detail the 5-step recovery flow (primary → fallback chain → on_exhausted resolution → cascade vs not); contract O-4 rewritten as 'conditional cascade'; new contract O-7 'Recovery Flow Execution and Traffic Behavior' (fallback edges receive 0 RPS normally, traffic surges during primary failure, each fallback emits its own child span with fallback.role/fallback.primary/fallback.attempt attributes, self-metrics include xk6_otel_gen.recovery.invoked.total). (4) application-design.md — Q8 row in principles table revised; section 6 'PBT-01 preparation' for C2 enriched with 4 new invariants covering recovery semantics (no-cascade-when-fallback-succeeds, cascade-only-on-exhaustion, fallback-not-called-when-primary-succeeds, FallbackAttempts ordering); section 5 'Open Design Decisions' added recovery-specific Functional Design questions (YAML form, nesting, default response attrs, latency accounting, timeout propagation)."
+**Context**: Application Design — change-request absorbed. Awaiting fresh review and approval. Cache-aside / circuit-breaker patterns now expressible.
+
+---
+
+## Application Design — Change Request: Package Layout Flattened (no internal/, no pkg/)
+**Timestamp**: 2026-06-08T00:01:00Z
+**User Input**: "Request Changes - component-dependency.md を読んでいますが、わざわざinternalパッケージにする理由は何ですか？別に公開されても構わないのですが"
+**AI Response**: "Explained the original rationale (default Go convention for hiding non-import-target packages) and acknowledged it was not strongly justified for this project. Listed pros (standalone use cases like CI YAML validation via topology package, signal-synthesis reuse, exporter embedding; better API discipline; composability for downstream OSS) and cons (semver discipline, larger doc surface). Asked AskUserQuestion for layout choice; user picked top-level-only (no internal/, no pkg/). Applied changes: (1) components.md — table updated to mark all packages public; new 'パッケージレイアウト方針' callout explaining the rationale. (2) component-methods.md — all package declarations and import paths flipped (internal/topology → topology, pkg/k6otelgen → k6otelgen, etc.). (3) services.md — service list table updated; Mermaid subgraph label 'internal core' → 'core packages'. (4) component-dependency.md — top-level note added; matrix and layer diagram now show package names without internal/ prefix; Mermaid subgraph titles 'Boundary Layer (pkg/)' / 'Application Layer (internal/)' etc. dropped the parenthetical paths; shared-singleton candidates updated. (5) application-design.md — layered architecture diagram updated; Open Design Decisions reference 'registry' (not 'internal/registry'). (6) AGENTS.md — package structure section reworded to indicate top-level public layout and added registry/ as a candidate. (7) .cursor/rules/10-go-conventions.mdc — package table updated, layer-discipline note added (no internal/ enforcement, review-based instead). (8) .cursor/rules/20-pbt-enforcement.mdc — glob `internal/testutil/generators/**` → `testutil/generators/**`. (9) .cursor/rules/30-otel-semantic-conventions.mdc — globs updated for synth/exporter/journey. Historical entries in audit.md and the answered application-design-plan.md are intentionally unchanged (they reflect what was decided at the time)."
+**Context**: Application Design — flattened package layout. Layer discipline (Boundary → Application → Domain / Boundary → Infrastructure) is preserved as a design contract enforced via dependency matrix and code review, not via Go's `internal/` mechanism.
+
+---
+
+## Application Design — Change Request: 2-Pass Parse with Resolved Pointers
+**Timestamp**: 2026-06-08T00:01:30Z
+**User Input**: "component-methods.md を読んでいます。EdgeやStepでサービスをstringで指定してますが、万が一同名のサービスが出てきてしまった場合に問題になりそう。ここをstringにした理由をよく理解したいので、解説してくだし"
+**AI Response**: "Explained the 3 reasons for the original string choice (YAML round-trip naturalness, avoiding pointer cycles, single-pass parsing) and acknowledged its weaknesses (typo robustness, type safety, future namespacing). Noted YAML 1.2 spec forbids duplicate keys within a `services:` map, so true duplicates are impossible in a single file — but type safety / IDE support / future multi-file are valid concerns. Asked via AskUserQuestion; user chose option A: 2-pass parse + resolved pointers + ServiceID newtype. Applied changes: (1) component-methods.md — added '設計メモ: 2-pass parse' section to C1; added ServiceID newtype; Schema.Services map[ServiceID]*Service; Service.Name ServiceID; Edge.From/To now *Service (resolved by Parse, guaranteed non-nil after Parse); Step.Service now *Service; Step.Parallel []*Step; Journey.Entry *Service; Journey.Steps []*Step; FaultTarget restructured as variant {Kind, Service *Service, Edge *Edge}; Outcome.FallbackAttempts now []*topology.Edge; Outcome.FallbackUsed now *topology.Edge. Added `topology.Equal(a,b)` API for identifier-based deep-equality (since reflect.DeepEqual breaks on cyclic pointers); added `MarshalYAML` API documenting that resolved pointers are serialized back to name strings. (2) components.md — '参照モデル' callout above the type list; updated all type entries; FaultTarget added; ServiceID added. (3) services.md — Phase 1 step 5 now describes the 2-pass Parse internals (rawSchema → resolve → Validate → ApplyFaults). (4) application-design.md — PBT-01 properties for C1 updated to use topology.Equal and added new invariants (all pointers non-nil after Parse; Schema.Services[svc.Name]==svc consistency); Open Design Decisions added Marshaler implementation details and JourneyID newtype discussion."
+**Context**: Application Design — typed references. Tradeoff: marginal additional implementation complexity in Parse / Marshaler for substantial gains in IDE support, type safety, and early typo detection (consistent with PBT Full enforcement quality bar).
+
+---
+
+## Application Design — Change Request: Journey Definition Not Documented; Operations as First-Class
+**Timestamp**: 2026-06-08T00:02:00Z
+**User Input**: "ざっと全体見てるんだけどジャーニーの定義方法って書いてる？"
+**AI Response**: "Acknowledged the gap: only the Go type stubs (Journey/Step) were documented; the actual YAML structure of a journey and the semantic relationship between Step.Operation and Edge.Operation were not specified. Identified the underlying ambiguity (does a step implicitly fire edges? which ones? what is the mapping?). Presented 3 options for resolving it via AskUserQuestion; user picked option A (Operations as first-class concept). Applied changes: (1) NEW file topology-yaml-schema.md — full YAML schema spec with complete example, including services/operations/calls/parallel/on_failure/journeys/faults sections; demonstrates the cache-aside semantics with a concrete catalog-service+product-db+product-cache example. (2) component-methods.md — restructured Service (Operations map replaces Edges); NEW Operation type (Name, Service back-pointer, Calls []*CallNode); NEW CallNode type (variant: single Edge or Parallel []*CallNode); Edge now has From/To as *Operation pointers (not *Service); Step.Service+Step.Operation collapsed to Step.Op *Operation; FaultTarget grew TargetOperation variant. (3) components.md — '主な型' list updated to reflect Operation as first-class; added pointer to topology-yaml-schema.md. (4) services.md — Phase 2 rewritten to describe Operation tree traversal: journey Step → entry Operation → recursive Operation.Calls traversal, with on_exhausted=return_default/succeed_silently skipping target Operation recursion. (5) application-design.md — added topology-yaml-schema.md to the doc index; principles table Q2 row updated; PBT C2 invariants enriched with Operation-tree-traversal and on_exhausted-skip rules."
+**Context**: Application Design — biggest restructuring so far. Journey semantics are now fully specified: a journey is a flat sequence of `(service, operation)` entry points, and the engine traverses each operation's call tree recursively. cache-aside / circuit-breaker patterns now have a concrete YAML form, and the trace shape matches real-world service-mesh observations.
+
+---
+
+## Application Design — Clarification: Operation Tree vs Journey (Two Abstraction Levels)
+**Timestamp**: 2026-06-08T00:02:30Z
+**User Input**: "Journeyのセクションを見たんですが、これはユーザー視点でのジャーニーですね。例えばフロントエンドを叩いた後に、フロントエンドへのリクエストがバックエンドの複数のサービスを経由する場合はどのようにジャーニーを定義するんでしょうか？（1つのサービスに複数のoperationが定義されていることがあるため）"
+**AI Response**: "Confirmed the user-perspective interpretation. Clarified the two-level abstraction: Operation tree (intra-trace, automatic from topology — written under `services:`) vs Journey (inter-trace, explicit user-action sequence — written under `journeys:`). Backend fan-out (multiple services / multiple operations called from one frontend operation) is NOT enumerated in the journey; it lives in the calling operation's `calls:` list. Asked AskUserQuestion whether to enrich topology-yaml-schema.md with this clarification; user answered yes. Added a new section 'まず把握すべき 2 つの抽象レベル' at the top of topology-yaml-schema.md with (a) intra-trace example: frontend.GET /products/{id} calling catalog-service.GetProduct + catalog-service.ListRelated (same service, different op) + search-service.LogQuery (different service); concrete span tree depicted; (b) inter-trace example: multi-step `full-checkout` journey producing 3 traces. This pre-empts the most common conceptual confusion before the user reaches the formal sections."
+**Context**: Application Design — pedagogical refinement only (no type/structural changes). The model itself already supported all these cases; documentation now makes them explicit upfront.
+
+---

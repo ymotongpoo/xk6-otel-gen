@@ -85,7 +85,7 @@ go test ./...
 go test -race -count=1 ./...
 
 # 特定ユニットのみ
-go test ./internal/topology/...
+go test ./topology/...
 
 # PBT のシード固定実行 (再現性確認)
 RAPID_SEED=1 go test -run TestProperty ./...
@@ -105,16 +105,18 @@ golangci-lint run
 - **Go バージョン**: 直近 stable + 1 つ前の minor (例: 1.23 / 1.22)。go.mod に明記。
 - **フォーマット**: `gofmt` / `goimports` 準拠。CI で強制。
 - **モジュールパス**: `github.com/ymotongpoo/xk6-otel-gen`
-- **パッケージ構成 (暫定、Units Generation で確定):**
+- **パッケージ構成 (Application Design で確定 — 全パッケージをトップレベル公開):**
   - `cmd/xk6-otel-gen-build/` — ヘルパー (任意)
-  - `internal/topology/` — YAML スキーマ・パーサ・グラフモデル
-  - `internal/journey/` — Critical User Journey エンジン
-  - `internal/synth/` — Signal Synthesizer (spans, metrics, logs)
-  - `internal/exporter/` — OTLP/gRPC + OTLP/HTTP 送信パイプライン
-  - `pkg/k6otelgen/` — k6 JS モジュール (外部公開 API)
-  - `pkg/k6output/` — k6 Output モジュール
+  - `topology/` — YAML スキーマ・パーサ・グラフモデル (公開)
+  - `journey/` — Critical User Journey エンジン (公開)
+  - `synth/` — Signal Synthesizer (spans, metrics, logs) (公開)
+  - `exporter/` — OTLP/gRPC + OTLP/HTTP 送信パイプライン (公開)
+  - `k6otelgen/` — k6 JS モジュール (k6 register)
+  - `k6output/` — k6 Output モジュール (k6 register)
+  - `testutil/generators/` — PBT ドメインジェネレータ (公開)
   - `examples/` — minimal / realistic サンプル
   - `test/integration/` — Integration tests + Docker compose
+  - `registry/` (候補) — `k6otelgen` と `k6output` が共有する Pipeline holder。NFR Design で確定
 - **命名**: パッケージ名は単数形・小文字・ハイフン無し。エクスポート識別子は GoDoc コメント付き。
 - **エラー処理**: `errors.Wrap` 系ではなく `fmt.Errorf("...: %w", err)`。
 - **ロギング**: k6 の `modules.VU.InitEnv().Logger` (k6 統合パスから取得可能なロガー) を使う。
@@ -133,7 +135,7 @@ golangci-lint run
 
 - **PBT-02 (Round-trip)**: YAML パーサ、OTLP protobuf シリアライザ等のラウンドトリップテストを必須化
 - **PBT-03 (Invariants)**: トポロジーグラフの不変条件 (DAG, reachability) と信号合成の不変条件 (1 ジャーニー = 1 trace_id, parent_span_id 連鎖, metric サムの保存則) をテスト
-- **PBT-07 (Generator Quality)**: ドメイン特化ジェネレータを `internal/testutil/generators/` に集約し再利用
+- **PBT-07 (Generator Quality)**: ドメイン特化ジェネレータを `testutil/generators/` に集約し再利用
 - **PBT-08 (Shrinking & Repro)**: シード値を CI ログに出力する。`pgregory.net/rapid` のデフォルトを尊重し、shrink を無効化しない
 - **PBT-09 (Framework)**: `pgregory.net/rapid` を `go.mod` に明示
 - **PBT-10 (Complementary)**: 例ベーステストと PBT を別ファイル/別関数で明示 (例: `topology_test.go` vs `topology_property_test.go`)
