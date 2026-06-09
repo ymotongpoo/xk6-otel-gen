@@ -326,16 +326,16 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Step 9.1 — Create `exporter/otlp_roundtrip_test.go`
 
-- [ ] `TestOTLPProtobufRoundTrip` using `rapid.Check`:
+- [x] `TestOTLPProtobufRoundTrip` using `rapid.Check`:
   - Generate `*coltracepb.ExportTraceServiceRequest` with random ResourceSpans / ScopeSpans / Spans (use realistic field types: trace_id 16 bytes, span_id 8 bytes, etc.).
   - Marshal → Unmarshal → assert `proto.Equal(orig, parsed)`.
-- [ ] Optionally also TestOTLPMetricsRoundTrip, TestOTLPLogsRoundTrip (analogous). Decision: implement at least Traces; Metrics and Logs are nice-to-have but acceptable to defer.
-- [ ] Uses `go.opentelemetry.io/proto/otlp/collector/trace/v1` (test-only import).
-- [ ] All tests call `t.Parallel()`.
+- [x] Optionally also TestOTLPMetricsRoundTrip, TestOTLPLogsRoundTrip (analogous). Decision: implement at least Traces; Metrics and Logs are nice-to-have but acceptable to defer.
+- [x] Uses `go.opentelemetry.io/proto/otlp/collector/trace/v1` (test-only import).
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 9 commit
 
-- [ ] `git add exporter/otlp_roundtrip_test.go && git commit -m "test(exporter): add PBT for OTLP protobuf round-trip (TP-U4-3)"`
+- [x] `git add exporter/otlp_roundtrip_test.go && git commit -m "test(exporter): add PBT for OTLP protobuf round-trip (TP-U4-3)"`
 
 ---
 
