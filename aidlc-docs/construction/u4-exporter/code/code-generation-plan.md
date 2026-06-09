@@ -242,34 +242,34 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Step 6.1 — Create `exporter/pipeline.go`
 
-- [ ] Define `Pipeline` struct with `tp`, `mp`, `lp`, `res`, `stats`, `shutdownOnce`, `shutdownErr`.
-- [ ] Implement `New(cfg Config) (*Pipeline, error)` per NFR-D `nfr-design-patterns.md` §3.1:
+- [x] Define `Pipeline` struct with `tp`, `mp`, `lp`, `res`, `stats`, `shutdownOnce`, `shutdownErr`.
+- [x] Implement `New(cfg Config) (*Pipeline, error)` per NFR-D `nfr-design-patterns.md` §3.1:
   - `cfg.fillDefaults()` → `cfg.Validate()` → `buildResource` → `buildTraceExporter` → `buildMetricExporter` (with cleanup of trace on fail) → `buildLogExporter` (with cleanup of both on fail) → construct 3 Providers with `WithResource` + appropriate Reader/Processor wiring.
   - Trace: `sdktrace.WithBatcher(traceExp, MaxQueueSize, MaxExportBatchSize, BatchTimeout)`.
   - Metric: `sdkmetric.WithReader(NewPeriodicReader(metricExp, WithInterval(cfg.BatchTimeout)))`.
   - Log: `sdklog.WithProcessor(NewBatchProcessor(logExp, MaxQueueSize, ExportMaxBatchSize, ExportInterval))`.
   - On any failure: return `nil, &PipelineError{Stage, Inner}` with appropriate cleanup of previously-built exporters (best-effort, error discarded — Q10=A).
-- [ ] Implement `(*Pipeline).TracerProvider() trace.TracerProvider`.
-- [ ] Implement `(*Pipeline).MeterProvider() metric.MeterProvider`.
-- [ ] Implement `(*Pipeline).LoggerProvider() log.LoggerProvider`.
-- [ ] Implement `(*Pipeline).Shutdown(ctx) error` using `shutdownOnce` + `errors.Join` over 3 Provider Shutdowns.
-- [ ] Implement `(*Pipeline).Stats() Stats` delegating to `pipelineStats.snapshot()`.
-- [ ] All public identifiers have full GoDoc with usage hints.
+- [x] Implement `(*Pipeline).TracerProvider() trace.TracerProvider`.
+- [x] Implement `(*Pipeline).MeterProvider() metric.MeterProvider`.
+- [x] Implement `(*Pipeline).LoggerProvider() log.LoggerProvider`.
+- [x] Implement `(*Pipeline).Shutdown(ctx) error` using `shutdownOnce` + `errors.Join` over 3 Provider Shutdowns.
+- [x] Implement `(*Pipeline).Stats() Stats` delegating to `pipelineStats.snapshot()`.
+- [x] All public identifiers have full GoDoc with usage hints.
 
 ### Step 6.2 — Unit test `exporter/pipeline_test.go` (with mockExporter scaffolding)
 
-- [ ] Define `mockSpanExporter`, `mockMetricExporter`, `mockLogExporter` in this file (or in a `mocks_test.go` helper file in the `exporter_test` external test package).
-- [ ] **Decision**: place tests in **internal `package exporter`** so we can directly call `buildTraceExporter` etc. with mocks via test-helper-only constructors. Alternatively, expose a small internal `newWithExporters(cfg, traceExp, metricExp, logExp) (*Pipeline, error)` helper that is **only callable from package-internal tests**.
-- [ ] `TestNew_Success` — uses real (in-memory) defaults with `Insecure=true, Endpoint="localhost:4317"`. Since we cannot guarantee a listener, expect that `New` itself succeeds (OTLP exporters lazy-connect on first export). Shutdown immediately.
-- [ ] `TestNew_ValidationError` — invalid Config → `*PipelineError{Stage:"validate"}`.
-- [ ] `TestNew_ExporterFailure_CleansUp` — inject a mock that fails on second exporter build, verify first exporter's Shutdown was called.
-- [ ] `TestPipeline_Shutdown_Idempotent` — call Shutdown twice, expect same error / nil and only one inner call (via mocks).
-- [ ] `TestPipeline_Stats_DelegatesToSnapshot`.
-- [ ] All tests call `t.Parallel()` where shared state allows.
+- [x] Define `mockSpanExporter`, `mockMetricExporter`, `mockLogExporter` in this file (or in a `mocks_test.go` helper file in the `exporter_test` external test package).
+- [x] **Decision**: place tests in **internal `package exporter`** so we can directly call `buildTraceExporter` etc. with mocks via test-helper-only constructors. Alternatively, expose a small internal `newWithExporters(cfg, traceExp, metricExp, logExp) (*Pipeline, error)` helper that is **only callable from package-internal tests**.
+- [x] `TestNew_Success` — uses real (in-memory) defaults with `Insecure=true, Endpoint="localhost:4317"`. Since we cannot guarantee a listener, expect that `New` itself succeeds (OTLP exporters lazy-connect on first export). Shutdown immediately.
+- [x] `TestNew_ValidationError` — invalid Config → `*PipelineError{Stage:"validate"}`.
+- [x] `TestNew_ExporterFailure_CleansUp` — inject a mock that fails on second exporter build, verify first exporter's Shutdown was called.
+- [x] `TestPipeline_Shutdown_Idempotent` — call Shutdown twice, expect same error / nil and only one inner call (via mocks).
+- [x] `TestPipeline_Stats_DelegatesToSnapshot`.
+- [x] All tests call `t.Parallel()` where shared state allows.
 
 ### Phase 6 commit
 
-- [ ] `git add exporter/pipeline.go exporter/pipeline_test.go && git commit -m "feat(exporter): add Pipeline orchestrator with all-or-nothing New and idempotent Shutdown"`
+- [x] `git add exporter/pipeline.go exporter/pipeline_test.go && git commit -m "feat(exporter): add Pipeline orchestrator with all-or-nothing New and idempotent Shutdown"`
 
 ---
 

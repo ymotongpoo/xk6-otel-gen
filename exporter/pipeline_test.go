@@ -1,0 +1,128 @@
+package exporter
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	sdklog "go.opentelemetry.io/otel/sdk/log"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdkresource "go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+)
+
+func TestNew_Success(t *testing.T) {
+	t.Parallel()
+
+	p, err := New(Config{
+		Endpoint:     "localhost:4317",
+		Insecure:     true,
+		Timeout:      500 * time.Millisecond,
+		BatchSize:    8,
+		BatchTimeout: 10 * time.Millisecond,
+		MaxQueueSize: 16,
+	})
+	if err != nil {
+		t.Fatalf("New() error = %v, want nil", err)
+	}
+	if p.TracerProvider() == nil || p.MeterProvider() == nil || p.LoggerProvider() == nil {
+		t.Fatalf("providers must be non-nil: trace=%v metric=%v log=%v", p.TracerProvider(), p.MeterProvider(), p.LoggerProvider())
+	}
+	_ = p.Shutdown(context.Background())
+}
+
+func TestNew_ValidationError(t *testing.T) {
+	t.Parallel()
+
+	_, err := New(Config{Endpoint: "localhost:4317", Timeout: -time.Second})
+	if err == nil {
+		t.Fatal("New() error = nil, want PipelineError")
+	}
+	var pipeErr *PipelineError
+	if !errors.As(err, &pipeErr) {
+		t.Fatalf("New() error type = %T, want *PipelineError", err)
+	}
+	if pipeErr.Stage != "validate" {
+		t.Fatalf("PipelineError.Stage = %q, want validate", pipeErr.Stage)
+	}
+	var cfgErr *ConfigError
+	if !errors.As(err, &cfgErr) {
+		t.Fatalf("New() error = %v, want wrapped ConfigError", err)
+	}
+}
+
+func TestNew_ExporterFailure_CleansUp(t *testing.T) {
+	t.Parallel()
+
+	sentinel := errors.New("metric builder failed")
+	traceInner := &fakeSpanExporter{}
+	_, err := newWithExporterBuilders(validPipelineConfig(),
+		func(context.Context, Config, *pipelineStats) (sdktrace.SpanExporter, error) {
+			return traceInner, nil
+		},
+		func(context.Context, Config, *pipelineStats) (sdkmetric.Exporter, error) {
+			return nil, sentinel
+		},
+		func(context.Context, Config, *pipelineStats) (sdklog.Exporter, error) {
+			t.Fatal("log builder should not be called after metric builder failure")
+			return nil, nil
+		},
+	)
+	if !errors.Is(err, sentinel) {
+		t.Fatalf("newWithExporterBuilders() error = %v, want %v", err, sentinel)
+	}
+	var pipeErr *PipelineError
+	if !errors.As(err, &pipeErr) || pipeErr.Stage != "metric_exporter" {
+		t.Fatalf("newWithExporterBuilders() error = %v, want metric_exporter PipelineError", err)
+	}
+	if traceInner.shutdown != 1 {
+		t.Fatalf("trace shutdown count = %d, want 1", traceInner.shutdown)
+	}
+}
+
+func TestPipeline_Shutdown_Idempotent(t *testing.T) {
+	t.Parallel()
+
+	traceInner := &fakeSpanExporter{}
+	metricInner := &fakeMetricExporter{}
+	logInner := &fakeLogExporter{}
+	p := newPipelineFromExporters(validPipelineConfig(), sdkresource.Empty(), &pipelineStats{}, traceInner, metricInner, logInner)
+
+	first := p.Shutdown(context.Background())
+	second := p.Shutdown(context.Background())
+	if first != second {
+		t.Fatalf("second Shutdown() error = %v, want same value as first %v", second, first)
+	}
+	if traceInner.shutdown != 1 || metricInner.shutdown != 1 || logInner.shutdown != 1 {
+		t.Fatalf("shutdown counts = trace:%d metric:%d log:%d, want all 1", traceInner.shutdown, metricInner.shutdown, logInner.shutdown)
+	}
+}
+
+func TestPipeline_Stats_DelegatesToSnapshot(t *testing.T) {
+	t.Parallel()
+
+	stats := &pipelineStats{}
+	stats.tracesExported.Add(1)
+	stats.metricsFailed.Add(2)
+	stats.logsExported.Add(3)
+	p := &Pipeline{stats: stats}
+
+	got := p.Stats()
+	want := Stats{TracesExported: 1, MetricsFailed: 2, LogsExported: 3}
+	if got != want {
+		t.Fatalf("Stats() = %#v, want %#v", got, want)
+	}
+}
+
+func validPipelineConfig() Config {
+	return Config{
+		Protocol:     ProtocolGRPC,
+		Endpoint:     "localhost:4317",
+		Insecure:     true,
+		Timeout:      500 * time.Millisecond,
+		BatchSize:    8,
+		BatchTimeout: 10 * time.Millisecond,
+		MaxQueueSize: 16,
+	}
+}
