@@ -191,26 +191,26 @@
 
 ### Step 4.1 — Create `exporter/stats.go`
 
-- [ ] Define `Stats` (public, 6 fields per FD revision).
-- [ ] Define unexported `pipelineStats` with 6 `atomic.Int64` fields.
-- [ ] Implement `(*pipelineStats).snapshot() Stats`.
-- [ ] Define `tracingExporter` (`inner sdktrace.SpanExporter`, `stats *pipelineStats`) implementing `sdktrace.SpanExporter`.
-- [ ] Define `metricExporter` (`inner sdkmetric.Exporter`, `stats *pipelineStats`) implementing `sdkmetric.Exporter` (all 5 methods: `Export`, `Aggregation`, `Temporality`, `ForceFlush`, `Shutdown`).
-- [ ] Define `loggingExporter` (`inner sdklog.Exporter`, `stats *pipelineStats`) implementing `sdklog.Exporter`.
-- [ ] Implement `countMetricDataPoints(rm *metricdata.ResourceMetrics) int` (iterates ScopeMetrics → Metrics → data point count by aggregation type: Gauge, Sum, Histogram, ExponentialHistogram, Summary).
-- [ ] All identifiers have GoDoc (only `Stats` is exported, others are internal so brief comments suffice).
+- [x] Define `Stats` (public, 6 fields per FD revision).
+- [x] Define unexported `pipelineStats` with 6 `atomic.Int64` fields.
+- [x] Implement `(*pipelineStats).snapshot() Stats`.
+- [x] Define `tracingExporter` (`inner sdktrace.SpanExporter`, `stats *pipelineStats`) implementing `sdktrace.SpanExporter`.
+- [x] Define `metricExporter` (`inner sdkmetric.Exporter`, `stats *pipelineStats`) implementing `sdkmetric.Exporter` (all 5 methods: `Export`, `Aggregation`, `Temporality`, `ForceFlush`, `Shutdown`).
+- [x] Define `loggingExporter` (`inner sdklog.Exporter`, `stats *pipelineStats`) implementing `sdklog.Exporter`.
+- [x] Implement `countMetricDataPoints(rm *metricdata.ResourceMetrics) int` (iterates ScopeMetrics → Metrics → data point count by aggregation type: Gauge, Sum, Histogram, ExponentialHistogram, Summary).
+- [x] All identifiers have GoDoc (only `Stats` is exported, others are internal so brief comments suffice).
 
 ### Step 4.2 — Unit test `exporter/stats_test.go`
 
-- [ ] `TestPipelineStats_Snapshot_AtomicLoad` — increment counters from multiple goroutines, verify Snapshot returns non-decreasing values per field.
-- [ ] `TestTracingExporter_Success` — fake inner returns nil → `tracesExported += len(spans)`.
-- [ ] `TestTracingExporter_Failure` — fake inner returns error → `tracesFailed += 1`, error propagated.
-- [ ] Same pattern for `MetricExporter` and `LoggingExporter`.
-- [ ] `TestCountMetricDataPoints_*` — table-driven across Gauge / Sum / Histogram.
+- [x] `TestPipelineStats_Snapshot_AtomicLoad` — increment counters from multiple goroutines, verify Snapshot returns non-decreasing values per field.
+- [x] `TestTracingExporter_Success` — fake inner returns nil → `tracesExported += len(spans)`.
+- [x] `TestTracingExporter_Failure` — fake inner returns error → `tracesFailed += 1`, error propagated.
+- [x] Same pattern for `MetricExporter` and `LoggingExporter`.
+- [x] `TestCountMetricDataPoints_*` — table-driven across Gauge / Sum / Histogram.
 
 ### Phase 4 commit
 
-- [ ] `git add exporter/stats.go exporter/stats_test.go && git commit -m "feat(exporter): add atomic Stats and per-signal instrumented wrappers"`
+- [x] `git add exporter/stats.go exporter/stats_test.go && git commit -m "feat(exporter): add atomic Stats and per-signal instrumented wrappers"`
 
 ---
 
