@@ -99,15 +99,15 @@
 
 ### Step 1.1 — Implement `*ParseError` and `*ValidationError`
 
-- [ ] Create `topology/errors.go` per `nfr-design-patterns.md` §2 P-ERR-1:
+- [x] Create `topology/errors.go` per `nfr-design-patterns.md` §2 P-ERR-1:
   - `type ParseError struct { Path, Message string; Inner error }` with `Error()` and `Unwrap()`
   - `type ValidationError struct { Path, Rule, Message string }` with `Error()`
   - GoDoc for both types
 
 ### Step 1.2 — Build check
 
-- [ ] `go build ./topology/...` — succeeds.
-- [ ] **Acceptance**: errors compile, no warnings.
+- [x] `go build ./topology/...` — succeeds.
+- [x] **Acceptance**: errors compile, no warnings.
 
 ---
 
