@@ -73,33 +73,33 @@
 
 ### Step 0.1 — Verify Go version
 
-- [ ] `head -3 go.mod` shows `go 1.25` (set during U1). If not, run `go mod edit -go=1.25` and `go mod tidy`.
+- [x] `head -3 go.mod` shows `go 1.25` (set during U1). If not, run `go mod edit -go=1.25` and `go mod tidy`.
 
 ### Step 0.2 — Add OTel SDK dependencies
 
-- [ ] Run `go get go.opentelemetry.io/otel@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/sdk@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/sdk/metric@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/sdk/log@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlptrace@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlpmetricgrpc@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlpmetrichttp@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc@latest`.
-- [ ] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp@latest`.
-- [ ] Run `go get go.opentelemetry.io/proto/otlp@latest` (test-only; OK if marked direct since `_test.go` imports it — do not import from any non-test file).
-- [ ] Run `go mod tidy`.
+- [x] Run `go get go.opentelemetry.io/otel@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/sdk@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/sdk/metric@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/sdk/log@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlptrace@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlpmetricgrpc@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlpmetrichttp@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc@latest`.
+- [x] Run `go get go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp@latest`.
+- [x] Run `go get go.opentelemetry.io/proto/otlp@latest` (test-only; OK if marked direct since `_test.go` imports it — do not import from any non-test file).
+- [x] Run `go mod tidy`.
 
 ### Step 0.3 — Create exporter/ package skeleton
 
-- [ ] Create `exporter/` directory.
-- [ ] Create empty `exporter/doc.go` containing only the placeholder `package exporter` line and a TODO comment. (Real doc comment is written in Phase 8.)
-- [ ] Verify: `go build ./exporter/...` succeeds (empty package compiles).
+- [x] Create `exporter/` directory.
+- [x] Create empty `exporter/doc.go` containing only the placeholder `package exporter` line and a TODO comment. (Real doc comment is written in Phase 8.)
+- [x] Verify: `go build ./exporter/...` succeeds (empty package compiles).
 
 ### Phase 0 commit
 
-- [ ] `git add go.mod go.sum exporter/doc.go && git commit -m "build(exporter): add OTel SDK dependencies for U4 ..."`
+- [x] `git add go.mod go.sum exporter/doc.go && git commit -m "build(exporter): add OTel SDK dependencies for U4 ..."`
 
 ---
 
