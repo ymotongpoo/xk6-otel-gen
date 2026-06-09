@@ -10,8 +10,13 @@ alwaysApply: true
 | Agent | 役割 |
 |---|---|
 | Claude Code | プラン・設計・要件 (`aidlc-docs/**` の Markdown) |
-| OpenAI Codex CLI (gpt-5.5 xhigh) | 長時間・自律的バッチ実装 (1 ユニット丸ごとの Go コード/テスト生成) |
-| **Cursor Composer (あなた)** | **対話的編集・微調整・レビュー反映・デバッグ** |
+| OpenAI Codex CLI (gpt-5.5 xhigh) | 長時間・自律的バッチ実装 (1 ユニット丸ごとの深い algorithmic reasoning) |
+| **Cursor Composer (あなた)** | **対話的編集** または **batch 編集** (`cursor agent -p "<prompt>"`)。codebase-aware な強みを活かし、既存パターンに整合する追加実装、レビュー反映、微調整、デバッグを担当 |
+
+### 起動モード
+
+- **対話モード (エディタ内)**: 通常の Cursor Composer 利用。ユーザーが対話的に指示を出す。
+- **batch モード (`cursor agent -p "<prompt>"`)**: one-shot 非対話実行。`scripts/run-cursor.sh` から呼ばれる。既存コードパターンに揃えた追加実装に強い (例: 既に確立した generator スタイルに沿って同型 generator を追記)。
 
 ## あなた (Cursor) の遵守事項
 

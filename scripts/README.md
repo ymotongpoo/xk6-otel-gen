@@ -4,7 +4,50 @@ Implementation-agent runner scripts. These exist to launch the
 implementation agents (Codex CLI / Cursor Composer) against a unit's
 `code-generation-plan.md` in long-running, mostly-unattended mode.
 
-## `run-codex-u7.sh`
+## Generic runners (recommended)
+
+- **`run-codex.sh <unit-id> [--phases <range>] [--dry-run]`** — Codex
+  CLI batch via `codex exec`. Best for phases requiring deep algorithmic
+  reasoning (Parse pipelines, DAG checks, multi-file new construction).
+- **`run-cursor.sh <unit-id> [--phases <range>] [--dry-run]`** — Cursor
+  Composer batch via `cursor agent -p "<prompt>"`. Best for additive,
+  pattern-conforming work (extending existing generators in U7 style,
+  adding tests that mirror established patterns, etc.).
+
+Both scripts share the same contract: locate the plan at
+`aidlc-docs/construction/<unit-id>-*/code/code-generation-plan.md`,
+preflight (clean working tree, required tools), embed the prompt,
+launch the agent under timeout + tee to `logs/<agent>-<unit>-<phases>-<ts>.log`,
+postflight (new-commit diff, dirty-tree warning).
+
+### Choosing between Codex and Cursor for a phase
+
+See `AGENTS.md §2 "Codex と Cursor の使い分けガイドライン"`. The
+`code-generation-plan.md` for each unit annotates each phase with a
+**recommended agent**; the runner scripts honor that. Override at your
+own discretion.
+
+### Typical U1 workflow (mixed-agent)
+
+```bash
+# Codex handles Phase 0-12 (core implementation, long batch)
+./scripts/run-codex.sh u1 --phases 0-12
+
+# When that completes successfully, Cursor handles Phase 13 (U7 generator extension)
+./scripts/run-cursor.sh u1 --phases 13
+```
+
+You can also let Codex do all phases, or Cursor do all phases — the
+split is a recommendation, not a hard rule. But the phase-13 generators
+are textbook Cursor work (mirror existing U7 generator style), and
+phases 0-12 are textbook Codex work (build a complex multi-file
+subsystem from scratch).
+
+## `run-codex-u7.sh` (historical / U7 only)
+
+The original U7-specific Codex runner. Hardcoded to the U7 plan. Kept
+for historical reproducibility (the U7 implementation logs reference
+this script). New unit work should use `run-codex.sh` instead.
 
 Runs Codex CLI in non-interactive batch mode against the U7
 (testutil/generators) implementation plan. Codex follows
