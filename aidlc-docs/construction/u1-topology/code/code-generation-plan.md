@@ -300,15 +300,15 @@
 
 ### Step 7.1 — Implement ApplyFaults + Overlay lookup
 
-- [ ] Create `topology/faults.go`.
-- [ ] Implement `(*Schema).ApplyFaults() *FaultOverlay` per `business-logic-model.md` §6.
-- [ ] Implement `(o *FaultOverlay).NodeFaults / OperationFaults / EdgeFaults` (O(1) map lookups).
-- [ ] Implement `FaultOverlayEqual(a, b *FaultOverlay) bool` (used by TP-U1-7).
-- [ ] The `FaultOverlay` struct (currently opaque from U7) needs its 3 maps as unexported fields. If U7 left it as `type FaultOverlay struct{}`, replace with proper fields here.
+- [x] Create `topology/faults.go`.
+- [x] Implement `(*Schema).ApplyFaults() *FaultOverlay` per `business-logic-model.md` §6.
+- [x] Implement `(o *FaultOverlay).NodeFaults / OperationFaults / EdgeFaults` (O(1) map lookups).
+- [x] Implement `FaultOverlayEqual(a, b *FaultOverlay) bool` (used by TP-U1-7).
+- [x] The `FaultOverlay` struct (currently opaque from U7) needs its 3 maps as unexported fields. If U7 left it as `type FaultOverlay struct{}`, replace with proper fields here.
 
 ### Step 7.2 — Build check
 
-- [ ] `go build ./topology/...` — succeeds.
+- [x] `go build ./topology/...` — succeeds.
 
 ---
 
