@@ -64,7 +64,7 @@
 - **Lifecycle Phase**: CONSTRUCTION
 - **Current Unit**: U4 (exporter) — Functional Design (Part 1: plan + questions awaiting answers)
 - **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → U4 [FD in progress] → U3 → U2 → U5 → U6 → U8
-- **Status**: U1 fully complete (14 commits, all DoD met). U4 FD Q&A complete (all A). 3 FD artifacts generated under aidlc-docs/construction/u4-exporter/functional-design/. Awaiting approval to proceed to NFR Requirements for U4.
+- **Status**: U1 fully complete. U4 FD committed (9052453). NFR Requirements Q&A complete. 2 NFR-R artifacts generated under aidlc-docs/construction/u4-exporter/nfr-requirements/. Awaiting approval to proceed to NFR Design.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)

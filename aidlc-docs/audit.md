@@ -484,3 +484,37 @@
 **AI Response**: "All A. Generated 3 FD artifacts under aidlc-docs/construction/u4-exporter/functional-design/: (1) business-logic-model.md — Config struct unified shape with 4-stage MergeWith priority (JS > env > YAML defaults > built-in); ConfigFromEnv covering all standard OTEL_EXPORTER_OTLP_* vars including _TRACES_/_METRICS_/_LOGS_ prefix with priority + same-value-across-signals constraint; New(cfg) pipeline with all-or-nothing cleanup on partial failure; buildResource using SDK detectors merged with ResourceOverrides; Protocol-switched buildTraceExporter/buildMetricExporter/buildLogExporter via otlp{trace,metric,log}{grpc,http}; shared holder via package-level sync.Once + GetShared(factory)/SetShared/ResetShared (test-only); Stats with per-field atomic.Int64 plus instrumented exporter wrappers; Shutdown via sync.Once-cached errors.Join of 3 Provider.Shutdown calls; mermaid data flow diagram. (2) business-rules.md — Config field constraints (value ranges, Headers/key format, MaxQueueSize >= BatchSize); MergeWith per-field override conditions; Map-replacement semantics for Headers/ResourceOverrides; signal-specific env strictness; ConfigError/PipelineError/SharedError type hierarchy; 4 testable properties (TP-U4-1 MergeWith override-wins, TP-U4-2 MergeWith idempotency, TP-U4-3 OTLP protobuf round-trip via go.opentelemetry.io/proto/otlp, TP-U4-4 Stats monotonicity via stateful PBT); Shared Holder rules table; Resource semantics with SDK Merge override precedence; explicit priority diagram; perf targets table (New < 100ms, Stats < 1us, Shutdown < BatchTimeout+buffer). (3) domain-entities.md — Protocol/Config/Pipeline/Stats/PipelineError/ConfigError/SharedError types with semantics + invariants; 10 public function/method contracts with idempotency + thread-safety + failure-pattern columns; package layout with 9 files + 5 test files; full API signature list; import dependency table (only OTel SDK, no internal topology/journey/synth); §6 U7 generator request: ValidConfig/AnyConfig (2 functions) with ConfigOption pattern and realistic ranges; Out of Scope section (YAML defaults parse handled by U1 in future, sampler custom, SDK internal metrics, Lint API)."
 **Context**: U4 exporter Functional Design — Step 8 GATE (awaiting explicit approval before NFR Requirements for U4).
 
+
+## U4 exporter — FD Approved & Committed; NFR Requirements Plan Issued
+**Timestamp**: 2026-06-09T05:45:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "U4 FD committed as 9052453. Proceeding to U4 NFR Requirements. Created u4-exporter-nfr-requirements-plan.md with 12 [Answer]: questions covering OTel Go SDK module selection, SDK version policy, integration test execution model (build tag vs always), integration test verification scope, New() performance target, steady-state 1k RPS performance, Stats() read performance, coverage target, cover vs integration test scope, library logging policy (no logs vs slog), back-compat policy, and explicit N/A enumeration."
+**Context**: U4 NFR Requirements — Step 5 GATE (awaiting user answers).
+
+
+## U4 exporter — NFR Requirements Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-09T05:50:00Z
+**User Input** (raw, in u4-exporter-nfr-requirements-plan.md):
+- Q1=A (minimal OTel SDK module set)
+- Q2=A with elaboration ("開発中も最新安定版に追従してください")
+- Q3=A (build-tag-gated integration tests)
+- Q4=A with elaboration ("ただ可能ならcorrelationできてほしい" — 3-signal correlation via shared trace_id)
+- Q5=A (New < 100ms)
+- Q6=A (steady-state CPU < 10% on 4 vCPU, drops allowed)
+- Q7=X — explicit override of recommendation: "特に要件はないです。100msくらいかかったところでツールの性能には影響ないので。" (no Stats() perf target)
+- Q8=A (80% coverage)
+- Q9=A (unit-only for coverage)
+- Q10=A (no library logging)
+- Q11=A (SemVer post-v1)
+- Q12=A (explicit N/A enumeration)
+
+**AI Response**: "Generated 2 NFR-R artifacts under aidlc-docs/construction/u4-exporter/nfr-requirements/: (1) nfr-requirements.md — 12 applicable NFRs (NFR-U4-1 minimal SDK module set, NFR-U4-2 latest-stable tracking, NFR-U4-3 build-tag integration tests, NFR-U4-4 integration test scope with correlation requirement via shared trace_id across 3 signals, NFR-U4-5 New < 100ms, NFR-U4-6 steady-state 1k RPS CPU < 10%, NFR-U4-7 Stats() no target per user override, NFR-U4-8 thread-safety, NFR-U4-9 no library logs, NFR-U4-10 80% coverage unit-only, NFR-U4-11 SemVer, NFR-U4-12 Shutdown SLA) + 10 N/A categories (persistence, authn/authz, at-rest/in-transit encryption (latter handled by SDK), i18n/a11y, GDPR/SOC2, absolute RPS target, production monitoring, DR); project NFR traceability table; PBT compliance summary (PBT-01..04 implemented, PBT-06 stateful for Stats monotonic, PBT-07..09 inherit); 11-item DoD checklist. (2) tech-stack-decisions.md — OTel SDK module table with 13 modules (12 production + proto/otlp test-only) + 4 modules explicitly excluded (propagation, stdout, semconv, baggage); latest-stable + dependabot version strategy; OTel Go SDK multi-repo coordination note; Integration test stack (collector-contrib Docker image, file_exporter, docker-compose.yaml example); correlation test code sketch (TestIntegration_ThreeSignals_Correlated) with metric exemplar + log span context auto-propagation notes; CI workflow sketch; Go 1.25 requirement; bash recipe for `go get @latest` of all SDK modules; alternatives rejected list (self-rolled OTLP, pre-stable API, Collector self-host, auto-instrumentation)."
+**Context**: U4 NFR Requirements — Step 8 GATE (awaiting explicit approval before NFR Design for U4).
+
+
+## U4 NFR-R — Clarification: propagation package exclusion rationale
+**Timestamp**: 2026-06-09T06:00:00Z
+**User Input**: "Propagatorが必要ないというのは、現状の仕様では疑似テレメトリーシグナルを自分でpdataに基づいて生成してしまうからで、このツールより先にトレースを伝搬させる必要がないからだと認識しています。この認識で合っていますか？"
+**AI Response**: "Confirmed: that understanding is precise and complete. propagation only matters when a process-boundary HTTP/gRPC header carries trace context. xk6-otel-gen synthesizes the entire 3-signal payload in-process and ships it via OTLP directly (trace_id lives in the protobuf, not in any inject/extract header), so propagation is dead weight. In-process trace context (used for U3/U2 span parent-child chaining and for the NFR-U4-4 metric exemplar / log span context auto-attachment) flows through Go's context.Context — that's separate from the propagation package. Updated tech-stack-decisions.md §1.2 with this explicit rationale + listed future scenarios where propagation could become relevant (real k6 HTTP integration, external trace_id seeding) but kept them out of current scope. Also expanded the baggage entry to share the same reasoning."
+**Context**: Documentation refinement — no code/behavior change, just locking in the rationale so future readers don't re-litigate this decision.
+
