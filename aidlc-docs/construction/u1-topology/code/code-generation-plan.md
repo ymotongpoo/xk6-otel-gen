@@ -59,27 +59,27 @@
 
 ### Step 0.1 — Bump `go.mod` to Go 1.25
 
-- [ ] Run `go mod edit -go=1.25`.
-- [ ] If the local toolchain is older than 1.25, add `toolchain go1.25.x` line (use the latest available).
-- [ ] Run `go mod tidy`.
-- [ ] Verify: `head -3 go.mod` shows `go 1.25`.
+- [x] Run `go mod edit -go=1.25`.
+- [x] If the local toolchain is older than 1.25, add `toolchain go1.25.x` line (use the latest available).
+- [x] Run `go mod tidy`.
+- [x] Verify: `head -3 go.mod` shows `go 1.25`.
 
 ### Step 0.2 — Add dependencies
 
-- [ ] Run `go get gopkg.in/yaml.v3@latest`.
-- [ ] Run `go get github.com/santhosh-tekuri/jsonschema/v5@latest`.
-- [ ] Run `go mod tidy`.
-- [ ] Verify: `go.mod` `require` section contains both packages.
-- [ ] Note: `jsonschema/v5` is test-only; if Go marks it as direct (since `_test.go` imports it), that's fine. Do NOT add it to body imports of any non-test file.
+- [x] Run `go get gopkg.in/yaml.v3@latest`.
+- [x] Run `go get github.com/santhosh-tekuri/jsonschema/v5@latest`.
+- [x] Run `go mod tidy`.
+- [x] Verify: `go.mod` `require` section contains both packages.
+- [x] Note: `jsonschema/v5` is test-only; if Go marks it as direct (since `_test.go` imports it), that's fine. Do NOT add it to body imports of any non-test file.
 
 ### Step 0.3 — Delete U7 's panic stubs
 
-- [ ] Delete file `topology/stubs.go`.
-- [ ] Run `go build ./topology/...` — **expected to FAIL** at this point, since `Parse` etc. no longer exist. This is OK; subsequent phases will reinstate them.
+- [x] Delete file `topology/stubs.go`.
+- [x] Run `go build ./topology/...` — **expected to FAIL** at this point, since `Parse` etc. no longer exist. This is OK; subsequent phases will reinstate them.
 
 ### Step 0.4 — Update `topology/doc.go`
 
-- [ ] Replace the existing U7 placeholder doc.go with the final package documentation per `logical-components.md` LC-0:
+- [x] Replace the existing U7 placeholder doc.go with the final package documentation per `logical-components.md` LC-0:
   - Package overview (3-4 paragraphs)
   - Explicit `IMMUTABILITY:` section per NFR-U1-5 (P-IMM-1)
   - Explicit `CONCURRENCY:` section per NFR-U1-6 (P-CONC-1)
@@ -88,8 +88,8 @@
 
 ### Step 0.5 — Build verification (expected partial failure is OK)
 
-- [ ] Run `go vet ./topology/...` — should pass (only types + enums + doc remain, no stale code).
-- [ ] **Acceptance**: `topology/` contains only doc.go, enums.go, types.go. All ready for additive implementation.
+- [x] Run `go vet ./topology/...` — should pass (only types + enums + doc remain, no stale code).
+- [x] **Acceptance**: `topology/` contains only doc.go, enums.go, types.go. All ready for additive implementation.
 
 ---
 
