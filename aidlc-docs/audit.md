@@ -559,3 +559,24 @@ Generated 2 NFR Design artifacts under aidlc-docs/construction/u4-exporter/nfr-d
 (2) logical-components.md — 8 logical components (LC-0..LC-7: doc.go, config.go, resource.go, exporters.go, stats.go, pipeline.go, shared.go, errors.go) each with 責務/公開API/実装スケッチ/依存; component dependency diagram; external package list; test component mapping to LCs; final summary."
 
 **Context**: U4 NFR Design — artifacts generated, awaiting approval (Step 5/6 GATE).
+
+
+## U4 exporter — NFR Design Approved & Committed
+**Timestamp**: 2026-06-09T07:20:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "U4 NFR-D committed as 1eb2293 (bundled FD revision: Stats 9→6 fields cascade from Q3 verification). Proceeding to U4 Code Generation Planning."
+**Context**: U4 NFR-D approval gate cleared.
+
+
+## U4 exporter — Code Generation Plan Created
+**Timestamp**: 2026-06-09T07:30:00Z
+**User Input**: "Codex CLI で Phase 0..N 自律実行 (推奨)"
+**AI Response**: "Created u4 code-generation-plan.md with 15 phases (Phase 0..14): deps+skeleton, errors, config, resource, stats+wrappers, exporter factory, Pipeline orchestrator, shared holder, documentation (3 Examples), PBT TP-U4-3 round-trip, PBT TP-U4-4 Stats monotonic, BenchmarkNew, U7 generator additions (ValidConfig/AnyConfig), integration harness with -tags=integration, and final DoD verification. Includes 11-item anti-pattern enumeration cross-referencing NFR-D Q1..Q12 decisions."
+**Context**: U4 Code Generation — Part 1 Planning (Step 3/4 GATE).
+
+
+## U4 exporter — Code Generation Plan Approved & Committed
+**Timestamp**: 2026-06-09T07:35:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "U4 code generation plan committed as b2d8788. Proceeding to Part 2 — handoff to Codex CLI for Phase 0..14 autonomous execution via scripts/run-codex.sh u4."
+**Context**: U4 Code Generation — Part 1 Planning approval cleared; Part 2 awaits Codex execution.

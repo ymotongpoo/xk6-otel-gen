@@ -14,3 +14,6 @@ logs/
 
 # Local profiling artifacts (go test -cpuprofile etc.)
 *.prof
+
+# Ephemeral build/test scratch scripts
+.tmp-*.sh
