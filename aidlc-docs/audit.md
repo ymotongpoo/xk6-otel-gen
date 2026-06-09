@@ -391,3 +391,30 @@
 **AI Response**: "Bumped Go minimum requirement from 1.21 to 1.25 across all active spec/contract documents. Updated: (1) requirements.md NFR-3.2 — clarified that '現行 stable と 1 つ前の minor' means go.mod minimum is 1.25 with rationale tied to Go's official support policy. (2) u1-topology/nfr-requirements/nfr-requirements.md NFR-U1-7 — overrode Q8=A (Go 1.21+); now Go 1.25+, go.mod directive to be updated from 1.24 to 1.25 via `go mod edit -go=1.25` during U1 Code Generation; explicit list of 1.25-or-below stable features available. (3) u1-topology/nfr-requirements/tech-stack-decisions.md §3 — full rewrite of Go version section with 1.25+ requirement and CI matrix reduced to 1.25+; go.mod template updated to `go 1.25`. (4) AGENTS.md §5 code conventions — `1.23 / 1.22` → `1.25 以上`. (5) .cursor/rules/10-go-conventions.mdc — same. NOT modified (historical records): audit.md entries, u7-testutil-code-generation-plan.md (`go 1.23` initial scaffolding line), u1-topology-nfr-requirements-plan.md Q8 question/answer. business-logic-model.md's `errors.Join Go 1.20+` historical note kept as it's a fact about when errors.Join was added (now subsumed by 1.25 requirement). The U7 `go.mod` (currently `go 1.24`) will be bumped to `go 1.25` as part of U1 Code Generation Phase 0."
 **Context**: Cross-cutting Go version override. Affects U1 going forward, all subsequent units, and the existing U7 go.mod.
 
+
+## U1 topology — NFR Design Plan Issued
+**Timestamp**: 2026-06-09T00:15:00Z
+**User Input**: "okです"
+**AI Response**: "Proceeding to U1 NFR Design. Created aidlc-docs/construction/plans/u1-topology-nfr-design-plan.md with 12 [Answer]: questions covering YAML decode strict/lax switching, errors.Join element typing (*ParseError vs *ValidationError vs unified), MarshalYAML strategy (rawSchema vs per-type Marshaler), DAG algorithm choice (Kahn vs DFS vs Tarjan), Validate ordering (R-STR first vs unordered), default-value application location (buildSchema vs constructor vs separate pass), performance optimization budget (minimal vs sync.Pool vs measure-first), immutability documentation placement (GoDoc vs README), test fixture format (inline vs testdata/), BenchmarkParse input scale (single vs 3-tier vs generated), JSON Schema template authoring (hand-written vs go-generate), and file granularity confirmation (16 production + 11 test files)."
+**Context**: U1 NFR Design — Step 5 GATE (awaiting user answers).
+
+
+## U1 topology — NFR Design Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-09T00:30:00Z
+**User Input** (raw, in u1-topology-nfr-design-plan.md):
+- Q1=A (shared decodeRaw with strict bool)
+- Q2=A (separate *ParseError and *ValidationError types)
+- Q3=A (Schema-level MarshalYAML via rawSchema)
+- Q4=A (Kahn's algorithm)
+- Q5=A (R-STR-1..8 then D-1..D-14 fixed order)
+- Q6=A (defaults in buildSchema with intDefault/float64Default/durationDefault helpers)
+- Q7=A (minimal optimization: map capacity reservation, slice cap hints, strings.Builder)
+- Q8=A (immutability in package doc.go + Schema GoDoc)
+- Q9=A (inline string fixtures for example-based tests)
+- Q10=A (single BenchmarkParse with typical YAML)
+- Q11=A (hand-written JSON Schema template)
+- Q12=A (FD-proposed file structure: 16 production + 11 test files)
+
+**AI Response**: "All answers A. Generated 2 NFR-D artifacts under aidlc-docs/construction/u1-topology/nfr-design/: (1) nfr-design-patterns.md — 10 pattern groups: Performance (P-PERF-1 shared decodeRaw with strict bool, P-PERF-2 alloc minimization via make-with-cap and strings.Builder, P-PERF-3 single BenchmarkParse, P-PERF-4 io.ReadAll, P-PERF-5 early R-STR-then-D order), Error Aggregation (P-ERR-1 separate *ParseError/*ValidationError, P-ERR-2 staged errors.Join Phase 2b vs Phase 3, P-ERR-3 dot-notation path strings), Marshal (P-MARSHAL-1 Schema-only MarshalYAML returning rawSchema, P-MARSHAL-2 sortedKeys helpers), DAG Validation (P-VAL-DAG Kahn algorithm with cycle reporting), Default Application (intDefault/float64Default/durationDefault), Immutability & Concurrency (P-IMM-1 GoDoc convention, P-IMM-2 no defensive copy, P-CONC-1 no package state), JSON Schema (P-JSON-1 hand-written + go:embed, P-JSON-2 enum sanity test), Testing (P-TEST-1 inline fixtures, P-TEST-2 FD layout, P-TEST-3 t.Parallel everywhere), API Extension (P-API-1 SemVer, P-API-2 additive only), Documentation (P-DOC-1 Example for top-level only, P-DOC-2 package doc.go). (2) logical-components.md — 10 production LCs (LC-0 doc.go, LC-1 raw.go internal types, LC-2 parse.go, LC-3 validate.go with 8 validateXxx for R-STR + 1 validateDomainRanges, LC-4 marshal.go with sortedKeys helpers, LC-5 equal.go with 16 equalXxx helpers, LC-6 faults.go with FaultOverlayEqual added, LC-7 jsonschema.go go:embed, LC-8 lint.go, LC-9 errors.go) + 12 test LCs (LC-T0..T12 mapped to TP-U1-1..8 + example-based tests + BenchmarkParse) + testdata/typical.yaml; coverage strategy targeting ~83-85%; mermaid dep graph showing no cycles; 14-phase Code Generation predictor outline including go.mod 1.25 bump in Phase 0 and U7 generator extension in Phase 13."
+**Context**: U1 NFR Design — Step 8 GATE (awaiting explicit approval before Code Generation Planning for U1).
+

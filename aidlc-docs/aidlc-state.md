@@ -64,7 +64,7 @@
 - **Lifecycle Phase**: CONSTRUCTION
 - **Current Unit**: U1 (topology) — Functional Design (Part 1: plan + questions awaiting answers)
 - **Construction Progress**: [✓ U7 complete] → U1 [FD in progress] → U4 → U3 → U2 → U5 → U6 → U8
-- **Status**: U7 fully complete. U1 FD committed (38ee1e6). NFR Requirements Q&A complete (all A). 2 NFR-R artifacts generated under aidlc-docs/construction/u1-topology/nfr-requirements/. Awaiting approval to proceed to NFR Design.
+- **Status**: U7 fully complete. U1 FD committed (38ee1e6), NFR-R + Go version bump committed (39dfcad). NFR Design Q&A complete (all A). 2 NFR-D artifacts generated under aidlc-docs/construction/u1-topology/nfr-design/. Awaiting approval to proceed to Code Generation Planning.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)
