@@ -457,3 +457,30 @@
 **Verification after fix**: go build ✓, go test -race ./... ✓, coverage 86.8% (testutil/generators) / 80.7% (topology) — both above 80% target. .fail seed files left by rapid during the failing run were deleted (no longer relevant).
 **Commit strategy**: combined Phase 13 commit since Cursor's fault.go and Claude's fix share the same file (splitting requires checkout-and-edit dance); Co-Authored-By trailers credit both Cursor (primary author of Phase 13) and Claude (small bug fix).
 
+
+## U1 topology — Final Approval (all 14 commits accepted); U4 FD Plan Issued
+**Timestamp**: 2026-06-09T05:00:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "U1 fully approved. 14 commits in total (01a49a6 Phase 0 manual + Codex 12 commits + 84d6244 Phase 13 Cursor + Claude fix). DoD all green: build ✓, race ✓, topology coverage 80.7%, testutil/generators coverage 86.8%, BenchmarkParse 1.47 ms/op, golangci-lint 0 issues, all checkboxes [x], TP-U1-1..8 passing, U7 TestValidSchema_ValidatePlaceholder un-skipped and passing, 0 Implementation-time Questions. Proceeding to U4 (exporter) Functional Design. Created aidlc-docs/construction/plans/u4-exporter-functional-design-plan.md with 12 [Answer]: questions covering: Config granularity (unified vs per-signal), OTEL_EXPORTER_OTLP_* env coverage, shared Pipeline holder pattern (package var + sync.Once vs Registry struct vs context.WithValue), BatchProcessor defaults, partial-init policy, Stats schema, Stats atomicity (atomic.Int64 vs Mutex vs atomic.Pointer), Shutdown SLA, multi-New/multi-Shutdown idempotency, Resource override semantics, PBT-01 testable properties, U7 generator additions."
+**Context**: U4 exporter Functional Design — Step 5 GATE (awaiting user answers).
+
+
+## U4 exporter — Functional Design Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-09T05:30:00Z
+**User Input** (raw, in u4-exporter-functional-design-plan.md): all answers = A
+- Q1=A (unified Config struct)
+- Q2=A (full OTEL_EXPORTER_OTLP_* env support, incl. _TRACES_/_METRICS_/_LOGS_ prefix)
+- Q3=A (package-level var + sync.Once + GetShared/SetShared)
+- Q4=A (OTel SDK default batch settings)
+- Q5=A (all-or-nothing init failure)
+- Q6=A (minimal Stats: success/fail counts + queue depth per signal)
+- Q7=A (per-field atomic.Int64)
+- Q8=A (ctx deadline respected, SDK semantics)
+- Q9=A (idempotent multi-New / no-op multi-Shutdown)
+- Q10=A (SDK detect -> Config override merge)
+- Q11=A (core 4 testable properties)
+- Q12=A (ValidConfig/AnyConfig only)
+
+**AI Response**: "All A. Generated 3 FD artifacts under aidlc-docs/construction/u4-exporter/functional-design/: (1) business-logic-model.md — Config struct unified shape with 4-stage MergeWith priority (JS > env > YAML defaults > built-in); ConfigFromEnv covering all standard OTEL_EXPORTER_OTLP_* vars including _TRACES_/_METRICS_/_LOGS_ prefix with priority + same-value-across-signals constraint; New(cfg) pipeline with all-or-nothing cleanup on partial failure; buildResource using SDK detectors merged with ResourceOverrides; Protocol-switched buildTraceExporter/buildMetricExporter/buildLogExporter via otlp{trace,metric,log}{grpc,http}; shared holder via package-level sync.Once + GetShared(factory)/SetShared/ResetShared (test-only); Stats with per-field atomic.Int64 plus instrumented exporter wrappers; Shutdown via sync.Once-cached errors.Join of 3 Provider.Shutdown calls; mermaid data flow diagram. (2) business-rules.md — Config field constraints (value ranges, Headers/key format, MaxQueueSize >= BatchSize); MergeWith per-field override conditions; Map-replacement semantics for Headers/ResourceOverrides; signal-specific env strictness; ConfigError/PipelineError/SharedError type hierarchy; 4 testable properties (TP-U4-1 MergeWith override-wins, TP-U4-2 MergeWith idempotency, TP-U4-3 OTLP protobuf round-trip via go.opentelemetry.io/proto/otlp, TP-U4-4 Stats monotonicity via stateful PBT); Shared Holder rules table; Resource semantics with SDK Merge override precedence; explicit priority diagram; perf targets table (New < 100ms, Stats < 1us, Shutdown < BatchTimeout+buffer). (3) domain-entities.md — Protocol/Config/Pipeline/Stats/PipelineError/ConfigError/SharedError types with semantics + invariants; 10 public function/method contracts with idempotency + thread-safety + failure-pattern columns; package layout with 9 files + 5 test files; full API signature list; import dependency table (only OTel SDK, no internal topology/journey/synth); §6 U7 generator request: ValidConfig/AnyConfig (2 functions) with ConfigOption pattern and realistic ranges; Out of Scope section (YAML defaults parse handled by U1 in future, sampler custom, SDK internal metrics, Lint API)."
+**Context**: U4 exporter Functional Design — Step 8 GATE (awaiting explicit approval before NFR Requirements for U4).
+
