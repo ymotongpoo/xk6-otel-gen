@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ymotongpoo/xk6-otel-gen/schemas/topology.schema.json",
+  "title": "xk6-otel-gen topology schema",
+  "description": "Declarative microservice topology used by xk6-otel-gen to synthesize OpenTelemetry signals.",
+  "type": "object",
+  "required": ["services", "journeys"],
+  "additionalProperties": true,
+  "properties": {
+    "services": {
+      "description": "Map of service identifiers to service declarations.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/Service" }
+    },
+    "journeys": {
+      "description": "Map of journey names to user-action sequences.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/Journey" }
+    },
+    "faults": {
+      "description": "Optional ordered fault injection specifications.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/FaultSpec" },
+      "default": []
+    }
+  },
+  "$defs": {
+    "Duration": {
+      "description": "Go-style duration string such as 10ms or 1s, or a numeric nanosecond value.",
+      "oneOf": [
+        { "type": "string", "examples": ["10ms", "1s"] },
+        { "type": "integer", "minimum": 0, "examples": [10000000] }
+      ]
+    },
+    "Service": {
+      "description": "A virtual service or dependency node.",
+      "type": "object",
+      "required": ["kind", "operations"],
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Semantic service category.",
+          "type": "string",
+          "enum": ["application", "database", "external_api", "cache", "queue"]
+        },
+        "replicas": {
+          "description": "Number of service instances to synthesize.",
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        },
+        "language": { "description": "Implementation language metadata.", "type": "string" },
+        "framework": { "description": "Framework metadata.", "type": "string" },
+        "version": { "description": "Service version metadata.", "type": "string" },
+        "operations": {
+          "description": "Callable units owned by the service.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/Operation" }
+        }
+      },
+      "examples": [
+        {
+          "kind": "application",
+          "replicas": 2,
+          "operations": [{ "name": "GET /", "calls": [] }]
+        }
+      ]
+    },
+    "Operation": {
+      "description": "A callable endpoint, RPC method, or message handler.",
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "description": "Operation name unique within the service.", "type": "string", "minLength": 1 },
+        "calls": {
+          "description": "Ordered outgoing calls made by this operation.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/CallNode" },
+          "default": []
+        }
+      },
+      "examples": [{ "name": "GetProduct", "calls": [] }]
+    },
+    "CallNode": {
+      "description": "Either a single outgoing edge or a parallel fan-out group.",
+      "oneOf": [
+        { "$ref": "#/$defs/Edge" },
+        {
+          "type": "object",
+          "required": ["parallel"],
+          "additionalProperties": true,
+          "properties": {
+            "parallel": {
+              "description": "Child call nodes that run concurrently.",
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/CallNode" }
+            }
+          }
+        }
+      ]
+    },
+    "Edge": {
+      "description": "Directed call from the owning operation to another operation.",
+      "type": "object",
+      "required": ["to"],
+      "additionalProperties": true,
+      "properties": {
+        "to": { "$ref": "#/$defs/CallTarget" },
+        "protocol": {
+          "description": "Transport protocol.",
+          "type": "string",
+          "enum": ["http", "grpc", "messaging"]
+        },
+        "latency": { "$ref": "#/$defs/LatencyDist" },
+        "error_rate": { "description": "Failure probability in [0,1].", "type": "number", "minimum": 0, "maximum": 1 },
+        "timeout": { "$ref": "#/$defs/Duration" },
+        "retries": { "description": "Retry count.", "type": "integer", "minimum": 0 },
+        "retry_backoff": {
+          "description": "Retry delay strategy.",
+          "type": "string",
+          "enum": ["exponential", "linear", "constant"]
+        },
+        "on_failure": { "$ref": "#/$defs/RecoveryPolicy" }
+      },
+      "examples": [
+        {
+          "to": { "service": "catalog", "operation": "GetProduct" },
+          "protocol": "http",
+          "latency": { "p50": "10ms", "p95": "100ms" }
+        }
+      ]
+    },
+    "CallTarget": {
+      "description": "String reference to a target operation.",
+      "type": "object",
+      "required": ["service", "operation"],
+      "additionalProperties": true,
+      "properties": {
+        "service": { "type": "string", "minLength": 1 },
+        "operation": { "type": "string", "minLength": 1 }
+      }
+    },
+    "RecoveryPolicy": {
+      "description": "Fallback behavior when an edge fails.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "fallback": {
+          "description": "Ordered fallback edge calls.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/Edge" },
+          "default": []
+        },
+        "on_exhausted": {
+          "description": "Action after all fallbacks fail.",
+          "type": "string",
+          "enum": ["propagate", "return_default", "succeed_silently"],
+          "default": "propagate"
+        },
+        "default_response": {
+          "description": "Synthetic response used with return_default.",
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "Journey": {
+      "description": "Weighted sequence of user-action entry operations.",
+      "type": "object",
+      "required": ["steps"],
+      "additionalProperties": true,
+      "properties": {
+        "steps": {
+          "description": "Ordered journey steps.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/Step" }
+        },
+        "weight": {
+          "description": "Relative selection weight.",
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 1
+        }
+      },
+      "examples": [
+        {
+          "weight": 1,
+          "steps": [{ "service": "frontend", "operation": "GET /" }]
+        }
+      ]
+    },
+    "Step": {
+      "description": "A journey operation invocation or a journey-level parallel group.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["service", "operation"],
+          "additionalProperties": true,
+          "properties": {
+            "service": { "type": "string", "minLength": 1 },
+            "operation": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["parallel"],
+          "additionalProperties": true,
+          "properties": {
+            "parallel": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/Step" }
+            }
+          }
+        }
+      ]
+    },
+    "FaultSpec": {
+      "description": "Fault declaration targeting a service, operation, or edge.",
+      "type": "object",
+      "required": ["target", "kind"],
+      "additionalProperties": true,
+      "properties": {
+        "target": { "$ref": "#/$defs/FaultTarget" },
+        "kind": {
+          "description": "Type of injected fault.",
+          "type": "string",
+          "enum": ["latency_inflation", "error_rate_override", "disconnect", "crash"]
+        },
+        "severity": { "$ref": "#/$defs/SeverityParams" }
+      }
+    },
+    "FaultTarget": {
+      "description": "Target string: node:<svc>, operation:<svc>.<op>, or edge:<svc>.<op>-><svc>.<op>.",
+      "type": "string",
+      "oneOf": [
+        { "pattern": "^node:.+" },
+        { "pattern": "^operation:.+\\..+" },
+        { "pattern": "^edge:.+\\..+->.+\\..+" }
+      ],
+      "examples": ["node:product-db", "operation:frontend.GET /", "edge:frontend.GET /->catalog.GetProduct"]
+    },
+    "LatencyDist": {
+      "description": "Latency distribution and percentile parameters.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "distribution": {
+          "type": "string",
+          "enum": ["constant", "lognormal", "normal", "exponential"],
+          "default": "constant"
+        },
+        "p50": { "$ref": "#/$defs/Duration" },
+        "p95": { "$ref": "#/$defs/Duration" }
+      }
+    },
+    "SeverityParams": {
+      "description": "Fault severity parameters used by different fault kinds.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "probability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "multiplier": { "type": "number", "exclusiveMinimum": 0 },
+        "add": { "$ref": "#/$defs/Duration" },
+        "value": { "type": "number" }
+      }
+    }
+  },
+  "examples": [
+    {
+      "services": {
+        "frontend": {
+          "kind": "application",
+          "operations": [{ "name": "GET /", "calls": [] }]
+        }
+      },
+      "journeys": {
+        "home": {
+          "steps": [{ "service": "frontend", "operation": "GET /" }]
+        }
+      }
+    }
+  ]
+}

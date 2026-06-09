@@ -316,8 +316,8 @@
 
 ### Step 8.1 — Write the JSON Schema template
 
-- [ ] Create directory `topology/jsonschema/`.
-- [ ] Create `topology/jsonschema/topology.schema.json` per `business-rules.md` §9:
+- [x] Create directory `topology/jsonschema/`.
+- [x] Create `topology/jsonschema/topology.schema.json` per `business-rules.md` §9:
   - `$schema: https://json-schema.org/draft/2020-12/schema`
   - `$id: https://github.com/ymotongpoo/xk6-otel-gen/schemas/topology.schema.json`
   - `title`, `type: object`, `required: [services, journeys]`, `additionalProperties: true`
@@ -328,13 +328,13 @@
 
 ### Step 8.2 — Implement ExportJSONSchema
 
-- [ ] Create `topology/jsonschema.go`.
-- [ ] Add `//go:embed jsonschema/topology.schema.json` and the variable.
-- [ ] Implement `(*Schema).ExportJSONSchema() ([]byte, error)` returning a copy of the embedded bytes (defensive copy so callers can't mutate the embed).
+- [x] Create `topology/jsonschema.go`.
+- [x] Add `//go:embed jsonschema/topology.schema.json` and the variable.
+- [x] Implement `(*Schema).ExportJSONSchema() ([]byte, error)` returning a copy of the embedded bytes (defensive copy so callers can't mutate the embed).
 
 ### Step 8.3 — Build check
 
-- [ ] `go build ./topology/...` — succeeds.
+- [x] `go build ./topology/...` — succeeds.
 
 ---
 
