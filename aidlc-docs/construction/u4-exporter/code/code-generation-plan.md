@@ -169,20 +169,20 @@
 
 ### Step 3.1 — Create `exporter/resource.go`
 
-- [ ] Implement `buildResource(ctx context.Context, cfg Config) (*sdkresource.Resource, error)` per NFR-D `logical-components.md` LC-2.
-- [ ] Auto-detect: `WithFromEnv`, `WithHost`, `WithProcess`, `WithOS`.
-- [ ] If `cfg.ResourceOverrides` non-empty: build a schemaless Resource and `sdkresource.Merge(detected, override)`.
-- [ ] Function and parameter docs (internal helper, brief comment only).
+- [x] Implement `buildResource(ctx context.Context, cfg Config) (*sdkresource.Resource, error)` per NFR-D `logical-components.md` LC-2.
+- [x] Auto-detect: `WithFromEnv`, `WithHost`, `WithProcess`, `WithOS`.
+- [x] If `cfg.ResourceOverrides` non-empty: build a schemaless Resource and `sdkresource.Merge(detected, override)`.
+- [x] Function and parameter docs (internal helper, brief comment only).
 
 ### Step 3.2 — Unit test `exporter/resource_test.go`
 
-- [ ] `TestBuildResource_AutoDetectOnly` (empty ResourceOverrides → expect Resource non-nil, host/OS attrs present).
-- [ ] `TestBuildResource_OverrideWins` (override `service.name` → expect merged value).
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestBuildResource_AutoDetectOnly` (empty ResourceOverrides → expect Resource non-nil, host/OS attrs present).
+- [x] `TestBuildResource_OverrideWins` (override `service.name` → expect merged value).
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 3 commit
 
-- [ ] `git add exporter/resource.go exporter/resource_test.go && git commit -m "feat(exporter): add resource builder with override merge"`
+- [x] `git add exporter/resource.go exporter/resource_test.go && git commit -m "feat(exporter): add resource builder with override merge"`
 
 ---
 
