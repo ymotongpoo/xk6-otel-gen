@@ -2,14 +2,11 @@ package topology
 
 import "time"
 
-// AUTOGEN-MARKER-U1: This file was scaffolded during U7 (testutil/generators)
-// Code Generation. The U1 (topology) Code Generation must implement Parse,
-// Validate, MarshalYAML, ApplyFaults, Equal, and related behavior.
-
 // ServiceID is a newtype for service name identifiers.
 type ServiceID string
 
 // Schema represents the parsed and resolved root of a topology YAML file.
+// It is immutable after Parse returns; treat all fields as read-only.
 type Schema struct {
 	Services map[ServiceID]*Service `yaml:"services"`
 	Journeys map[string]*Journey    `yaml:"journeys"`

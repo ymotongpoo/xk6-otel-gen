@@ -524,16 +524,16 @@
 
 ### Step 11.1 — Example functions
 
-- [ ] Create `topology/doc_test.go` with:
+- [x] Create `topology/doc_test.go` with:
   - `ExampleParse` — minimal YAML in, walk Schema, print svc name
   - `ExampleSchema_MarshalYAML` — Parse then Marshal, demonstrate round-trip
   - `ExampleLint` — load YAML with an unknown key, print the issue
 
 ### Step 11.2 — GoDoc completeness review
 
-- [ ] Run `go doc -all ./topology/` and visually verify every public identifier has GoDoc.
-- [ ] Confirm `Schema` type GoDoc has "immutable after Parse" warning (P-IMM-1).
-- [ ] Confirm package doc.go contains the IMMUTABILITY / CONCURRENCY / ERROR REPORTING sections.
+- [x] Run `go doc -all ./topology/` and visually verify every public identifier has GoDoc.
+- [x] Confirm `Schema` type GoDoc has "immutable after Parse" warning (P-IMM-1).
+- [x] Confirm package doc.go contains the IMMUTABILITY / CONCURRENCY / ERROR REPORTING sections.
 
 ---
 
