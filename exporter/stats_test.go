@@ -257,7 +257,16 @@ func resourceMetricsWith(data metricdata.Aggregation) *metricdata.ResourceMetric
 	}
 }
 
-func assertStatsNonDecreasing(t *testing.T, prev, current Stats) {
+// failHelper is the minimal subset of *testing.T / *rapid.T needed by
+// assertStatsNonDecreasing. Using a local interface avoids coupling to
+// the full testing.TB surface (which gained methods like Attr in Go 1.25
+// that rapid.T does not yet implement).
+type failHelper interface {
+	Helper()
+	Fatalf(format string, args ...any)
+}
+
+func assertStatsNonDecreasing(t failHelper, prev, current Stats) {
 	t.Helper()
 	if current.TracesExported < prev.TracesExported ||
 		current.TracesFailed < prev.TracesFailed ||
