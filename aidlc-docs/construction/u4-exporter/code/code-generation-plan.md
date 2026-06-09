@@ -219,11 +219,11 @@
 
 ### Step 5.1 — Create `exporter/exporters.go`
 
-- [ ] Implement `buildTraceExporter(ctx, cfg, stats) (sdktrace.SpanExporter, error)` — protocol switch, returns `&tracingExporter{inner, stats}`.
-- [ ] Implement `buildMetricExporter(ctx, cfg, stats) (sdkmetric.Exporter, error)` — analogous.
-- [ ] Implement `buildLogExporter(ctx, cfg, stats) (sdklog.Exporter, error)` — analogous.
-- [ ] For each: pass Endpoint, Headers, Timeout, optional `WithInsecure()`, optional `WithCompressor("gzip")` / `WithCompression(GzipCompression)`.
-- [ ] Internal helpers, brief comments only.
+- [x] Implement `buildTraceExporter(ctx, cfg, stats) (sdktrace.SpanExporter, error)` — protocol switch, returns `&tracingExporter{inner, stats}`.
+- [x] Implement `buildMetricExporter(ctx, cfg, stats) (sdkmetric.Exporter, error)` — analogous.
+- [x] Implement `buildLogExporter(ctx, cfg, stats) (sdklog.Exporter, error)` — analogous.
+- [x] For each: pass Endpoint, Headers, Timeout, optional `WithInsecure()`, optional `WithCompressor("gzip")` / `WithCompression(GzipCompression)`.
+- [x] Internal helpers, brief comments only.
 
 ### Step 5.2 — Unit test (covered later in Phase 6 / Phase 9)
 
@@ -231,7 +231,7 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Phase 5 commit
 
-- [ ] `git add exporter/exporters.go && git commit -m "feat(exporter): add OTLP exporter factory for traces, metrics, logs"`
+- [x] `git add exporter/exporters.go && git commit -m "feat(exporter): add OTLP exporter factory for traces, metrics, logs"`
 
 ---
 
