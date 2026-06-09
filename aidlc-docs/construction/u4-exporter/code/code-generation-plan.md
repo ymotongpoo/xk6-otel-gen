@@ -444,29 +444,29 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Step 14.1 — Run full suite
 
-- [ ] `go build ./...` — succeeds.
-- [ ] `go vet ./exporter/...` — clean.
-- [ ] `go test -race -count=1 ./exporter/...` — passes.
-- [ ] `go test -cover ./exporter/...` — verify coverage ≥ 80%. If below, add targeted tests.
-- [ ] `go test -bench=BenchmarkNew -benchmem ./exporter/...` — verify per-iteration < 100 ms.
+- [x] `go build ./...` — succeeds.
+- [x] `go vet ./exporter/...` — clean.
+- [x] `go test -race -count=1 ./exporter/...` — passes.
+- [x] `go test -cover ./exporter/...` — verify coverage ≥ 80%. If below, add targeted tests.
+- [x] `go test -bench=BenchmarkNew -benchmem ./exporter/...` — verify per-iteration < 100 ms.
 
 ### Step 14.2 — Create `aidlc-docs/construction/u4-exporter/code/code-generation-summary.md`
 
-- [ ] Document: files created (with line counts), test coverage final %, BenchmarkNew result, any deviations from plan.
-- [ ] Include `git log --oneline | head -20` of the U4-related commits.
+- [x] Document: files created (with line counts), test coverage final %, BenchmarkNew result, any deviations from plan.
+- [x] Include `git log --oneline | head -20` of the U4-related commits.
 
 ### Step 14.3 — Mark all checkboxes [x]
 
-- [ ] Walk back through this plan and verify every `[ ]` is `[x]`. If any remain, address the gap (or document why intentionally skipped).
+- [x] Walk back through this plan and verify every `[ ]` is `[x]`. If any remain, address the gap (or document why intentionally skipped).
 
 ### Step 14.4 — Update `aidlc-docs/aidlc-state.md`
 
-- [ ] Set `Current Unit` to U3.
-- [ ] Add U4 to completed list.
+- [x] Set `Current Unit` to U3.
+- [x] Add U4 to completed list.
 
 ### Phase 14 commit
 
-- [ ] `git add aidlc-docs/ && git commit -m "chore(u4-exporter): finalize code-generation-summary and checkbox state"`
+- [x] `git add aidlc-docs/ && git commit -m "chore(u4-exporter): finalize code-generation-summary and checkbox state"`
 
 ---
 

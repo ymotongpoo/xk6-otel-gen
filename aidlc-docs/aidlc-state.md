@@ -62,9 +62,10 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Unit**: U4 (exporter) — NFR Design (artifacts generated, awaiting approval)
-- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → U4 [NFR-D in approval] → U3 → U2 → U5 → U6 → U8
-- **Status**: U1 fully complete. U4 FD (9052453) + NFR-R (82f7d5c) committed. NFR Design artifacts generated at aidlc-docs/construction/u4-exporter/nfr-design/ (nfr-design-patterns.md, logical-components.md). FD revision applied to remove QueueLen from Stats (verified no OTel SDK public API).
+- **Current Unit**: U3 (Signal Synthesizer)
+- **Completed Units**: U7, U1, U4
+- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → U3 → U2 → U5 → U6 → U8
+- **Status**: U4 code generation completed through Phase 14 with exporter coverage 82.5%, `go test -race -count=1 ./...` clean, and Docker-backed exporter integration passing. Next construction focus is U3.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)

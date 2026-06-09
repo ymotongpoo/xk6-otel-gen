@@ -21,7 +21,9 @@ func ExampleNew() {
 	if err != nil {
 		return
 	}
-	defer p.Shutdown(context.Background())
+	defer func() {
+		_ = p.Shutdown(context.Background())
+	}()
 
 	_ = p.TracerProvider().Tracer("example")
 	// Output:
@@ -52,7 +54,9 @@ func ExampleGetShared() {
 	if err != nil {
 		return
 	}
-	defer p.Shutdown(context.Background())
+	defer func() {
+		_ = p.Shutdown(context.Background())
+	}()
 
 	_ = p
 	// Output:
