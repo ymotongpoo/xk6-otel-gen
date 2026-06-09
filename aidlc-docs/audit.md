@@ -580,3 +580,29 @@ Generated 2 NFR Design artifacts under aidlc-docs/construction/u4-exporter/nfr-d
 **User Input**: "Continue to Next Stage"
 **AI Response**: "U4 code generation plan committed as b2d8788. Proceeding to Part 2 — handoff to Codex CLI for Phase 0..14 autonomous execution via scripts/run-codex.sh u4."
 **Context**: U4 Code Generation — Part 1 Planning approval cleared; Part 2 awaits Codex execution.
+
+
+## U4 exporter — Code Generation Completed (Codex 2-session split)
+**Timestamp**: 2026-06-09T08:50:00Z
+**User Input**: Codex 2nd run completed Phase 11-14 successfully. Final commit 9309152. 4 new commits. Coverage 82.5%. BenchmarkNew: 6.78ms/op (well under 100ms target).
+**AI Response**: "U4 Code Generation complete across 15 phases (16 commits including the chore manual fix for Phase 10 type mismatch). Codex first run delivered Phase 0-9 (10 commits) then hit capacity at Phase 10 mid-file; Claude manually fixed the *rapid.T vs *testing.T type mismatch via local failHelper interface (Go 1.25 testing.TB added Attr() which pgregory.net/rapid does not yet implement) and committed 26b565a. Codex second run delivered Phase 11-14 (4 commits: b29f01f BenchmarkNew, 3ff2be1 ValidConfig/AnyConfig, 293968e integration harness, 9309152 final summary).
+
+Notable Codex-introduced deviations (documented in code-generation-summary.md):
+1. BenchmarkNew starts an in-process OTLP/gRPC server on localhost:4317 so the bench measures Pipeline construction rather than connection-timeout. Sensible workaround.
+2. PBT tests moved to exporter/config_property_test.go (external `package exporter_test`) to break the import cycle that arose because testutil/generators imports exporter. Architecturally correct.
+3. testutil/generators/WithProtocol now polymorphic to handle both topology.Protocol and exporter.Protocol (Go has no overloading). Worth a future U7 review.
+4. Integration Collector runs as root to work around bind-mount permissions for file_exporter output. Documented; revisit later.
+
+DoD all-green:
+- go build ./...: pass
+- go vet ./exporter/...: pass
+- go test -race -count=1 ./...: pass
+- go test -cover ./exporter/...: 82.5% (above 80% target)
+- BenchmarkNew: 6.78ms/op (well under 100ms target)
+- go test -tags=integration ./exporter/integration/...: pass (with Docker)
+- golangci-lint run: pass
+- 3 Example functions present
+
+Plan Phase 10 checkboxes back-filled to reflect the manual 26b565a commit."
+
+**Context**: U4 Code Generation — Part 2 complete; awaiting Continue to Next Stage approval before moving to U3 (synth).

@@ -344,15 +344,15 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Step 10.1 — Create `exporter/stats_monotonic_test.go`
 
-- [ ] `TestStats_Monotonic_Property` using `rapid.Check`:
+- [x] `TestStats_Monotonic_Property` using `rapid.Check`:
   - For each iteration, build a Pipeline backed by a mock that may succeed or fail per call.
   - Run `nOps := rapid.IntRange(1, 20)` `simulateExport` calls (call `tracingExporter.ExportSpans` etc. with random batch sizes).
   - After each, capture `p.Stats()` and assert each `*Exported` and `*Failed` field is `>=` the previous observation.
-- [ ] All tests call `t.Parallel()`.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 10 commit
 
-- [ ] `git add exporter/stats_monotonic_test.go && git commit -m "test(exporter): add stateful PBT for Stats monotonicity (TP-U4-4)"`
+- [x] `git add exporter/stats_monotonic_test.go && git commit -m "test(exporter): add stateful PBT for Stats monotonicity (TP-U4-4)"`
 
 ---
 
