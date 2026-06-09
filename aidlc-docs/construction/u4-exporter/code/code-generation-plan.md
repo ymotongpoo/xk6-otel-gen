@@ -379,26 +379,26 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Step 12.1 — Add `testutil/generators/exporter_config.go`
 
-- [ ] Implement `ValidConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config]` per FD `domain-entities.md` §6.
-- [ ] Implement `AnyConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config]` (allows invalid values: negative timeouts, empty endpoints, MaxQueueSize < BatchSize, unknown compression, etc.).
-- [ ] Define `ConfigOption` and at least these helpers: `WithFixedEndpoint(string)`, `WithProtocol(exporter.Protocol)`, `WithMinTimeout(time.Duration)`.
-- [ ] Follow existing U7 generator style (constants, helpers, doc comments).
+- [x] Implement `ValidConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config]` per FD `domain-entities.md` §6.
+- [x] Implement `AnyConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config]` (allows invalid values: negative timeouts, empty endpoints, MaxQueueSize < BatchSize, unknown compression, etc.).
+- [x] Define `ConfigOption` and at least these helpers: `WithFixedEndpoint(string)`, `WithProtocol(exporter.Protocol)`, `WithMinTimeout(time.Duration)`.
+- [x] Follow existing U7 generator style (constants, helpers, doc comments).
 
 ### Step 12.2 — Add `testutil/generators/exporter_config_test.go`
 
-- [ ] `TestValidConfig_PassesValidate_Property` — `ValidConfig().Draw(t, "cfg")` → `cfg.Validate()` returns nil.
-- [ ] `TestAnyConfig_SometimesInvalid_Property` — `AnyConfig().Draw(...)` over many iterations occasionally fails Validate (use a counter to check distribution within rapid).
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestValidConfig_PassesValidate_Property` — `ValidConfig().Draw(t, "cfg")` → `cfg.Validate()` returns nil.
+- [x] `TestAnyConfig_SometimesInvalid_Property` — `AnyConfig().Draw(...)` over many iterations occasionally fails Validate (use a counter to check distribution within rapid).
+- [x] All tests call `t.Parallel()`.
 
 ### Step 12.3 — Un-skip Phase 2 PBT tests
 
-- [ ] In `exporter/config_test.go`, remove `t.Skip("waits for ValidConfig generator from Phase 12")` from `TestMergeWith_OverrideWins_Property` and `TestMergeWith_Idempotent_Property`.
-- [ ] Import `github.com/ymotongpoo/xk6-otel-gen/testutil/generators` in `config_test.go` if not already.
-- [ ] Run `go test -race ./exporter/...` — all PBT tests pass.
+- [x] In `exporter/config_test.go`, remove `t.Skip("waits for ValidConfig generator from Phase 12")` from `TestMergeWith_OverrideWins_Property` and `TestMergeWith_Idempotent_Property`.
+- [x] Import `github.com/ymotongpoo/xk6-otel-gen/testutil/generators` in `config_test.go` if not already.
+- [x] Run `go test -race ./exporter/...` — all PBT tests pass.
 
 ### Phase 12 commit
 
-- [ ] `git add testutil/generators/exporter_config.go testutil/generators/exporter_config_test.go exporter/config_test.go && git commit -m "feat(testutil): add ValidConfig and AnyConfig generators for U4 PBT"`
+- [x] `git add testutil/generators/exporter_config.go testutil/generators/exporter_config_test.go exporter/config_test.go && git commit -m "feat(testutil): add ValidConfig and AnyConfig generators for U4 PBT"`
 
 ---
 

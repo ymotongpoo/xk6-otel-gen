@@ -3,12 +3,32 @@ package generators
 import (
 	"time"
 
+	"github.com/ymotongpoo/xk6-otel-gen/exporter"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 	"pgregory.net/rapid"
 )
 
 // EdgeOption mutates edge-generation parameters.
-type EdgeOption func(*edgeOptions)
+type EdgeOption interface {
+	applyEdgeOption(*edgeOptions)
+}
+
+type edgeOptionFunc func(*edgeOptions)
+
+func (f edgeOptionFunc) applyEdgeOption(o *edgeOptions) {
+	f(o)
+}
+
+type protocolOption struct {
+	edge   *topology.Protocol
+	config *exporter.Protocol
+}
+
+func (o protocolOption) applyEdgeOption(edgeOpts *edgeOptions) {
+	if o.edge != nil {
+		edgeOpts.protocol = o.edge
+	}
+}
 
 type edgeOptions struct {
 	protocol        *topology.Protocol
@@ -22,45 +42,54 @@ type edgeOptions struct {
 func applyEdgeOptions(opts []EdgeOption) edgeOptions {
 	o := edgeOptions{}
 	for _, opt := range opts {
-		opt(&o)
+		opt.applyEdgeOption(&o)
 	}
 	return o
 }
 
-// WithProtocol fixes the generated edge protocol.
-func WithProtocol(p topology.Protocol) EdgeOption {
-	return func(o *edgeOptions) {
-		o.protocol = &p
+type protocolValue interface {
+	topology.Protocol | exporter.Protocol
+}
+
+// WithProtocol fixes the generated protocol for edge or exporter config generators.
+func WithProtocol[P protocolValue](p P) protocolOption {
+	switch value := any(p).(type) {
+	case topology.Protocol:
+		return protocolOption{edge: &value}
+	case exporter.Protocol:
+		return protocolOption{config: &value}
+	default:
+		return protocolOption{}
 	}
 }
 
 // WithLatency fixes the generated edge latency pair.
 func WithLatency(p50, p95 time.Duration) EdgeOption {
-	return func(o *edgeOptions) {
+	return edgeOptionFunc(func(o *edgeOptions) {
 		o.p50 = &p50
 		o.p95 = &p95
-	}
+	})
 }
 
 // WithErrorRate fixes the generated edge error rate.
 func WithErrorRate(r float64) EdgeOption {
-	return func(o *edgeOptions) {
+	return edgeOptionFunc(func(o *edgeOptions) {
 		o.errorRate = &r
-	}
+	})
 }
 
 // WithOnFailure fixes the generated edge recovery policy.
 func WithOnFailure(rp *topology.RecoveryPolicy) EdgeOption {
-	return func(o *edgeOptions) {
+	return edgeOptionFunc(func(o *edgeOptions) {
 		o.onFailure = rp
-	}
+	})
 }
 
 // WithoutRecovery prevents ValidEdge from synthesizing a nested recovery policy.
 func WithoutRecovery() EdgeOption {
-	return func(o *edgeOptions) {
+	return edgeOptionFunc(func(o *edgeOptions) {
 		o.withoutRecovery = true
-	}
+	})
 }
 
 // ValidEdge returns a directed edge between from and to with valid domain ranges.

@@ -244,18 +244,6 @@ func TestConfigFromEnv_InvalidValuesRemainInvalid(t *testing.T) {
 	}
 }
 
-func TestMergeWith_OverrideWins_Property(t *testing.T) {
-	t.Parallel()
-	t.Skip("waits for ValidConfig generator from Phase 12")
-	// TODO(agent): Unskip with generators.ValidConfig once Phase 12 adds U4 generators.
-}
-
-func TestMergeWith_Idempotent_Property(t *testing.T) {
-	t.Parallel()
-	t.Skip("waits for ValidConfig generator from Phase 12")
-	// TODO(agent): Unskip with generators.ValidConfig once Phase 12 adds U4 generators.
-}
-
 func withConfig(base Config, mutate func(*Config)) Config {
 	mutate(&base)
 	return base
