@@ -285,14 +285,14 @@
 
 ### Step 6.1 — Implement Equal
 
-- [ ] Create `topology/equal.go`.
-- [ ] Implement `Equal(a, b *Schema) bool` per `business-logic-model.md` §4 and `business-rules.md` §4.
-- [ ] Implement helpers: `equalServices`, `equalService`, `equalOperations`, `equalOperation`, `equalCalls`, `equalCallNode`, `equalEdge`, `equalRecoveryPolicy`, `equalJourneys`, `equalJourney`, `equalSteps`, `equalStep`, `equalFaults`, `equalFaultSpec`, `equalFaultTarget`, `equalLatency`, `equalSeverity`.
-- [ ] Use `identifyOp` (from validate.go) for *Operation comparison via "<svc>.<op>" string.
+- [x] Create `topology/equal.go`.
+- [x] Implement `Equal(a, b *Schema) bool` per `business-logic-model.md` §4 and `business-rules.md` §4.
+- [x] Implement helpers: `equalServices`, `equalService`, `equalOperations`, `equalOperation`, `equalCalls`, `equalCallNode`, `equalEdge`, `equalRecoveryPolicy`, `equalJourneys`, `equalJourney`, `equalSteps`, `equalStep`, `equalFaults`, `equalFaultSpec`, `equalFaultTarget`, `equalLatency`, `equalSeverity`.
+- [x] Use `identifyOp` (from validate.go) for *Operation comparison via "<svc>.<op>" string.
 
 ### Step 6.2 — Build check
 
-- [ ] `go build ./topology/...` — succeeds.
+- [x] `go build ./topology/...` — succeeds.
 
 ---
 
