@@ -10,9 +10,11 @@ implementation agents (Codex CLI / Cursor Composer) against a unit's
   CLI batch via `codex exec`. Best for phases requiring deep algorithmic
   reasoning (Parse pipelines, DAG checks, multi-file new construction).
 - **`run-cursor.sh <unit-id> [--phases <range>] [--dry-run]`** — Cursor
-  Composer batch via `cursor agent -p "<prompt>"`. Best for additive,
-  pattern-conforming work (extending existing generators in U7 style,
-  adding tests that mirror established patterns, etc.).
+  Composer batch via `agent -p "<prompt>"` (the Cursor Agent CLI binary
+  is named `agent`). Best for additive, pattern-conforming work
+  (extending existing generators in U7 style, adding tests that mirror
+  established patterns, etc.). Override the binary name via `CURSOR_BIN`
+  env var if your installation differs.
 
 Both scripts share the same contract: locate the plan at
 `aidlc-docs/construction/<unit-id>-*/code/code-generation-plan.md`,

@@ -3,7 +3,7 @@
 # code-generation-plan.md by Cursor Composer (Agent mode).
 #
 # Counterpart to scripts/run-codex.sh, but for Cursor. Cursor's batch
-# capability is invoked via `cursor agent -p "<prompt>"` (one-shot,
+# capability is invoked via `agent -p "<prompt>"` (one-shot,
 # non-interactive). This script wraps that call with the same hand-off
 # contract: plan reference, role boundaries, Conventional Commits per
 # Phase, audit append on ambiguity.
@@ -20,14 +20,11 @@
 #     ./scripts/run-cursor.sh u1                  # all phases (rarely used)
 #     ./scripts/run-cursor.sh u1 --dry-run        # preflight only
 #
-# Cursor CLI binary detection:
-#   This script tries the following invocations in order until one
-#   succeeds with --help (or --version):
-#     1. cursor agent -p "..."
-#     2. cursor-agent -p "..."
-#   If your installation differs, set CURSOR_BIN="<binary>" and
-#   CURSOR_SUBCMD="<sub-command>" env vars. Examples:
-#     CURSOR_BIN=cursor-agent CURSOR_SUBCMD="" ./scripts/run-cursor.sh u1 --phases 13
+# Cursor CLI binary:
+#   The Cursor Agent CLI binary is `agent` (no sub-command). This script
+#   invokes `agent -p "<prompt>"`. If your installation uses a different
+#   binary name, set CURSOR_BIN="<binary>" env var. Example:
+#     CURSOR_BIN=/opt/cursor/bin/agent ./scripts/run-cursor.sh u1 --phases 13
 
 set -euo pipefail
 
@@ -54,32 +51,13 @@ usage() {
   sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
-# Detect Cursor CLI binary.
-# Result variables set: CURSOR_BIN, CURSOR_SUBCMD
-detect_cursor_cli() {
-  # Honor env-var override first.
-  if [[ -n "${CURSOR_BIN:-}" ]]; then
-    command -v "${CURSOR_BIN}" >/dev/null 2>&1 \
-      || die "CURSOR_BIN=${CURSOR_BIN} not on PATH"
-    : "${CURSOR_SUBCMD:=}"
-    log "using user-specified ${CURSOR_BIN} ${CURSOR_SUBCMD}"
-    return 0
-  fi
-  # Try `cursor agent`.
-  if command -v cursor >/dev/null 2>&1; then
-    if cursor agent --help >/dev/null 2>&1; then
-      CURSOR_BIN="cursor"
-      CURSOR_SUBCMD="agent"
-      return 0
-    fi
-  fi
-  # Try `cursor-agent`.
-  if command -v cursor-agent >/dev/null 2>&1; then
-    CURSOR_BIN="cursor-agent"
-    CURSOR_SUBCMD=""
-    return 0
-  fi
-  die "Cursor CLI not found. Install Cursor (with CLI enabled) or set CURSOR_BIN. See scripts/README.md."
+# Resolve Cursor CLI binary. Default: `agent`.
+# Override via CURSOR_BIN env var if your installation differs.
+resolve_cursor_bin() {
+  : "${CURSOR_BIN:=agent}"
+  command -v "${CURSOR_BIN}" >/dev/null 2>&1 \
+    || die "Cursor CLI binary '${CURSOR_BIN}' not on PATH. Install Cursor (with CLI enabled), or set CURSOR_BIN env var to the correct binary name. See scripts/README.md."
+  log "cursor cli: ${CURSOR_BIN}"
 }
 
 # ----------------------------------------------------------------------------
@@ -133,7 +111,7 @@ log "phases: ${PHASES}"
 
 command -v git >/dev/null 2>&1 || die "git is required"
 command -v go  >/dev/null 2>&1 || die "go toolchain is required"
-detect_cursor_cli
+resolve_cursor_bin
 
 [[ -f "${PLAN_PATH}" ]] || die "plan file missing: ${PLAN_PATH}"
 [[ -f "AGENTS.md" ]]    || die "AGENTS.md missing"
@@ -145,7 +123,6 @@ fi
 BASELINE_COMMIT="$(git rev-parse HEAD)"
 BASELINE_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 log "baseline branch=${BASELINE_BRANCH} commit=${BASELINE_COMMIT:0:10}"
-log "cursor cli: ${CURSOR_BIN} ${CURSOR_SUBCMD}"
 
 if "${DRY_RUN}"; then
   log "--dry-run: preflight OK, exiting without launching Cursor"
@@ -217,7 +194,7 @@ PROMPT_EOF
 # ----------------------------------------------------------------------------
 # Launch Cursor
 # ----------------------------------------------------------------------------
-log "launching ${CURSOR_BIN} ${CURSOR_SUBCMD} -p '<prompt>'"
+log "launching ${CURSOR_BIN} -p '<prompt>'"
 log "log file: ${LOG_FILE}"
 log "hard timeout: ${CURSOR_TIMEOUT}s"
 
@@ -230,7 +207,7 @@ log "hard timeout: ${CURSOR_TIMEOUT}s"
   echo "  plan:            ${PLAN_PATH}"
   echo "  baseline branch: ${BASELINE_BRANCH}"
   echo "  baseline commit: ${BASELINE_COMMIT}"
-  echo "  cursor cli:      ${CURSOR_BIN} ${CURSOR_SUBCMD}"
+  echo "  cursor cli:      ${CURSOR_BIN}"
   echo "  timeout:         ${CURSOR_TIMEOUT}s"
   echo "=================================================================="
   echo
@@ -242,17 +219,12 @@ log "hard timeout: ${CURSOR_TIMEOUT}s"
   echo
 } | tee -a "${LOG_FILE}"
 
-# Build the argv. Cursor agent expects:
-#   cursor agent -p "<prompt>"      (or)
-#   cursor-agent -p "<prompt>"
-# Note: some Cursor CLI versions support stdin instead of -p; if -p fails
-# in your environment, swap to: `${CURSOR_BIN} ${CURSOR_SUBCMD} <<< "${PROMPT}"`
-CURSOR_ARGV=("${CURSOR_BIN}")
-[[ -n "${CURSOR_SUBCMD}" ]] && CURSOR_ARGV+=("${CURSOR_SUBCMD}")
-CURSOR_ARGV+=("-p" "${PROMPT}")
-
+# Cursor Agent invocation: `agent -p "<prompt>"`. If your installation
+# uses a different binary, override via the CURSOR_BIN env var.
 set +e
-timeout --kill-after=30s "${CURSOR_TIMEOUT}" "${CURSOR_ARGV[@]}" 2>&1 | tee -a "${LOG_FILE}"
+timeout --kill-after=30s "${CURSOR_TIMEOUT}" \
+  "${CURSOR_BIN}" -p "${PROMPT}" \
+  2>&1 | tee -a "${LOG_FILE}"
 CURSOR_EXIT=${PIPESTATUS[0]}
 set -e
 

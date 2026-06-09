@@ -2,7 +2,7 @@
 
 > **This file is the Single Source of Truth (SSOT) for the U1 implementation.**
 >
-> **Audience**: Codex CLI (`gpt-5.5 xhigh`) for autonomous batch execution + Cursor Composer 2.5 for both interactive editing AND batch editing via `cursor agent -p "<prompt>"`. Read `AGENTS.md` for role boundaries and the agent-selection guideline before starting.
+> **Audience**: Codex CLI (`gpt-5.5 xhigh`) for autonomous batch execution + Cursor Composer 2.5 for both interactive editing AND batch editing via `agent -p "<prompt>"` (Cursor Agent CLI binary is `agent`). Read `AGENTS.md` for role boundaries and the agent-selection guideline before starting.
 >
 > **Recommended agent per Phase** (see AGENTS.md §2 "Codex と Cursor の使い分けガイドライン"):
 > - **Phase 0-12 → Codex** (deep algorithmic reasoning, long-running, multi-file new construction). Run via `scripts/run-codex.sh u1` (or the older `scripts/run-codex-u7.sh` style for one-off).
@@ -583,7 +583,7 @@
 ---
 
 ## Phase 13 — Extend U7 testutil/generators with 18 new generators
-**Recommended agent**: **Cursor Composer 2.5 (batch mode via `cursor agent -p`)** — this phase is **additive, pattern-conforming work**: the 18 new generators follow the established U7 generator style (atomic helpers, `Valid<Type>` / `Any<Type>` naming, functional options, R-V/R-A invariants). Cursor's codebase-aware nature makes it ideal for matching existing style precisely. Run via `scripts/run-cursor.sh u1 --phases 13`.
+**Recommended agent**: **Cursor Composer 2.5 (batch mode via `agent -p`)** — this phase is **additive, pattern-conforming work**: the 18 new generators follow the established U7 generator style (atomic helpers, `Valid<Type>` / `Any<Type>` naming, functional options, R-V/R-A invariants). Cursor's codebase-aware nature makes it ideal for matching existing style precisely. Run via `scripts/run-cursor.sh u1 --phases 13`.
 
 > Per FD `domain-entities.md` §6 (Q13=A). These 9 Valid + 9 Any pairs are added to the existing U7 package without disturbing existing generators.
 

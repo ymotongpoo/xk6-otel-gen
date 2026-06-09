@@ -22,7 +22,7 @@
 |---|---|---|---|
 | **Claude Code** | プラン・設計・要件・テスタブルプロパティ識別。**コードは書かない** (例外: 設定/スキャフォルドファイルのみ) | `aidlc-docs/**` の全 Markdown ドキュメント | 対話セッション |
 | **OpenAI Codex CLI** (gpt-5.5 xhigh) | **長時間・自律的なバッチ実装**。1 ユニット丸ごとの Go コード/テストコード生成、PBT 実装、grunt work、深い algorithmic reasoning | リポジトリのソースツリー (Go パッケージ、テスト、サンプル) | `codex exec` (non-interactive) |
-| **Cursor Composer 2.5** | **対話的編集** または **batch 編集**。Codex が出力したコードの微調整、レビュー反映、リファクタリング、デバッグ。加えて **既存コードパターンに整合する追加実装** (例: 既に確立した generator スタイルに沿って新規 generator を追記)。codebase-aware なため、既存規約に揃える作業に強い | リポジトリのソースツリー (差分単位の編集または小〜中規模バッチ) | エディタ内対話 / `cursor agent -p "<prompt>"` (one-shot non-interactive) |
+| **Cursor Composer 2.5** | **対話的編集** または **batch 編集**。Codex が出力したコードの微調整、レビュー反映、リファクタリング、デバッグ。加えて **既存コードパターンに整合する追加実装** (例: 既に確立した generator スタイルに沿って新規 generator を追記)。codebase-aware なため、既存規約に揃える作業に強い | リポジトリのソースツリー (差分単位の編集または小〜中規模バッチ) | エディタ内対話 / `agent -p "<prompt>"` (one-shot non-interactive、Cursor Agent CLI バイナリは `agent`) |
 
 ### Codex と Cursor の使い分けガイドライン
 
