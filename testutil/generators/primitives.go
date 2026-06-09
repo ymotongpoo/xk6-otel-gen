@@ -150,3 +150,23 @@ func ValidProtocol() *rapid.Generator[topology.Protocol] {
 		}).Draw(t, "protocol")
 	})
 }
+
+// ValidErrorRate is an alias for ValidProbability (edge error_rate ∈ [0, 1]).
+func ValidErrorRate() *rapid.Generator[float64] {
+	return ValidProbability()
+}
+
+// AnyErrorRate is an alias for AnyProbability.
+func AnyErrorRate() *rapid.Generator[float64] {
+	return AnyProbability()
+}
+
+// ValidTimeoutDuration is an alias for ValidTimeout.
+func ValidTimeoutDuration() *rapid.Generator[time.Duration] {
+	return ValidTimeout()
+}
+
+// AnyTimeoutDuration is an alias for AnyTimeout.
+func AnyTimeoutDuration() *rapid.Generator[time.Duration] {
+	return AnyTimeout()
+}

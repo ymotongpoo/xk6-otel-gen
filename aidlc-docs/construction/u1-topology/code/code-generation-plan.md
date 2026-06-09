@@ -589,33 +589,33 @@
 
 ### Step 13.1 — Add primitives / sub-generators (LC-2 of U7)
 
-- [ ] Add to `testutil/generators/primitives.go`:
+- [x] Add to `testutil/generators/primitives.go`:
   - `ValidErrorRate / AnyErrorRate` (alias of ValidProbability / AnyProbability if not already present)
   - `ValidTimeoutDuration / AnyTimeoutDuration` (already exist as ValidTimeout / AnyTimeout)
 
 ### Step 13.2 — Add Operation / Edge generators
 
-- [ ] Create `testutil/generators/operation.go`:
+- [x] Create `testutil/generators/operation.go`:
   - `ValidOperation(svc *topology.Service, opts ...OperationOption) *rapid.Generator[*topology.Operation]`
   - `AnyOperation(svc *topology.Service, opts ...OperationOption) *rapid.Generator[*topology.Operation]`
   - `OperationOption` type with `MaxCalls(n int)`, `WithName(s string)`
-- [ ] Create `testutil/generators/edge.go`:
+- [x] Create `testutil/generators/edge.go`:
   - `ValidEdge(from, to *topology.Operation, opts ...EdgeOption) *rapid.Generator[*topology.Edge]`
   - `AnyEdge(from, to *topology.Operation, opts ...EdgeOption) *rapid.Generator[*topology.Edge]`
   - `EdgeOption` type with `WithProtocol(p)`, `WithLatency(p50, p95 time.Duration)`, `WithErrorRate(r)`, `WithOnFailure(rp *topology.RecoveryPolicy)`
 
 ### Step 13.3 — Add CallNode / RecoveryPolicy generators
 
-- [ ] Create `testutil/generators/callnode.go`:
+- [x] Create `testutil/generators/callnode.go`:
   - `ValidCallNode(from *topology.Operation, target *topology.Operation, opts ...CallNodeOption) *rapid.Generator[*topology.CallNode]`
   - `AnyCallNode(...)` — including degenerate (both Edge and Parallel set, or neither)
-- [ ] Create `testutil/generators/recovery.go`:
+- [x] Create `testutil/generators/recovery.go`:
   - `ValidRecoveryPolicy(from *topology.Operation, fallbackTargets []*topology.Operation, opts ...RecoveryPolicyOption) *rapid.Generator[*topology.RecoveryPolicy]`
   - `AnyRecoveryPolicy(...)`
 
 ### Step 13.4 — Add Journey / Step generators
 
-- [ ] Create `testutil/generators/journey.go`:
+- [x] Create `testutil/generators/journey.go`:
   - `ValidJourney(schema *topology.Schema, opts ...JourneyOption) *rapid.Generator[*topology.Journey]`
   - `AnyJourney(...)`
   - `ValidStep(schema *topology.Schema, opts ...StepOption) *rapid.Generator[*topology.Step]`
@@ -623,7 +623,7 @@
 
 ### Step 13.5 — Add Fault generators
 
-- [ ] Create `testutil/generators/fault.go`:
+- [x] Create `testutil/generators/fault.go`:
   - `ValidFaultSpec(schema *topology.Schema, opts ...FaultOption) *rapid.Generator[topology.FaultSpec]`
   - `AnyFaultSpec(...)`
   - `ValidFaultTarget(schema *topology.Schema, opts ...FaultTargetOption) *rapid.Generator[topology.FaultTarget]`
@@ -633,7 +633,7 @@
 
 ### Step 13.6 — Update U7's domain-entities.md §8 with this completed entry
 
-- [ ] Append to `aidlc-docs/construction/u7-testutil/functional-design/domain-entities.md` §8:
+- [x] Append to `aidlc-docs/construction/u7-testutil/functional-design/domain-entities.md` §8:
   ```markdown
   ### Request from U1 FD (COMPLETED in U1 Code Generation Phase 13)
   - ValidOperation, AnyOperation
@@ -650,9 +650,9 @@
 
 ### Step 13.7 — Test verification
 
-- [ ] `go test -race -count=1 ./testutil/generators/...` — passes
-- [ ] `go test -cover ./testutil/generators/...` — ≥ 80% (was 88.5% before; should stay above)
-- [ ] **Acceptance**: All 18 new generator pairs exist and have at least a smoke test.
+- [x] `go test -race -count=1 ./testutil/generators/...` — passes
+- [x] `go test -cover ./testutil/generators/...` — ≥ 80% (was 88.5% before; should stay above)
+- [x] **Acceptance**: All 18 new generator pairs exist and have at least a smoke test.
 
 ---
 

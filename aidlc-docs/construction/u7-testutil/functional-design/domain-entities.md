@@ -325,18 +325,14 @@ ServiceOption:
 
 このセクションは **U1 以降の各ユニット FD で書かれる "U7 への追加リクエスト" を統合する場所**。各ユニット FD は自分が必要とするジェネレータを以下に追記する責任を持つ (Q8=A 規約)。
 
-**現状: 空** (本書は U7 初期 FD 時点、まだ他ユニットの FD は走っていない)
-
-(以後、U1 FD 開始時に "U1 → U7 リクエスト" としてエントリ追加 — テンプレートは下記)
-
-```markdown
-### Request from U1 FD (TODO: 後で記入)
+### Request from U1 FD (COMPLETED in U1 Code Generation Phase 13)
 - ValidOperation, AnyOperation
-- ValidCallNode, AnyCallNode
 - ValidEdge, AnyEdge
+- ValidCallNode, AnyCallNode
 - ValidRecoveryPolicy, AnyRecoveryPolicy
-- ValidJourney, ValidStep
-- ValidFaultSpec, ValidFaultTarget
-- ValidFaultOverlay
-- 根拠: [U1 FD の Testable Properties セクション参照]
-```
+- ValidJourney, AnyJourney
+- ValidStep, AnyStep
+- ValidFaultSpec, AnyFaultSpec
+- ValidFaultTarget, AnyFaultTarget
+- ValidFaultOverlay, AnyFaultOverlay
+- Files added: testutil/generators/{operation,edge,callnode,recovery,journey,fault}.go
