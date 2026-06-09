@@ -110,22 +110,22 @@
 
 ### Step 1.1 — Create `exporter/errors.go`
 
-- [ ] Define `PipelineError` with `Stage string`, `Inner error`, `Error()`, `Unwrap()`.
-- [ ] Define `ConfigError` with `Field string`, `Value any`, `Message string`, `Error()`. (No `Unwrap` needed — leaf error.)
-- [ ] Define `SharedError` with `Reason string`, `Inner error`, `Error()`, `Unwrap()`.
-- [ ] All three have GoDoc comments referencing their use sites (`New`, `Config.Validate`, `GetShared/SetShared`).
+- [x] Define `PipelineError` with `Stage string`, `Inner error`, `Error()`, `Unwrap()`.
+- [x] Define `ConfigError` with `Field string`, `Value any`, `Message string`, `Error()`. (No `Unwrap` needed — leaf error.)
+- [x] Define `SharedError` with `Reason string`, `Inner error`, `Error()`, `Unwrap()`.
+- [x] All three have GoDoc comments referencing their use sites (`New`, `Config.Validate`, `GetShared/SetShared`).
 
 ### Step 1.2 — Unit test `exporter/errors_test.go`
 
-- [ ] `TestPipelineError_Error` checks formatting.
-- [ ] `TestPipelineError_Unwrap` checks `errors.Is` integration.
-- [ ] `TestConfigError_Error` checks formatting with various Value types.
-- [ ] `TestSharedError_Error` checks both nil and non-nil Inner.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestPipelineError_Error` checks formatting.
+- [x] `TestPipelineError_Unwrap` checks `errors.Is` integration.
+- [x] `TestConfigError_Error` checks formatting with various Value types.
+- [x] `TestSharedError_Error` checks both nil and non-nil Inner.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 1 commit
 
-- [ ] `git add exporter/errors.go exporter/errors_test.go && git commit -m "feat(exporter): add typed error hierarchy"`
+- [x] `git add exporter/errors.go exporter/errors_test.go && git commit -m "feat(exporter): add typed error hierarchy"`
 
 ---
 
