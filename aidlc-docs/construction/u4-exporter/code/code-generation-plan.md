@@ -136,31 +136,31 @@
 
 ### Step 2.1 — Create `exporter/config.go`
 
-- [ ] Define `Protocol int` with constants `ProtocolGRPC`, `ProtocolHTTP`.
-- [ ] Implement `(Protocol).String() string` returning `"grpc"` / `"http"`.
-- [ ] Define `Config` struct exactly as in FD `domain-entities.md` §1.2.
-- [ ] Define unexported `defaultConfig` var with built-in defaults from `business-rules.md` §10.
-- [ ] Implement unexported `(Config).fillDefaults() Config`.
-- [ ] Implement `(Config).Validate() error` returning `errors.Join` of `*ConfigError`s per `business-rules.md` §1.1.
-- [ ] Implement `(Config).MergeWith(override Config) Config` per `business-rules.md` §2.
-- [ ] Implement `ConfigFromEnv() Config` per `business-rules.md` §2.4 (signal-specific priority, OTEL_EXPORTER_OTLP_HEADERS comma-split, OTEL_EXPORTER_OTLP_TIMEOUT in ms, OTEL_EXPORTER_OTLP_PROTOCOL parsing `"grpc"` / `"http/protobuf"`).
-- [ ] All identifiers have GoDoc.
+- [x] Define `Protocol int` with constants `ProtocolGRPC`, `ProtocolHTTP`.
+- [x] Implement `(Protocol).String() string` returning `"grpc"` / `"http"`.
+- [x] Define `Config` struct exactly as in FD `domain-entities.md` §1.2.
+- [x] Define unexported `defaultConfig` var with built-in defaults from `business-rules.md` §10.
+- [x] Implement unexported `(Config).fillDefaults() Config`.
+- [x] Implement `(Config).Validate() error` returning `errors.Join` of `*ConfigError`s per `business-rules.md` §1.1.
+- [x] Implement `(Config).MergeWith(override Config) Config` per `business-rules.md` §2.
+- [x] Implement `ConfigFromEnv() Config` per `business-rules.md` §2.4 (signal-specific priority, OTEL_EXPORTER_OTLP_HEADERS comma-split, OTEL_EXPORTER_OTLP_TIMEOUT in ms, OTEL_EXPORTER_OTLP_PROTOCOL parsing `"grpc"` / `"http/protobuf"`).
+- [x] All identifiers have GoDoc.
 
 ### Step 2.2 — Unit test `exporter/config_test.go`
 
-- [ ] `TestProtocol_String` (table-driven).
-- [ ] `TestConfig_Validate_OK` (well-formed config).
-- [ ] `TestConfig_Validate_Errors` (table-driven: each invalid field).
-- [ ] `TestConfig_MergeWith_Examples` (handful of example-based cases including header replacement semantics).
-- [ ] `TestConfig_fillDefaults_Examples` (zero values get filled).
-- [ ] `TestConfigFromEnv_*` (use `t.Setenv` for each env var).
-- [ ] **PBT TP-U4-1**: `TestMergeWith_OverrideWins_Property` using `rapid.Check` + `generators.ValidConfig()` (will be added in Phase 12 — for now, mark this test with a `t.Skip("waits for ValidConfig generator from Phase 12")` and a TODO; un-skip in Phase 12).
-- [ ] **PBT TP-U4-2**: `TestMergeWith_Idempotent_Property` similar skip-until-Phase-12.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestProtocol_String` (table-driven).
+- [x] `TestConfig_Validate_OK` (well-formed config).
+- [x] `TestConfig_Validate_Errors` (table-driven: each invalid field).
+- [x] `TestConfig_MergeWith_Examples` (handful of example-based cases including header replacement semantics).
+- [x] `TestConfig_fillDefaults_Examples` (zero values get filled).
+- [x] `TestConfigFromEnv_*` (use `t.Setenv` for each env var).
+- [x] **PBT TP-U4-1**: `TestMergeWith_OverrideWins_Property` using `rapid.Check` + `generators.ValidConfig()` (will be added in Phase 12 — for now, mark this test with a `t.Skip("waits for ValidConfig generator from Phase 12")` and a TODO; un-skip in Phase 12).
+- [x] **PBT TP-U4-2**: `TestMergeWith_Idempotent_Property` similar skip-until-Phase-12.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 2 commit
 
-- [ ] `git add exporter/config.go exporter/config_test.go && git commit -m "feat(exporter): add Config with validate, merge, and env loader"`
+- [x] `git add exporter/config.go exporter/config_test.go && git commit -m "feat(exporter): add Config with validate, merge, and env loader"`
 
 ---
 
