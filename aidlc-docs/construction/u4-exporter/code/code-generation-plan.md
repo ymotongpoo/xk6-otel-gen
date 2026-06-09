@@ -361,14 +361,14 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Step 11.1 — Create `exporter/bench_test.go`
 
-- [ ] `BenchmarkNew` — fixed `benchConfig` (gRPC, localhost:4317, Insecure, Timeout 5s, BatchSize 512, MaxQueueSize 2048, BatchTimeout 1s).
-- [ ] Each iteration: `New(benchConfig)` → `p.Shutdown(context.Background())`.
-- [ ] `b.ReportAllocs()`.
-- [ ] Verify locally: `go test -bench=BenchmarkNew -benchmem ./exporter/...` runs in well under 100 ms per iteration.
+- [x] `BenchmarkNew` — fixed `benchConfig` (gRPC, localhost:4317, Insecure, Timeout 5s, BatchSize 512, MaxQueueSize 2048, BatchTimeout 1s).
+- [x] Each iteration: `New(benchConfig)` → `p.Shutdown(context.Background())`.
+- [x] `b.ReportAllocs()`.
+- [x] Verify locally: `go test -bench=BenchmarkNew -benchmem ./exporter/...` runs in well under 100 ms per iteration.
 
 ### Phase 11 commit
 
-- [ ] `git add exporter/bench_test.go && git commit -m "test(exporter): add BenchmarkNew with fixed Config"`
+- [x] `git add exporter/bench_test.go && git commit -m "test(exporter): add BenchmarkNew with fixed Config"`
 
 ---
 
