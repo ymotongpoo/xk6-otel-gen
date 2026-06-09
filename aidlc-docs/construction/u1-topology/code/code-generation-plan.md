@@ -541,17 +541,17 @@
 
 ### Step 12.1 — Full DoD battery
 
-- [ ] `go build ./...` — passes
-- [ ] `go test -race -count=1 ./...` — passes
-- [ ] `go test -cover ./topology/...` — ≥ 80%
-- [ ] `golangci-lint run ./...` — no warnings (if not installed, note in summary)
-- [ ] `go vet ./...` — no warnings
-- [ ] No `TODO(agent):` markers in `topology/` or `testutil/generators/`
-- [ ] `go list -deps ./topology/...` includes `gopkg.in/yaml.v3` but does NOT include `log/*` (NFR-U1-4)
+- [x] `go build ./...` — passes
+- [x] `go test -race -count=1 ./...` — passes
+- [x] `go test -cover ./topology/...` — ≥ 80%
+- [x] `golangci-lint run ./...` — no warnings (if not installed, note in summary)
+- [x] `go vet ./...` — no warnings
+- [x] No `TODO(agent):` markers in `topology/` or `testutil/generators/`
+- [x] `go list -deps ./topology/...` includes `gopkg.in/yaml.v3` but does NOT include `log/*` (NFR-U1-4)
 
 ### Step 12.2 — Write `code-generation-summary.md`
 
-- [ ] Create `aidlc-docs/construction/u1-topology/code/code-generation-summary.md` containing:
+- [x] Create `aidlc-docs/construction/u1-topology/code/code-generation-summary.md` containing:
   - List of files created/modified (paths)
   - LOC per file (rough)
   - `BenchmarkParse` result (ns/op, B/op, allocs/op)
@@ -563,12 +563,12 @@
 
 ### Step 12.3 — Mark all checkboxes [x]
 
-- [ ] Mark all `[ ]` items in this document as `[x]` (including this one).
-- [ ] Update `aidlc-docs/aidlc-state.md` Current Status: "U1 complete, ready for U4."
+- [x] Mark all `[ ]` items in this document as `[x]` (including this one).
+- [x] Update `aidlc-docs/aidlc-state.md` Current Status: "U1 complete, ready for U4."
 
 ### Step 12.4 — Audit log entry
 
-- [ ] Append to `aidlc-docs/audit.md`:
+- [x] Append to `aidlc-docs/audit.md`:
   ```
   ## U1 topology — Code Generation Complete (by implementation agent)
   **Timestamp**: <ISO 8601 now>

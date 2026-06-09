@@ -62,9 +62,9 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Unit**: U1 (topology) — Functional Design (Part 1: plan + questions awaiting answers)
-- **Construction Progress**: [✓ U7 complete] → U1 [FD in progress] → U4 → U3 → U2 → U5 → U6 → U8
-- **Status**: U7 fully complete. U1 FD (38ee1e6) + NFR-R (39dfcad) + NFR-D (1088401) committed. Code Generation Planning complete — code-generation-plan.md ready for Codex/Cursor execution. Awaiting approval to hand off.
+- **Current Unit**: U1 (topology) — Code Generation complete
+- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → U4 → U3 → U2 → U5 → U6 → U8
+- **Status**: U1 complete, ready for U4.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)

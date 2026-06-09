@@ -30,10 +30,12 @@ func assertNoNilSchemaPointers(t *rapid.T, s *topology.Schema) {
 	for id, svc := range s.Services {
 		if svc == nil {
 			t.Fatalf("service %s is nil", id)
+			continue
 		}
 		for name, op := range svc.Operations {
 			if op == nil {
 				t.Fatalf("operation %s.%s is nil", id, name)
+				continue
 			}
 			if op.Service == nil {
 				t.Fatalf("operation %s.%s has nil Service", id, name)
@@ -44,6 +46,7 @@ func assertNoNilSchemaPointers(t *rapid.T, s *topology.Schema) {
 	for name, journey := range s.Journeys {
 		if journey == nil {
 			t.Fatalf("journey %s is nil", name)
+			continue
 		}
 		assertNoNilStepPointers(t, journey.Steps)
 	}
@@ -69,6 +72,7 @@ func assertNoNilCallPointers(t *rapid.T, nodes []*topology.CallNode) {
 	for _, node := range nodes {
 		if node == nil {
 			t.Fatal("call node is nil")
+			continue
 		}
 		if node.Edge != nil {
 			if node.Edge.From == nil || node.Edge.To == nil {
@@ -90,6 +94,7 @@ func assertNoNilStepPointers(t *rapid.T, steps []*topology.Step) {
 	for _, step := range steps {
 		if step == nil {
 			t.Fatal("step is nil")
+			continue
 		}
 		if step.Op == nil && len(step.Parallel) == 0 {
 			t.Fatal("step has neither Op nor Parallel")

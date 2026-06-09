@@ -362,16 +362,7 @@ func resolveRecoveryPolicy(schema *Schema, owningOp *Operation, rp *rawRecoveryP
 }
 
 func lookupOperation(schema *Schema, svcName, opName string) (*Operation, error) {
-	return lookupOperationAtPath(schema, svcName, opName, fmt.Sprintf("operation:%s.%s", svcName, opName))
-}
-
-func lookupOperationAtPath(schema *Schema, svcName, opName, path string) (*Operation, error) {
-	if svcName == "" {
-		return nil, newParseError(path+".service", "service is required")
-	}
-	if opName == "" {
-		return nil, newParseError(path+".operation", "operation is required")
-	}
+	path := fmt.Sprintf("operation:%s.%s", svcName, opName)
 	svc, ok := schema.Services[ServiceID(svcName)]
 	if !ok || svc == nil {
 		return nil, newParseErrorf(path+".service", "service %q not found", svcName)
@@ -381,6 +372,31 @@ func lookupOperationAtPath(schema *Schema, svcName, opName, path string) (*Opera
 		return nil, newParseErrorf(path+".operation", "operation %q on service %q not found", opName, svcName)
 	}
 	return op, nil
+}
+
+func lookupOperationAtPath(schema *Schema, svcName, opName, path string) (*Operation, error) {
+	if svcName == "" {
+		return nil, newParseError(path+".service", "service is required")
+	}
+	if opName == "" {
+		return nil, newParseError(path+".operation", "operation is required")
+	}
+	op, err := lookupOperation(schema, svcName, opName)
+	if err == nil {
+		return op, nil
+	}
+	var parseErr *ParseError
+	if !errors.As(err, &parseErr) {
+		return nil, err
+	}
+	switch parseErr.Path {
+	case "operation:" + svcName + "." + opName + ".service":
+		return nil, newParseErrorf(path+".service", "service %q not found", svcName)
+	case "operation:" + svcName + "." + opName + ".operation":
+		return nil, newParseErrorf(path+".operation", "operation %q on service %q not found", opName, svcName)
+	default:
+		return nil, parseErr
+	}
 }
 
 func parseOperationRef(spec, path string) (string, string, error) {
