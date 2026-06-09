@@ -117,7 +117,7 @@
 
 ### Step 2.1 — Implement raw structs
 
-- [ ] Create `topology/raw.go` per `logical-components.md` LC-1:
+- [x] Create `topology/raw.go` per `logical-components.md` LC-1:
   - `rawSchema`, `rawService`, `rawOperation`, `rawCallNode`, `rawCallTarget`, `rawJourney`, `rawStep`, `rawFault`, `rawRecoveryPolicy`, `rawLatencyDist`, `rawSeverity`
   - All unexported (lowercase prefix `raw*`)
   - Pointer fields (`*int`, `*float64`, `*time.Duration`) for nil-detection of YAML-omitted values
@@ -125,7 +125,7 @@
 
 ### Step 2.2 — Build check
 
-- [ ] `go build ./topology/...` — succeeds.
+- [x] `go build ./topology/...` — succeeds.
 
 ---
 
