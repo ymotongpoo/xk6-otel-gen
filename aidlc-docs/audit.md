@@ -606,3 +606,39 @@ DoD all-green:
 Plan Phase 10 checkboxes back-filled to reflect the manual 26b565a commit."
 
 **Context**: U4 Code Generation — Part 2 complete; awaiting Continue to Next Stage approval before moving to U3 (synth).
+
+
+## U3 synth — Code Generation Approved & FD Plan Issued
+**Timestamp**: 2026-06-09T08:55:00Z
+**User Input**: "Conteinus to Next Stage" (approving U4 codegen completion)
+**AI Response**: "U4 fully complete (17 commits, 82.5% coverage, BenchmarkNew 6.78ms/op, integration tests pass). Proceeding to U3 (synth) Functional Design. Created u3-synth-fd-plan.md with 13 [Answer]: questions covering: OTel Semantic Conventions versioning, Service.Kind→Span Kind/AttrSet mapping, metric naming (semconv namespaced histograms + active gauge), Resource attribute set + service.instance.id strategy, multi-replica selection responsibility (Engine vs Synthesizer), ErrorType normalization, Span Status mapping from HTTP/RPC codes, log emission scope (failure-only vs both), time control (Engine-provided vs Now()), span kind decision rule, PBT properties (TP-U3-1..4 minimum), U7 generator additions (8 funcs = 4 pairs), and file split (6 prod + 5 test)."
+**Context**: U3 FD — Step 5 GATE (awaiting user answers to 13 questions).
+
+
+## U3 synth — FD Plan Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-09T09:30:00Z
+**User Input**: "回答しました" (all 13 [Answer]: tags filled in u3-synth-fd-plan.md)
+- Q1=B (import go.opentelemetry.io/otel/semconv/v1.27.0 directly; user questions why U4 avoided it — Claude documented rationale in business-rules.md §1)
+- Q2=A (mapping table for (ServiceKind, EdgeKind) → SpanKind + AttrPolicy)
+- Q3=A (3 semconv metrics: client/server duration histograms + active_requests UDC)
+- Q4=B (A + Service.Language/Framework) — Claude resolved ambiguity by mapping Language → process.runtime.name and Framework → synth.service.framework custom namespace; documented in business-logic-model.md §3
+- Q5=A (per-step replica selection by Engine; Synthesizer receives InstanceIdx via SpanInput)
+- Q6=A (Engine passes semconv-compliant error.type strings as-is)
+- Q7=A (semconv-compliant Span Status: HTTP 4xx → Unset, 5xx → Error, Success=false → Error)
+- Q8=B (no filtering at synth: emit both success and failure logs; defer filtering to OTel Collector)
+- Q9=A (Engine-provided StartTime/EndTime used as-is via trace.WithTimestamp)
+- Q10=A (Edge non-nil → Client; nil → Server; messaging → Producer/Consumer)
+- Q11=A (4 PBT properties: TP-U3-1 BuildResource Idempotency, TP-U3-2 Allowed Attr Keys, TP-U3-3 Histogram Bucket Insertion, TP-U3-4 error.type Required on Failure)
+- Q12=C (8 funcs/4 pairs base + ValidErrorType optional)
+- Q13=A (6 production + 5 test files: doc.go, interface.go, synthesizer.go, resource.go, attributes.go, errors.go + 5 test files)
+
+**Claude resolved ambiguities in FD**:
+1. Q4=B mapping clarification: telemetry.sdk.language stays "go" (the SDK is Go); svc.Language → process.runtime.name; svc.Framework → synth.service.framework (custom).
+2. Q1=B rationale documented: U3 is a heavy semconv consumer (dozens of keys × 4 namespaces) vs U4's sparse usage; both choices are defensible.
+3. SpanInput.InstanceIdx added (not in original Application Design §C3); will need to be reflected in U2 Journey Engine FD.
+
+**AI Response**: "Generated 3 FD artifacts under aidlc-docs/construction/u3-synth/functional-design/:
+(1) business-logic-model.md — Synthesizer responsibilities, input/output flow, BeginSpan/RecordMetric/EmitLog/BuildResource lifecycle, (ServiceKind, EdgeKind) → policy mapping, metric instrumentation, time control, Span Status mapping, ErrorType passthrough, SpanKind decision, multi-replica handling with new InstanceIdx field, trace context propagation, provider injection, PBT properties overview, out-of-scope enumeration.
+(2) business-rules.md — semconv v1.27.0 import policy with U4 divergence rationale, attribute policy mapping table with semconv key references, HTTP/RPC/DB/Messaging attribute sets, metric naming and units, Resource attribute set with deterministic service.instance.id (UUID v5 of svc.Name/instanceIdx), log severity mapping (Info/Error), 4 testable properties with implementation sketches, provider connection conventions (instrumentation name 'github.com/ymotongpoo/xk6-otel-gen/synth'), concurrency guarantees, performance targets, out-of-scope.
+(3) domain-entities.md — Synthesizer interface, SpanInput (with InstanceIdx) / MetricInput (with InstanceIdx) / LogInput / Outcome / FinishSpanFunc, internal defaultSynthesizer + attributePolicy types, NewDefault / BuildResource / BeginSpan / RecordMetric / EmitLog / FinishSpanFunc contracts, package layout (6 production + 5 test files), public API signature list, import dependencies (incl. semconv/v1.27.0 + google/uuid + topology, NOT exporter), U7 generator request (8 funcs / 4 pairs + optional ValidErrorType), Application Design §C3 amendments documented."
+**Context**: U3 FD — artifacts generated, awaiting approval (Step 5/6 GATE).

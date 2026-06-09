@@ -33,7 +33,7 @@
   - 3 信号の correlation (NFR-U4-4) も `Counter.Add(ctx, ...)` / `Logger.Emit(ctx, record)` 経由で SDK が in-process Context から自動付与するため、propagation は不要
   - 将来 (k6 本物 HTTP リクエストとの混在、外部から trace_id seed を受け取る等の) 拡張で必要になれば後追い import で良い
 - `go.opentelemetry.io/otel/exporters/stdout/*` — デバッグ用、本 unit からは import しない (開発者が必要なら自分の test code で別途 import)
-- `go.opentelemetry.io/otel/semconv/v1.*` — U3 (synth) で使う、U4 は Resource 属性を `map[string]string` で受け取るので不要
+- `go.opentelemetry.io/otel/semconv/v1.27.0` — **U3 (synth) と整合して U4 でも import 可**。U4 production code は `ResourceOverrides map[string]string` を user-provided key として受け取るので semconv 定数の出番は現状ないが、将来 U4 内で hard-coded semconv attribute を出す箇所が発生したら import する (export attr key の typo 防止)。テストコードでは `"service.name"` 等の固定値検証に `string(semconv.ServiceNameKey)` を使って良い。Bump プロトコルは U3 と同じ (`attributes.go` 等 1 ファイルに集約) — U4 では `resource.go` に局所化される想定。
 - `go.opentelemetry.io/otel/baggage` — 本 unit では使わない (propagation と同様の理由 + そもそも baggage を運ぶ HTTP request も無いため)
 
 ### 1.3 検証

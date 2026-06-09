@@ -62,7 +62,8 @@
   - `go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc`
   - `go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp`
   - `go.opentelemetry.io/proto/otlp` (test-only, TP-U4-3)
-- **Explicitly excluded**: `go.opentelemetry.io/otel/propagation` (in-process telemetry synthesis), `go.opentelemetry.io/otel/baggage`, `stdout` exporters, `semconv` (use raw `attribute.String` keys)
+- **Explicitly excluded**: `go.opentelemetry.io/otel/propagation` (in-process telemetry synthesis), `go.opentelemetry.io/otel/baggage`, `stdout` exporters.
+- **Allowed but currently unused in production code**: `go.opentelemetry.io/otel/semconv/v1.27.0` — U4 production code passes through user-provided keys (no hard-coded semconv attrs), so semconv constants do not currently appear in `exporter/*.go`. Test code MAY use semconv constants (`string(semconv.ServiceNameKey)` etc.) for typo-safety. (Policy update 2026-06-09: previous "raw string only" stance withdrawn for project-wide consistency with U3.)
 
 ---
 
@@ -480,7 +481,7 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 - ❌ Adding `*QueueLen` fields to Stats "for future compatibility" (verified absent in OTel SDK upstream)
 - ❌ Wrapping internal queue counters in our wrapper to fake QueueLen (creates misleading values)
 - ❌ Importing `propagation` package (in-process telemetry synthesis)
-- ❌ Importing `semconv` (use raw attribute keys to avoid version-coupling)
+- ⚠ Avoiding `semconv` import was the original stance but was withdrawn 2026-06-09 for project-wide consistency. semconv import is now allowed (`go.opentelemetry.io/otel/semconv/v1.27.0`). U4 production code currently has no place where semconv constants apply (user-provided keys only), so the actual diff is minimal — but reviewers should not block a PR that introduces semconv usage in U4.
 - ❌ Using real Collector in unit tests (use mock; integration tests are separate `-tags=integration`)
 - ❌ `errors.Join` to combine cleanup errors with primary error (Q10=A: discard cleanup errors)
 - ❌ Splitting `pipeline.go` into multiple files (Q11=A: keep together)
