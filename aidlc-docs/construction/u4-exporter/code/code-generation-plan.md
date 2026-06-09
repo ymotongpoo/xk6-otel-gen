@@ -409,33 +409,33 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Step 13.1 — Create `exporter/testdata/collector-config.yaml`
 
-- [ ] Collector config with OTLP/gRPC receiver on `:4317` and file_exporter writing to `/var/log/otel/traces.json`, `metrics.json`, `logs.json`.
-- [ ] 3 pipelines (traces, metrics, logs) all routing OTLP → file.
+- [x] Collector config with OTLP/gRPC receiver on `:4317` and file_exporter writing to `/var/log/otel/traces.json`, `metrics.json`, `logs.json`.
+- [x] 3 pipelines (traces, metrics, logs) all routing OTLP → file.
 
 ### Step 13.2 — Create `exporter/testdata/docker-compose.yaml`
 
-- [ ] Single service `collector` using `otel/opentelemetry-collector-contrib:latest`, mounts `./collector-config.yaml` and `./otel-logs/` (volume for output JSON), exposes `4317` and `4318`.
+- [x] Single service `collector` using `otel/opentelemetry-collector-contrib:latest`, mounts `./collector-config.yaml` and `./otel-logs/` (volume for output JSON), exposes `4317` and `4318`.
 
 ### Step 13.3 — Create `exporter/integration/helpers.go`
 
-- [ ] `StartCollector(t *testing.T) (endpoint string, cleanup func())` — uses `os/exec` to run `docker compose -f testdata/docker-compose.yaml up -d`, waits for port readiness, returns cleanup that runs `docker compose down`.
-- [ ] `ReadCollectorTraces(t *testing.T) []byte` — reads `./otel-logs/traces.json`.
-- [ ] Analogous for Metrics, Logs.
-- [ ] All helpers use `t.Helper()`.
+- [x] `StartCollector(t *testing.T) (endpoint string, cleanup func())` — uses `os/exec` to run `docker compose -f testdata/docker-compose.yaml up -d`, waits for port readiness, returns cleanup that runs `docker compose down`.
+- [x] `ReadCollectorTraces(t *testing.T) []byte` — reads `./otel-logs/traces.json`.
+- [x] Analogous for Metrics, Logs.
+- [x] All helpers use `t.Helper()`.
 
 ### Step 13.4 — Create `exporter/integration/integration_test.go`
 
-- [ ] `//go:build integration` build tag at top.
-- [ ] `TestIntegration_ThreeSignals_Correlated` — construct Pipeline, emit one span / one metric data point / one log record sharing the same `trace_id` and `span_id`, force flush, Shutdown, then read all three JSON files and assert the same trace_id / span_id appears across all three.
-- [ ] All tests call `t.Parallel()` only within the same test (since they share the Collector singleton).
+- [x] `//go:build integration` build tag at top.
+- [x] `TestIntegration_ThreeSignals_Correlated` — construct Pipeline, emit one span / one metric data point / one log record sharing the same `trace_id` and `span_id`, force flush, Shutdown, then read all three JSON files and assert the same trace_id / span_id appears across all three.
+- [x] All tests call `t.Parallel()` only within the same test (since they share the Collector singleton).
 
 ### Step 13.5 — Update CI hint (no actual workflow change, just documentation)
 
-- [ ] In `exporter/integration/README.md`, document: "`go test -tags=integration ./exporter/integration/...` requires Docker. Skipped by default."
+- [x] In `exporter/integration/README.md`, document: "`go test -tags=integration ./exporter/integration/...` requires Docker. Skipped by default."
 
 ### Phase 13 commit
 
-- [ ] `git add exporter/integration/ exporter/testdata/ && git commit -m "test(exporter): add integration test harness with Collector and 3-signal correlation"`
+- [x] `git add exporter/integration/ exporter/testdata/ && git commit -m "test(exporter): add integration test harness with Collector and 3-signal correlation"`
 
 ---
 

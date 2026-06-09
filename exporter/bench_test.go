@@ -12,23 +12,26 @@ import (
 	"google.golang.org/grpc"
 )
 
-var benchConfig = Config{
-	Protocol:     ProtocolGRPC,
-	Endpoint:     "localhost:4317",
-	Insecure:     true,
-	Timeout:      5 * time.Second,
-	BatchSize:    512,
-	BatchTimeout: time.Second,
-	MaxQueueSize: 2048,
+func benchmarkConfig() Config {
+	return Config{
+		Protocol:     ProtocolGRPC,
+		Endpoint:     "localhost:4317",
+		Insecure:     true,
+		Timeout:      5 * time.Second,
+		BatchSize:    512,
+		BatchTimeout: time.Second,
+		MaxQueueSize: 2048,
+	}
 }
 
 func BenchmarkNew(b *testing.B) {
-	cleanup := startBenchmarkCollector(b)
+	cfg := benchmarkConfig()
+	cleanup := startBenchmarkCollector(b, cfg.Endpoint)
 	defer cleanup()
 
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		p, err := New(benchConfig)
+		p, err := New(cfg)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -38,10 +41,10 @@ func BenchmarkNew(b *testing.B) {
 	}
 }
 
-func startBenchmarkCollector(b *testing.B) func() {
+func startBenchmarkCollector(b *testing.B, endpoint string) func() {
 	b.Helper()
 
-	listener, err := net.Listen("tcp", benchConfig.Endpoint)
+	listener, err := net.Listen("tcp", endpoint)
 	if err != nil {
 		b.Fatalf("listen benchmark OTLP collector: %v", err)
 	}
