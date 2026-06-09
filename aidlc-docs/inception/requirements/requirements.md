@@ -134,7 +134,7 @@
 
 ### NFR-3 — Compatibility
 - **NFR-3.1**: 対応 k6: **最新 stable と直近 2 マイナーバージョン**。
-- **NFR-3.2**: 対応 Go: Go の現行 stable と 1 つ前の minor。
+- **NFR-3.2**: 対応 Go: **Go 1.25 以上**。Go 公式サポートポリシー (最新 stable + 1 つ前の minor が公式サポート対象) を踏まえ、go.mod の `go` directive は `1.25` を最低要件とする。これ未満の Go では build / test は保証しない。
 - **NFR-3.3**: 対応 OS: Linux (amd64 / arm64) と macOS (arm64) — Windows は best-effort。
 
 ### NFR-4 — Testability

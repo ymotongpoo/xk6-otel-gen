@@ -10,7 +10,7 @@ alwaysApply: false
 # Go コード規約 (xk6-otel-gen)
 
 ## ビルド対象
-- Go バージョン: 直近 stable + 1 つ前の minor。go.mod の `go` ディレクティブに準拠。
+- Go バージョン: **1.25 以上** (Go 公式サポートポリシーに従い、最新 stable + 1 つ前のみサポート対象)。go.mod の `go` ディレクティブは `go 1.25` を最低要件とする。
 - モジュールパス: `github.com/ymotongpoo/xk6-otel-gen`
 
 ## フォーマット・静的解析

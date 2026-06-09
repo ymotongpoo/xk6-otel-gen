@@ -357,3 +357,37 @@
 **AI Response**: "Generated 3 FD artifacts under aidlc-docs/construction/u1-topology/functional-design/: (1) business-logic-model.md — Parse 2-pass pipeline (yaml decode → buildSchema with defaults → resolveReferences with errors.Join → Validate); rawSchema/rawService/rawOperation/rawCallNode private types for YAML decoding; Lint API design (separate from Parse, returns []LintIssue); MarshalYAML returning rawSchema for yaml.v3 (alphabetical order for maps, declaration order for sequences); Equal with identifier-based comparison (identifyOp helper: <svc>.<op>); Validate aggregating R-STR-1..8 + D-1..D-14 via errors.Join; ApplyFaults returning *FaultOverlay with 3 pointer-keyed maps; ExportJSONSchema via //go:embed static template; FindServiceByName / JourneyNames; mermaid data flow diagram. (2) business-rules.md — default value table (Replicas=1, ErrorRate=0.0, Timeout=0, Retries=0, RetryBackoff=exponential, Distribution=constant, Weight=1.0, OnExhausted=propagate), Validate checklist (8 structural R-STR + 14 domain D), Equal ordering rules per field, performance target (10ms typical), Lint API spec (LintError/Warning), ParseError/ValidationError types, ApplyFaults idempotency contract, JSON Schema Draft 2020-12 structure with $defs for each type, all 8 testable properties TP-U1-1..8 with rapid.Check pseudocode (TP-U1-6 Validate idempotent, TP-U1-7 ApplyFaults idempotent, TP-U1-8 JSON Schema round-trip via santhosh-tekuri/jsonschema/v5 test dep). (3) domain-entities.md — contracts for each type (Schema/Service/Operation/CallNode/Edge/RecoveryPolicy/Journey/Step/FaultTarget/FaultSpec/FaultOverlay) with semantic meaning + invariants; contracts for all 10 public functions/methods (Parse/ParseFile/Validate/Equal/MarshalYAML/ApplyFaults/ExportJSONSchema/FindServiceByName/JourneyNames/Lint) with args/returns/side-effects/idempotency/thread-safety/error-patterns; new file layout under topology/ (raw.go, parse.go, validate.go, marshal.go, equal.go, faults.go, jsonschema.go, lint.go, errors.go, jsonschema/topology.schema.json embed) + 11 test files; dependency additions (jsonschema/v5 as test-only, 1-time AGENTS.md §2 relaxation); §6 U7 generator addition requests (18 functions: 9 Valid + 9 Any) per Q13=A; Out of Scope section. Awaiting user approval."
 **Context**: U1 topology Functional Design — Step 8 GATE (awaiting explicit approval before NFR Requirements for U1).
 
+
+## U1 topology — FD Approved & Committed; NFR Requirements Plan Issued
+**Timestamp**: 2026-06-08T16:05:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "U1 FD committed as 38ee1e6 (docs(u1-topology): add functional design with parse 2-pass and 8 testable properties) — 6 files, 1739 insertions. Proceeding to U1 NFR Requirements. Created aidlc-docs/construction/plans/u1-topology-nfr-requirements-plan.md with 12 [Answer]: questions covering yaml.v3 version policy, jsonschema/v5 handling (test-only vs body), Parse/Validate/ApplyFaults benchmark scope, memory budget, log output policy (no library logs vs slog), immutability enforcement (convention vs getters vs Clone), concurrency safety, Go version requirement (1.21+ for errors.Join / slog), coverage target, Lint API performance, back-compat policy, and explicit N/A enumeration."
+**Context**: U1 NFR Requirements — Step 5 GATE (awaiting user answers).
+
+
+## U1 topology — NFR Requirements Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-08T16:10:00Z
+**User Input** (raw, in u1-topology-nfr-requirements-plan.md):
+- Q1=A (yaml.v3 latest-stable tracking)
+- Q2=A (jsonschema/v5 as test-only dep)
+- Q3=A (BenchmarkParse only initially)
+- Q4=A (implicit memory budget, ≤1MB target)
+- Q5=A (no library logs, errors as return values)
+- Q6=A (immutability as convention via GoDoc)
+- Q7=A (thread-safe via immutability convention)
+- Q8=A (Go 1.21+, keep go.mod at 1.24 since U7 set it)
+- Q9=A (80% coverage target)
+- Q10=A (Lint ≤15ms target)
+- Q11=A (SemVer post-v1, same as U7)
+- Q12=A (explicit N/A enumeration)
+
+**AI Response**: "All answers A. Generated 2 NFR-R artifacts under aidlc-docs/construction/u1-topology/nfr-requirements/: (1) nfr-requirements.md — 10 applicable NFRs (NFR-U1-1 Parse 10ms, NFR-U1-2 large YAML as monitor-only, NFR-U1-3 memory ≤1MB implicit, NFR-U1-4 no library logs, NFR-U1-5 immutability convention, NFR-U1-6 thread-safety, NFR-U1-7 Go 1.21+, NFR-U1-8 coverage 80%, NFR-U1-9 Lint ≤15ms, NFR-U1-10 SemVer) + 9 N/A categories (network perf, availability/SLA, security, compliance, i18n/a11y, production monitoring, backup/DR, input-size DoS, encryption); PBT compliance summary (PBT-01..04 self-implemented, PBT-05/06 N/A, PBT-07/08/09 inherited from U7, PBT-10 compliant); project NFR traceability; 11-item DoD checklist. (2) tech-stack-decisions.md — yaml.v3 selection rationale + alternative analysis (sigs.k8s.io/yaml rejected for limited Marshaler flexibility); jsonschema/v5 selection rationale + test-only scope (1-time AGENTS.md §2 relaxation, NOT propagated to AGENTS.md proper since test deps don't affect production build); Go 1.21+ requirement with go.mod kept at 1.24 from U7; complete go.mod inventory for U1 completion; file structure 16 production files + 11 test files; CI integration commands; U7-U1 transition (delete stubs.go, update doc.go, keep enums.go/types.go); maintenance/Deprecation rules; PBT-09 reconfirmation; alternatives rejected list."
+**Context**: U1 NFR Requirements — Step 8 GATE (awaiting explicit approval before NFR Design for U1).
+
+
+## U1 topology — NFR Requirements Change Request: Go version bumped to 1.25+
+**Timestamp**: 2026-06-09T00:00:00Z
+**User Input**: "tech-stack-decisions.md と nfr-requirements.md を読んでいますが、Goのバージョン要件がおかしいです。Goは公式には最新版とその1つ前のバージョンまでがサポート対象なので、いまではGo 1.25以上とすべきです。他のセクションでも同様のものがあればGo 1.25以上となるようにしてください。"
+**AI Response**: "Bumped Go minimum requirement from 1.21 to 1.25 across all active spec/contract documents. Updated: (1) requirements.md NFR-3.2 — clarified that '現行 stable と 1 つ前の minor' means go.mod minimum is 1.25 with rationale tied to Go's official support policy. (2) u1-topology/nfr-requirements/nfr-requirements.md NFR-U1-7 — overrode Q8=A (Go 1.21+); now Go 1.25+, go.mod directive to be updated from 1.24 to 1.25 via `go mod edit -go=1.25` during U1 Code Generation; explicit list of 1.25-or-below stable features available. (3) u1-topology/nfr-requirements/tech-stack-decisions.md §3 — full rewrite of Go version section with 1.25+ requirement and CI matrix reduced to 1.25+; go.mod template updated to `go 1.25`. (4) AGENTS.md §5 code conventions — `1.23 / 1.22` → `1.25 以上`. (5) .cursor/rules/10-go-conventions.mdc — same. NOT modified (historical records): audit.md entries, u7-testutil-code-generation-plan.md (`go 1.23` initial scaffolding line), u1-topology-nfr-requirements-plan.md Q8 question/answer. business-logic-model.md's `errors.Join Go 1.20+` historical note kept as it's a fact about when errors.Join was added (now subsumed by 1.25 requirement). The U7 `go.mod` (currently `go 1.24`) will be bumped to `go 1.25` as part of U1 Code Generation Phase 0."
+**Context**: Cross-cutting Go version override. Affects U1 going forward, all subsequent units, and the existing U7 go.mod.
+

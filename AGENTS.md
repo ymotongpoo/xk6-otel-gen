@@ -102,7 +102,7 @@ golangci-lint run
 
 ## 5. Code Conventions
 
-- **Go バージョン**: 直近 stable + 1 つ前の minor (例: 1.23 / 1.22)。go.mod に明記。
+- **Go バージョン**: **Go 1.25 以上** を最低要件とする (`go.mod` の go directive に明記)。Go 公式サポートポリシー (最新 stable + 1 つ前の minor のみがサポート対象) に追従するため、1.24 以下では build / test を保証しない。
 - **フォーマット**: `gofmt` / `goimports` 準拠。CI で強制。
 - **モジュールパス**: `github.com/ymotongpoo/xk6-otel-gen`
 - **パッケージ構成 (Application Design で確定 — 全パッケージをトップレベル公開):**
