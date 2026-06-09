@@ -342,9 +342,9 @@
 
 ### Step 9.1 — Implement Lint API
 
-- [ ] Create `topology/lint.go`.
-- [ ] Implement `LintIssue` struct and `LintSeverity` enum with `String()` method (per `business-rules.md` §6).
-- [ ] Implement `Lint(r io.Reader) ([]LintIssue, error)`:
+- [x] Create `topology/lint.go`.
+- [x] Implement `LintIssue` struct and `LintSeverity` enum with `String()` method (per `business-rules.md` §6).
+- [x] Implement `Lint(r io.Reader) ([]LintIssue, error)`:
   - Read input via `io.ReadAll`
   - Call `decodeRaw(strict=true)` — capture unknown-field errors from yaml.v3 as LintWarning entries
   - Build schema (same as Parse) — convert ParseError to LintError entries
@@ -353,16 +353,16 @@
 
 ### Step 9.2 — Implement `FindServiceByName` and `JourneyNames`
 
-- [ ] Add to a new file `topology/schema_methods.go` (or fold into parse.go):
+- [x] Add to a new file `topology/schema_methods.go` (or fold into parse.go):
   - `(*Schema).FindServiceByName(id ServiceID) (*Service, bool)`
   - `(*Schema).JourneyNames() []string` — returns sorted slice
-- [ ] These are 1-line wrappers (per `domain-entities.md` §2.8, §2.9).
+- [x] These are 1-line wrappers (per `domain-entities.md` §2.8, §2.9).
 
 ### Step 9.3 — Build verification
 
-- [ ] `go build ./...` (full repo) — **succeeds**.
-- [ ] `go vet ./...` — no warnings.
-- [ ] **Acceptance**: All public API is back in place. U7's `testutil/generators` should still build and pass its tests (Validate is now real, no longer panic stub).
+- [x] `go build ./...` (full repo) — **succeeds**.
+- [x] `go vet ./...` — no warnings.
+- [x] **Acceptance**: All public API is back in place. U7's `testutil/generators` should still build and pass its tests (Validate is now real, no longer panic stub).
 
 ---
 
