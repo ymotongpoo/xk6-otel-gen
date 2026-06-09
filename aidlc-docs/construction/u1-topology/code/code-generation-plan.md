@@ -372,7 +372,7 @@
 
 ### Step 10.1 — Example-based tests for Parse (LC-T1)
 
-- [ ] Create `topology/parse_test.go` with `t.Parallel()` on each function:
+- [x] Create `topology/parse_test.go` with `t.Parallel()` on each function:
   - `TestParse_MinimalSchema` — inline YAML with 1 svc + 1 journey
   - `TestParse_DefaultsApplied` — confirm Replicas=1 etc. when omitted
   - `TestParse_YAMLSyntaxError_FailFast` — malformed YAML returns single error
@@ -382,7 +382,7 @@
 
 ### Step 10.2 — TP-U1-1: Round-trip PBT (LC-T2)
 
-- [ ] Create `topology/parse_roundtrip_test.go`:
+- [x] Create `topology/parse_roundtrip_test.go`:
   ```go
   func TestParse_RoundTrip(t *testing.T) {
       t.Parallel()
@@ -399,7 +399,7 @@
 
 ### Step 10.3 — TP-U1-2: Non-nil pointers (LC-T3)
 
-- [ ] Create `topology/parse_pointers_test.go`:
+- [x] Create `topology/parse_pointers_test.go`:
   ```go
   func TestParse_NoNilPointers(t *testing.T) {
       t.Parallel()
@@ -415,7 +415,7 @@
 
 ### Step 10.4 — TP-U1-3: Map-key consistency (LC-T4)
 
-- [ ] Create `topology/parse_consistency_test.go`:
+- [x] Create `topology/parse_consistency_test.go`:
   ```go
   func TestParse_MapKeyConsistency(t *testing.T) {
       t.Parallel()
@@ -429,13 +429,13 @@
 
 ### Step 10.5 — TP-U1-4: DAG (LC-T5)
 
-- [ ] Create `topology/validate_dag_test.go`:
+- [x] Create `topology/validate_dag_test.go`:
   - PBT: `TestValidate_AlwaysDAG` — for every ValidSchema, topology sort succeeds
   - Example: `TestValidate_DetectsCycle` — construct a 2-operation cycle manually and confirm validateDAG returns the right error message containing both operation names
 
 ### Step 10.6 — TP-U1-6: Validate idempotent (LC-T6)
 
-- [ ] Create `topology/validate_idempotent_test.go`:
+- [x] Create `topology/validate_idempotent_test.go`:
   ```go
   func TestValidate_Idempotent(t *testing.T) {
       t.Parallel()
@@ -450,20 +450,20 @@
 
 ### Step 10.7 — Example-based Validate (LC-T7)
 
-- [ ] Create `topology/validate_test.go`:
+- [x] Create `topology/validate_test.go`:
   - `TestValidate_StructuralRules` — table-driven, 1 example per R-STR-1..8 violation
   - `TestValidate_DomainRanges` — table-driven, sample D-1..D-14 violations
   - `TestValidate_OnValidSchemaReturnsNil` — sanity, build a known-valid Schema and confirm Validate==nil
 
 ### Step 10.8 — TP-U1-5 + TP-U1-7: ApplyFaults (LC-T8)
 
-- [ ] Create `topology/applyfaults_test.go`:
+- [x] Create `topology/applyfaults_test.go`:
   - `TestApplyFaults_OverlayCovers` (PBT, TP-U1-5)
   - `TestApplyFaults_Idempotent` (PBT, TP-U1-7) — use `FaultOverlayEqual`
 
 ### Step 10.9 — TP-U1-8: JSON Schema round-trip (LC-T9)
 
-- [ ] Create `topology/jsonschema_roundtrip_test.go`:
+- [x] Create `topology/jsonschema_roundtrip_test.go`:
   ```go
   func TestExportJSONSchema_RoundTrip(t *testing.T) {
       t.Parallel()
@@ -485,14 +485,14 @@
 
 ### Step 10.10 — Example-based for MarshalYAML (LC-T10)
 
-- [ ] Create `topology/marshal_test.go`:
+- [x] Create `topology/marshal_test.go`:
   - `TestMarshal_AlphabeticalOrder` — confirm services / operations / journeys appear sorted in output
   - `TestMarshal_PreservesSequenceOrder` — confirm faults / calls / fallback / steps preserve declaration order
   - `TestMarshal_OmitsZeroValues` — confirm `replicas: 1` omitted when default, `language: ""` omitted, etc.
 
 ### Step 10.11 — Example-based for Equal (LC-T11)
 
-- [ ] Create `topology/equal_test.go`:
+- [x] Create `topology/equal_test.go`:
   - `TestEqual_Reflexive`
   - `TestEqual_Symmetric` (build pairs, swap and re-test)
   - `TestEqual_DistinguishesDifferentCallsOrder` (R-V vs order-preserving fields)
@@ -500,23 +500,23 @@
 
 ### Step 10.12 — testdata + BenchmarkParse (LC-T12)
 
-- [ ] Create `topology/testdata/typical.yaml` — hand-crafted, 10 services / 30 operations / 50 edges / 5 journeys / 3 faults. Match the demo flavor of `examples/minimal/` style.
-- [ ] Create `topology/bench_test.go` with `BenchmarkParse` per `nfr-design-patterns.md` §1 P-PERF-3.
-- [ ] Run `go test -bench=BenchmarkParse -benchmem ./topology/...`. Record ns/op in `code-generation-summary.md`. Verify ≤ 10,000,000 ns/op.
+- [x] Create `topology/testdata/typical.yaml` — hand-crafted, 10 services / 30 operations / 50 edges / 5 journeys / 3 faults. Match the demo flavor of `examples/minimal/` style.
+- [x] Create `topology/bench_test.go` with `BenchmarkParse` per `nfr-design-patterns.md` §1 P-PERF-3.
+- [x] Run `go test -bench=BenchmarkParse -benchmem ./topology/...`. Record ns/op in `code-generation-summary.md`. Verify ≤ 10,000,000 ns/op.
 
 ### Step 10.13 — Un-skip U7's TestValidSchema_ValidatePlaceholder
 
-- [ ] Open `testutil/generators/schema_test.go`.
-- [ ] Find `TestValidSchema_ValidatePlaceholder` (was `t.Skip(...)` per U7 Phase 2 plan).
-- [ ] Remove the `t.Skip(...)` line and the `TODO(u1):` comment.
-- [ ] The body should now call `topology.Validate(s)` and assert `nil`.
-- [ ] Run `go test -run TestValidSchema ./testutil/generators/...` — confirm pass.
+- [x] Open `testutil/generators/schema_test.go`.
+- [x] Find `TestValidSchema_ValidatePlaceholder` (was `t.Skip(...)` per U7 Phase 2 plan).
+- [x] Remove the `t.Skip(...)` line and the `TODO(u1):` comment.
+- [x] The body should now call `topology.Validate(s)` and assert `nil`.
+- [x] Run `go test -run TestValidSchema ./testutil/generators/...` — confirm pass.
 
 ### Step 10.14 — Test verification
 
-- [ ] `go test -race -count=1 ./...` — passes (all).
-- [ ] `go test -cover ./topology/...` — ≥ 80%.
-- [ ] **Acceptance**: race-free, coverage ≥ 80%, all TP-U1-1..8 active.
+- [x] `go test -race -count=1 ./...` — passes (all).
+- [x] `go test -cover ./topology/...` — ≥ 80%.
+- [x] **Acceptance**: race-free, coverage ≥ 80%, all TP-U1-1..8 active.
 
 ---
 

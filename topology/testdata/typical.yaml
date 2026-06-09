@@ -1,0 +1,282 @@
+services:
+  svc00:
+    kind: application
+    replicas: 2
+    language: go
+    framework: net/http
+    version: v1.0.0
+    operations:
+      - name: Op0
+        calls:
+          - to: { service: svc01, operation: Op0 }
+            protocol: http
+            latency: { distribution: lognormal, p50: 10ms, p95: 80ms }
+          - to: { service: svc02, operation: Op0 }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 12ms, p95: 90ms }
+          - to: { service: svc03, operation: Op0 }
+            protocol: messaging
+            latency: { distribution: exponential, p50: 15ms, p95: 120ms }
+      - name: Op1
+        calls:
+          - to: { service: svc01, operation: Op1 }
+            protocol: http
+            latency: { p50: 11ms, p95: 70ms }
+          - to: { service: svc02, operation: Op1 }
+            protocol: grpc
+            latency: { p50: 14ms, p95: 85ms }
+          - to: { service: svc03, operation: Op1 }
+            protocol: http
+            latency: { p50: 16ms, p95: 130ms }
+      - name: Op2
+        calls:
+          - to: { service: svc01, operation: Op2 }
+            protocol: http
+            latency: { p50: 9ms, p95: 60ms }
+          - to: { service: svc02, operation: Op2 }
+            protocol: grpc
+            latency: { p50: 13ms, p95: 95ms }
+          - to: { service: svc03, operation: Op2 }
+            protocol: messaging
+            latency: { p50: 18ms, p95: 140ms }
+  svc01:
+    kind: application
+    replicas: 2
+    operations:
+      - name: Op0
+        calls:
+          - to: { service: svc02, operation: Op0 }
+            protocol: http
+            latency: { p50: 10ms, p95: 80ms }
+          - to: { service: svc03, operation: Op0 }
+            protocol: grpc
+            latency: { p50: 12ms, p95: 90ms }
+          - to: { service: svc04, operation: Op0 }
+            protocol: messaging
+            latency: { p50: 15ms, p95: 120ms }
+      - name: Op1
+        calls:
+          - to: { service: svc02, operation: Op1 }
+            protocol: http
+            latency: { p50: 11ms, p95: 70ms }
+          - to: { service: svc03, operation: Op1 }
+            protocol: grpc
+            latency: { p50: 14ms, p95: 85ms }
+          - to: { service: svc04, operation: Op1 }
+            protocol: http
+            latency: { p50: 16ms, p95: 130ms }
+      - name: Op2
+        calls:
+          - to: { service: svc02, operation: Op2 }
+            protocol: http
+            latency: { p50: 9ms, p95: 60ms }
+          - to: { service: svc03, operation: Op2 }
+            protocol: grpc
+            latency: { p50: 13ms, p95: 95ms }
+          - to: { service: svc04, operation: Op2 }
+            protocol: messaging
+            latency: { p50: 18ms, p95: 140ms }
+  svc02:
+    kind: application
+    replicas: 3
+    operations:
+      - name: Op0
+        calls:
+          - to: { service: svc03, operation: Op0 }
+            protocol: http
+            latency: { p50: 10ms, p95: 80ms }
+          - to: { service: svc04, operation: Op0 }
+            protocol: grpc
+            latency: { p50: 12ms, p95: 90ms }
+          - to: { service: svc05, operation: Op0 }
+            protocol: messaging
+            latency: { p50: 15ms, p95: 120ms }
+      - name: Op1
+        calls:
+          - to: { service: svc03, operation: Op1 }
+            protocol: http
+            latency: { p50: 11ms, p95: 70ms }
+          - to: { service: svc04, operation: Op1 }
+            protocol: grpc
+            latency: { p50: 14ms, p95: 85ms }
+          - to: { service: svc05, operation: Op1 }
+            protocol: http
+            latency: { p50: 16ms, p95: 130ms }
+      - name: Op2
+        calls:
+          - to: { service: svc03, operation: Op2 }
+            protocol: http
+            latency: { p50: 9ms, p95: 60ms }
+          - to: { service: svc04, operation: Op2 }
+            protocol: grpc
+            latency: { p50: 13ms, p95: 95ms }
+          - to: { service: svc05, operation: Op2 }
+            protocol: messaging
+            latency: { p50: 18ms, p95: 140ms }
+  svc03:
+    kind: application
+    replicas: 3
+    operations:
+      - name: Op0
+        calls:
+          - to: { service: svc04, operation: Op0 }
+            protocol: http
+            latency: { p50: 10ms, p95: 80ms }
+          - to: { service: svc05, operation: Op0 }
+            protocol: grpc
+            latency: { p50: 12ms, p95: 90ms }
+          - to: { service: svc06, operation: Op0 }
+            protocol: messaging
+            latency: { p50: 15ms, p95: 120ms }
+      - name: Op1
+        calls:
+          - to: { service: svc04, operation: Op1 }
+            protocol: http
+            latency: { p50: 11ms, p95: 70ms }
+          - to: { service: svc05, operation: Op1 }
+            protocol: grpc
+            latency: { p50: 14ms, p95: 85ms }
+          - to: { service: svc06, operation: Op1 }
+            protocol: http
+            latency: { p50: 16ms, p95: 130ms }
+      - name: Op2
+        calls:
+          - to: { service: svc04, operation: Op2 }
+            protocol: http
+            latency: { p50: 9ms, p95: 60ms }
+          - to: { service: svc05, operation: Op2 }
+            protocol: grpc
+            latency: { p50: 13ms, p95: 95ms }
+          - to: { service: svc06, operation: Op2 }
+            protocol: messaging
+            latency: { p50: 18ms, p95: 140ms }
+  svc04:
+    kind: application
+    replicas: 2
+    operations:
+      - name: Op0
+        calls:
+          - to: { service: svc05, operation: Op0 }
+            protocol: http
+            latency: { p50: 10ms, p95: 80ms }
+          - to: { service: svc06, operation: Op0 }
+            protocol: grpc
+            latency: { p50: 12ms, p95: 90ms }
+          - to: { service: svc07, operation: Op0 }
+            protocol: messaging
+            latency: { p50: 15ms, p95: 120ms }
+      - name: Op1
+        calls:
+          - to: { service: svc05, operation: Op1 }
+            protocol: http
+            latency: { p50: 11ms, p95: 70ms }
+          - to: { service: svc06, operation: Op1 }
+            protocol: grpc
+            latency: { p50: 14ms, p95: 85ms }
+          - to: { service: svc07, operation: Op1 }
+            protocol: http
+            latency: { p50: 16ms, p95: 130ms }
+      - name: Op2
+        calls:
+          - to: { service: svc05, operation: Op2 }
+            protocol: http
+            latency: { p50: 9ms, p95: 60ms }
+          - to: { service: svc06, operation: Op2 }
+            protocol: grpc
+            latency: { p50: 13ms, p95: 95ms }
+          - to: { service: svc07, operation: Op2 }
+            protocol: messaging
+            latency: { p50: 18ms, p95: 140ms }
+  svc05:
+    kind: application
+    replicas: 2
+    operations:
+      - name: Op0
+        calls:
+          - to: { service: svc06, operation: Op0 }
+            protocol: http
+            latency: { p50: 10ms, p95: 80ms }
+          - to: { service: svc07, operation: Op0 }
+            protocol: grpc
+            latency: { p50: 12ms, p95: 90ms }
+      - name: Op1
+        calls:
+          - to: { service: svc06, operation: Op1 }
+            protocol: http
+            latency: { p50: 11ms, p95: 70ms }
+          - to: { service: svc07, operation: Op1 }
+            protocol: grpc
+            latency: { p50: 14ms, p95: 85ms }
+      - name: Op2
+        calls:
+          - to: { service: svc06, operation: Op2 }
+            protocol: http
+            latency: { p50: 9ms, p95: 60ms }
+          - to: { service: svc07, operation: Op2 }
+            protocol: messaging
+            latency: { p50: 18ms, p95: 140ms }
+  svc06:
+    kind: database
+    operations:
+      - { name: Op0 }
+      - { name: Op1 }
+      - { name: Op2 }
+  svc07:
+    kind: cache
+    operations:
+      - { name: Op0 }
+      - { name: Op1 }
+      - { name: Op2 }
+  svc08:
+    kind: external_api
+    operations:
+      - { name: Op0 }
+      - { name: Op1 }
+      - { name: Op2 }
+  svc09:
+    kind: queue
+    operations:
+      - { name: Op0 }
+      - { name: Op1 }
+      - { name: Op2 }
+journeys:
+  browse:
+    weight: 1
+    steps:
+      - service: svc00
+        operation: Op0
+  checkout:
+    weight: 0.6
+    steps:
+      - service: svc00
+        operation: Op1
+      - service: svc01
+        operation: Op1
+  search:
+    weight: 0.5
+    steps:
+      - service: svc02
+        operation: Op2
+  background:
+    weight: 0.2
+    steps:
+      - parallel:
+          - service: svc03
+            operation: Op0
+          - service: svc04
+            operation: Op1
+  audit:
+    weight: 0.1
+    steps:
+      - service: svc05
+        operation: Op2
+faults:
+  - target: node:svc07
+    kind: crash
+    severity: { probability: 0.05 }
+  - target: operation:svc08.Op1
+    kind: error_rate_override
+    severity: { probability: 0.25, value: 0.5 }
+  - target: edge:svc00.Op0->svc01.Op0
+    kind: latency_inflation
+    severity: { probability: 0.1, multiplier: 3 }

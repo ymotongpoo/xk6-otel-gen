@@ -12,8 +12,12 @@ import (
 
 func TestValidSchema_ValidatePlaceholder(t *testing.T) {
 	t.Parallel()
-	// TODO(u1): enable topology.Validate once U1 replaces the panic stub.
-	t.Skip("U1: topology.Validate not implemented yet")
+	rapid.Check(t, func(t *rapid.T) {
+		schema := ValidSchema().Draw(t, "schema")
+		if err := topology.Validate(schema); err != nil {
+			t.Fatalf("Validate(ValidSchema()) error = %v", err)
+		}
+	})
 }
 
 func TestValidSchema_StructuralInvariants(t *testing.T) {
