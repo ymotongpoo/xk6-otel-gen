@@ -305,19 +305,19 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Step 8.1 — Replace `exporter/doc.go` placeholder
 
-- [ ] Write the full package documentation per NFR-D `nfr-design-patterns.md` §5.2.
-- [ ] Cover: overview, typical usage, lifecycle, configuration priority (4 layers), shared holder usage.
+- [x] Write the full package documentation per NFR-D `nfr-design-patterns.md` §5.2.
+- [x] Cover: overview, typical usage, lifecycle, configuration priority (4 layers), shared holder usage.
 
 ### Step 8.2 — Create `exporter/doc_test.go`
 
-- [ ] `ExampleNew` — construct Pipeline, use TracerProvider, Shutdown. Must include `// Output:` line (empty if no output expected).
-- [ ] `ExampleConfig_MergeWith` — show merge priority with `fmt.Println(merged.Endpoint, merged.Timeout)` and matching `// Output: override:4317 10s`.
-- [ ] `ExampleGetShared` — show `GetShared(factory)` once.
-- [ ] Examples MUST compile and pass `go test ./exporter/...`.
+- [x] `ExampleNew` — construct Pipeline, use TracerProvider, Shutdown. Must include `// Output:` line (empty if no output expected).
+- [x] `ExampleConfig_MergeWith` — show merge priority with `fmt.Println(merged.Endpoint, merged.Timeout)` and matching `// Output: override:4317 10s`.
+- [x] `ExampleGetShared` — show `GetShared(factory)` once.
+- [x] Examples MUST compile and pass `go test ./exporter/...`.
 
 ### Phase 8 commit
 
-- [ ] `git add exporter/doc.go exporter/doc_test.go && git commit -m "docs(exporter): add package documentation and Example functions"`
+- [x] `git add exporter/doc.go exporter/doc_test.go && git commit -m "docs(exporter): add package documentation and Example functions"`
 
 ---
 
