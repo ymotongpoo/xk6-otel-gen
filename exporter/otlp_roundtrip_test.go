@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 	tracecollectorpb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	resourcepb "go.opentelemetry.io/proto/otlp/resource/v1"
@@ -51,7 +52,7 @@ func otlpResourceSpans(t *rapid.T, label string) *tracepb.ResourceSpans {
 	return &tracepb.ResourceSpans{
 		Resource: &resourcepb.Resource{
 			Attributes: []*commonpb.KeyValue{
-				stringKeyValue("service.name", rapid.StringMatching(`^[a-z][a-z0-9-]{0,20}$`).Draw(t, label+"_service_name")),
+				stringKeyValue(string(semconv.ServiceNameKey), rapid.StringMatching(`^[a-z][a-z0-9-]{0,20}$`).Draw(t, label+"_service_name")),
 			},
 		},
 		ScopeSpans: scopes,

@@ -7,6 +7,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
 var envTestMu sync.Mutex
@@ -47,7 +49,7 @@ func TestConfig_Validate_OK(t *testing.T) {
 		BatchTimeout: 500 * time.Millisecond,
 		MaxQueueSize: 256,
 		ResourceOverrides: map[string]string{
-			"service.name": "checkout",
+			string(semconv.ServiceNameKey): "checkout",
 		},
 	}
 	if err := cfg.Validate(); err != nil {
@@ -84,7 +86,7 @@ func TestConfig_Validate_Errors(t *testing.T) {
 		{name: "header key invalid", cfg: withConfig(valid, func(c *Config) { c.Headers = map[string]string{"bad key": "v"} }), field: "Headers"},
 		{name: "header value empty", cfg: withConfig(valid, func(c *Config) { c.Headers = map[string]string{"X-Test": ""} }), field: "Headers"},
 		{name: "resource key empty", cfg: withConfig(valid, func(c *Config) { c.ResourceOverrides = map[string]string{"": "v"} }), field: "ResourceOverrides"},
-		{name: "resource value empty", cfg: withConfig(valid, func(c *Config) { c.ResourceOverrides = map[string]string{"service.name": ""} }), field: "ResourceOverrides"},
+		{name: "resource value empty", cfg: withConfig(valid, func(c *Config) { c.ResourceOverrides = map[string]string{string(semconv.ServiceNameKey): ""} }), field: "ResourceOverrides"},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -116,7 +118,7 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 		BatchSize:         128,
 		BatchTimeout:      time.Second,
 		MaxQueueSize:      256,
-		ResourceOverrides: map[string]string{"service.name": "base"},
+		ResourceOverrides: map[string]string{string(semconv.ServiceNameKey): "base"},
 	}
 	override := Config{
 		Protocol:          ProtocolHTTP,
@@ -128,7 +130,7 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 		BatchSize:         256,
 		BatchTimeout:      3 * time.Second,
 		MaxQueueSize:      512,
-		ResourceOverrides: map[string]string{"service.name": "override"},
+		ResourceOverrides: map[string]string{string(semconv.ServiceNameKey): "override"},
 	}
 
 	merged := base.MergeWith(override)
@@ -138,7 +140,7 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 	if !reflect.DeepEqual(merged.Headers, map[string]string{"override": "wins"}) {
 		t.Fatalf("Headers = %#v, want replacement map", merged.Headers)
 	}
-	if !reflect.DeepEqual(merged.ResourceOverrides, map[string]string{"service.name": "override"}) {
+	if !reflect.DeepEqual(merged.ResourceOverrides, map[string]string{string(semconv.ServiceNameKey): "override"}) {
 		t.Fatalf("ResourceOverrides = %#v, want replacement map", merged.ResourceOverrides)
 	}
 	if merged.Timeout != 2*time.Second || merged.BatchSize != 256 || merged.BatchTimeout != 3*time.Second || merged.MaxQueueSize != 512 {

@@ -6,6 +6,7 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	sdkresource "go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
 func TestBuildResource_AutoDetectOnly(t *testing.T) {
@@ -18,10 +19,10 @@ func TestBuildResource_AutoDetectOnly(t *testing.T) {
 	if res == nil {
 		t.Fatal("buildResource() = nil, want resource")
 	}
-	if _, ok := resourceAttr(res, "host.name"); !ok {
+	if _, ok := resourceAttr(res, string(semconv.HostNameKey)); !ok {
 		t.Fatalf("resource attributes missing host.name: %v", res.Attributes())
 	}
-	if _, ok := resourceAttr(res, "os.type"); !ok {
+	if _, ok := resourceAttr(res, string(semconv.OSTypeKey)); !ok {
 		t.Fatalf("resource attributes missing os.type: %v", res.Attributes())
 	}
 }
@@ -31,14 +32,14 @@ func TestBuildResource_OverrideWins(t *testing.T) {
 
 	res, err := buildResource(context.Background(), Config{
 		ResourceOverrides: map[string]string{
-			"service.name":           "catalog-service",
-			"deployment.environment": "prod",
+			string(semconv.ServiceNameKey): "catalog-service",
+			"deployment.environment":       "prod",
 		},
 	})
 	if err != nil {
 		t.Fatalf("buildResource() error = %v, want nil", err)
 	}
-	if got, ok := resourceAttr(res, "service.name"); !ok || got.AsString() != "catalog-service" {
+	if got, ok := resourceAttr(res, string(semconv.ServiceNameKey)); !ok || got.AsString() != "catalog-service" {
 		t.Fatalf("service.name = %q, %v; want catalog-service, true", got.AsString(), ok)
 	}
 	if got, ok := resourceAttr(res, "deployment.environment"); !ok || got.AsString() != "prod" {

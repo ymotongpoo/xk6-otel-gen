@@ -10,6 +10,7 @@ import (
 
 	"github.com/ymotongpoo/xk6-otel-gen/exporter"
 	"go.opentelemetry.io/otel/attribute"
+	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/metric"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
@@ -30,8 +31,8 @@ func TestIntegration_ThreeSignals_Correlated(t *testing.T) {
 		BatchTimeout: 100 * time.Millisecond,
 		MaxQueueSize: 8,
 		ResourceOverrides: map[string]string{
-			"service.name":      "u4-integration",
-			"service.namespace": "xk6-otel-gen",
+			string(semconv.ServiceNameKey):      "u4-integration",
+			string(semconv.ServiceNamespaceKey): "xk6-otel-gen",
 		},
 	})
 	if err != nil {
