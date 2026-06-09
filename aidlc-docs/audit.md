@@ -518,3 +518,44 @@
 **AI Response**: "Confirmed: that understanding is precise and complete. propagation only matters when a process-boundary HTTP/gRPC header carries trace context. xk6-otel-gen synthesizes the entire 3-signal payload in-process and ships it via OTLP directly (trace_id lives in the protobuf, not in any inject/extract header), so propagation is dead weight. In-process trace context (used for U3/U2 span parent-child chaining and for the NFR-U4-4 metric exemplar / log span context auto-attachment) flows through Go's context.Context — that's separate from the propagation package. Updated tech-stack-decisions.md §1.2 with this explicit rationale + listed future scenarios where propagation could become relevant (real k6 HTTP integration, external trace_id seeding) but kept them out of current scope. Also expanded the baggage entry to share the same reasoning."
 **Context**: Documentation refinement — no code/behavior change, just locking in the rationale so future readers don't re-litigate this decision.
 
+
+## U4 exporter — NFR-R Approved & Committed; NFR Design Plan Issued
+**Timestamp**: 2026-06-09T06:10:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "U4 NFR-R committed as 82f7d5c. Proceeding to U4 NFR Design. Created u4-exporter-nfr-design-plan.md with 12 [Answer]: questions covering: instrumented exporter wrapper style (3 typed wrappers vs generics vs no-decorator), Stats update timing (per-item vs per-batch), QueueLen retrieval (fixed 0 vs wrapper count vs SDK metric), mock exporter for unit test (separate package vs hook vs real Docker), integration test Collector output reading (file mount vs OTLP receiver vs in-process gRPC server), shared holder test reset (ResetShared explicit vs t.Cleanup helper vs separate package), Config construction style (struct literal vs functional options vs both), BenchmarkNew input (fixed vs generators draw vs sub-benchmarks), Pipeline internal field types (concrete SDK vs interface), partial-failure cleanup error handling (discard vs aggregate), file granularity confirmation, and Example function scope."
+**Context**: U4 NFR Design — Step 5 GATE (awaiting user answers).
+
+
+
+## U4 exporter — NFR Design Plan Answers Received & Q3 Verified
+**Timestamp**: 2026-06-09T07:00:00Z
+**User Input**: "回答しました" (all 12 [Answer]: tags filled in u4-exporter-nfr-design-plan.md)
+- Q1=A (3 typed wrappers: tracingExporter/metricExporter/loggingExporter)
+- Q2=A (Export nil → +len(batch) to *Exported; err → +1 to *Failed)
+- Q3=X (Verify SDK API before deciding; if no API, drop QueueLen from Stats, add TODO. Do NOT keep fields "for future compatibility")
+- Q4=A (mockExporter in exporter_test package, SetShared(buildMockPipeline()) pattern)
+- Q5=A (Read Collector file_exporter JSON via os.ReadFile from volume mount)
+- Q6=A (ResetShared() exported, called explicitly at test start)
+- Q7=A (plain struct literal, no functional options)
+- Q8=A (fixed Config in test code for BenchmarkNew)
+- Q9=A (Pipeline holds concrete SDK Provider types, not interfaces)
+- Q10=A (cleanup error discarded — don't mask primary error)
+- Q11=A (8 production files + 5 test files as proposed in FD §3)
+- Q12=A (3 Example functions: ExampleNew, ExampleConfig_MergeWith, ExampleGetShared)
+
+**Q3 Verification (WebFetch on open-telemetry/opentelemetry-go upstream)**:
+- BatchSpanProcessor: only OnStart/OnEnd/Shutdown/ForceFlush/MarshalLog exported — no public queue API
+- BatchProcessor (log): only Enabled/OnEmit/Shutdown/ForceFlush — no Len() exported
+- PeriodicReader (metric): pull-based, no queue concept
+- Conclusion: drop *QueueLen from Stats entirely; document as TODO for future SDK release
+
+**AI Response**: "Cascaded Q3 verification result through FD:
+1. business-logic-model.md — Stats struct: 9 fields → 6 (removed TracesQueueLen, MetricsQueueLen, LogsQueueLen); pipelineStats internal type updated; Stats() snapshot method updated; QueueLen update timing line removed; added 'Future: QueueLen の追加可能性 (TODO)' subsection.
+2. business-rules.md — §4.1 monotonicity: dropped QueueLen increase/decrease bullet; §11 performance: Stats() 9 atomic.Load → 6.
+3. domain-entities.md — Stats type spec: 9 fields → 6; invariants: removed QueueLen mention; added Note(Future) box documenting verified absence of OTel SDK public API.
+
+Generated 2 NFR Design artifacts under aidlc-docs/construction/u4-exporter/nfr-design/:
+(1) nfr-design-patterns.md — 11 sections covering Performance (per-signal wrappers Q1=A, Export timing Q2=A, snapshot read, BenchmarkNew fixed Config Q8=A, QueueLen verification Q3=X), Concurrency (atomic.Int64, sync.Once shared holder Q6=A, Shutdown idempotency), Error (partial-failure cleanup discard Q10=A, 3-type error hierarchy), API (struct literal Q7=A, concrete SDK Provider types Q9=A, minimal public API surface), Documentation (3 Example functions Q12=A, doc.go template, GoDoc completeness), Test (mockExporter in exporter_test Q4=A, integration build tag harness Q5=A, ResetShared explicit Q6=A, PBT patterns, file split Q11=A), extension points table, NFR-R traceability matrix, external deps confirmation (propagation excluded), and anti-pattern enumeration.
+(2) logical-components.md — 8 logical components (LC-0..LC-7: doc.go, config.go, resource.go, exporters.go, stats.go, pipeline.go, shared.go, errors.go) each with 責務/公開API/実装スケッチ/依存; component dependency diagram; external package list; test component mapping to LCs; final summary."
+
+**Context**: U4 NFR Design — artifacts generated, awaiting approval (Step 5/6 GATE).

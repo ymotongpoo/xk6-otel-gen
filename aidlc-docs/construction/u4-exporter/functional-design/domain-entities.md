@@ -72,20 +72,18 @@ func (p *Pipeline) Stats() Stats
 type Stats struct {
     TracesExported  int64
     TracesFailed    int64
-    TracesQueueLen  int64
     MetricsExported int64
     MetricsFailed   int64
-    MetricsQueueLen int64
     LogsExported    int64
     LogsFailed      int64
-    LogsQueueLen    int64
 }
 ```
 
 - **意味**: Pipeline の運用状態スナップショット
 - **不変条件**:
   - `*Exported` / `*Failed` は monotonic increasing (per Pipeline lifetime)
-  - `*QueueLen` は increase / decrease 両方ありうる
+
+> **Note (Future)**: OTel SDK の `BatchSpanProcessor` / `BatchProcessor` (logs) / `PeriodicReader` (metrics) は現時点で内部キュー長を公開する API を持たない (verified 2026-06: open-telemetry/opentelemetry-go upstream)。将来 SDK が `Len()` 系メソッドや関連 metric を公開した時点で `Stats` に `*QueueLen int64` を 3 フィールド追加検討。現時点では仕様に含めない。
 
 ### 1.5 エラー型
 

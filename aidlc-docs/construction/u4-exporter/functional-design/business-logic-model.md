@@ -294,15 +294,14 @@ func ResetShared()
 type Stats struct {
     TracesExported  int64
     TracesFailed    int64
-    TracesQueueLen  int64
     MetricsExported int64
     MetricsFailed   int64
-    MetricsQueueLen int64
     LogsExported    int64
     LogsFailed      int64
-    LogsQueueLen    int64
 }
 ```
+
+**QueueLen は含めない**。理由: OTel Go SDK の `BatchSpanProcessor` / `BatchProcessor` / `PeriodicReader` のいずれも **public な queue-length 取得 API を露出していない** ことを upstream リポジトリで確認済み (NFR Design Q3 検証)。metric の `PeriodicReader` は pull-based 設計のため queue 概念自体が N/A。将来 SDK が公開 API を追加したら本 Stats を拡張する余地はあるが、現時点では **フィールド自体を持たない** (`将来の互換性のため` という理由でゼロ値フィールドを残さない方針、利用者明示)。
 
 ### 内部実装
 
@@ -310,8 +309,10 @@ type Stats struct {
 type pipelineStats struct {
     tracesExported  atomic.Int64
     tracesFailed    atomic.Int64
-    tracesQueueLen  atomic.Int64
-    // ... 6 個分
+    metricsExported atomic.Int64
+    metricsFailed   atomic.Int64
+    logsExported    atomic.Int64
+    logsFailed      atomic.Int64
 }
 
 func newStats() *pipelineStats {
@@ -322,9 +323,10 @@ func (p *Pipeline) Stats() Stats {
     return Stats{
         TracesExported:  p.stats.tracesExported.Load(),
         TracesFailed:    p.stats.tracesFailed.Load(),
-        TracesQueueLen:  p.stats.tracesQueueLen.Load(),
         MetricsExported: p.stats.metricsExported.Load(),
-        // ...
+        MetricsFailed:   p.stats.metricsFailed.Load(),
+        LogsExported:    p.stats.logsExported.Load(),
+        LogsFailed:      p.stats.logsFailed.Load(),
     }
 }
 ```
@@ -332,8 +334,7 @@ func (p *Pipeline) Stats() Stats {
 ### カウンタ更新タイミング
 
 - `TracesExported` / `MetricsExported` / `LogsExported`: OTel SDK の Exporter が返す success time に対応する **batch サイズ分加算**
-- `TracesFailed` / etc.: Exporter が error を返したら 1 加算
-- `TracesQueueLen` / etc.: BatchProcessor の現在キュー長 (OTel SDK が直接露出しない場合、内部 wrapper exporter で count up/down)
+- `TracesFailed` / `MetricsFailed` / `LogsFailed`: Exporter が error を返したら 1 加算
 
 ### 実装の詳細 (Stats 更新)
 
@@ -346,7 +347,6 @@ type tracingExporter struct {
 }
 
 func (e *tracingExporter) ExportSpans(ctx context.Context, spans []sdktrace.ReadOnlySpan) error {
-    // queue len はここで -len(spans)、export 開始は OTel SDK 内部のためここで観測する
     err := e.inner.ExportSpans(ctx, spans)
     if err != nil {
         e.stats.tracesFailed.Add(1)
@@ -361,12 +361,17 @@ func (e *tracingExporter) Shutdown(ctx context.Context) error {
 }
 ```
 
-Queue length は BatchProcessor 内部状態のため、OTel SDK が露出する `BatchSpanProcessor.QueueSize()` のような API を使う。SDK バージョンによって取得方法が変わる可能性があり、最終的な実装は U4 Code Generation で確定。
-
 ### Stats の monotonicity (PBT-03 invariant の根拠)
 
 - 全カウンタは **減少しない** (`atomic.Add` のみ、`Store` しない)
 - `Stats()` は monotonic snapshot を返す (各 field は同一時点を保証しないが、各 field は他の field と独立に monotonic increasing)
+
+### Future: QueueLen の追加可能性 (TODO)
+
+- 現在の OTel Go SDK (2025-06 時点で確認) は `BatchSpanProcessor` / `BatchProcessor` のキュー長を public API として露出していない (`Len()` は unexported、`MarshalLog` は logging 用)
+- `PeriodicReader` (metric) は pull-based 設計でそもそも queue 概念が存在しない
+- 将来 SDK が `QueueSize()` 等を追加した場合、Traces/Logs についてのみ Stats への追加を再評価
+- Metric の `QueueLen` は意味論的に対応する概念がないため、SDK の進化に関わらず追加しない
 
 ---
 

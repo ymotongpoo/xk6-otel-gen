@@ -108,7 +108,6 @@ Q5=A all-or-nothing:
 ### 4.1 Monotonicity (PBT-03 / TP-U4-4)
 
 - すべての `*Exported` / `*Failed` counter は **減少しない** (`atomic.Add` のみ)
-- `*QueueLen` は **増減可能** (queue の bind/unbind を反映)
 
 ### 4.2 Atomic snapshot (Q7=A)
 
@@ -302,7 +301,7 @@ type SharedError struct {
 | 項目 | 期待値 |
 |---|---|
 | `New(Config)` の所要時間 | < 100 ms (gRPC connection 確立込み、再試行なし) |
-| `Stats()` 呼び出し | < 1 µs (9 個の `atomic.Load`) |
+| `Stats()` 呼び出し | < 1 µs (6 個の `atomic.Load`) |
 | `Shutdown(ctx)` 通常時 | < BatchTimeout + buffer (~6 s) |
 | `Shutdown(ctx)` deadline 即時 | < 100 ms (即座に context.DeadlineExceeded を返す) |
 | Pipeline インスタンス 1 個のメモリ | < 100 KB (3 Exporter + 3 Provider + Resource + Stats、connection bufferを除く) |
