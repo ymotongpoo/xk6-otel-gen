@@ -135,62 +135,62 @@
 
 ### Step 3.1 — Top-level Parse / ParseFile + decodeRaw
 
-- [ ] Create `topology/parse.go`.
-- [ ] Implement `Parse(r io.Reader) (*Schema, error)` per `business-logic-model.md` §1 and NFR-D P-PERF-1, P-PERF-4:
+- [x] Create `topology/parse.go`.
+- [x] Implement `Parse(r io.Reader) (*Schema, error)` per `business-logic-model.md` §1 and NFR-D P-PERF-1, P-PERF-4:
   - `io.ReadAll(r)` (P-PERF-4)
   - Call `decodeRaw(bytes.NewReader(data), false)` (lax)
   - Call `buildSchema(raw)`
   - Call `resolveReferences(schema, raw)` — if error, return
   - Call `Validate(schema)` — if error, return
   - Return `*Schema, nil`
-- [ ] Implement `ParseFile(path string) (*Schema, error)` — `os.Open` + `defer Close` + delegate to `Parse`.
-- [ ] Implement `decodeRaw(r io.Reader, strict bool) (*rawSchema, error)` (P-PERF-1):
+- [x] Implement `ParseFile(path string) (*Schema, error)` — `os.Open` + `defer Close` + delegate to `Parse`.
+- [x] Implement `decodeRaw(r io.Reader, strict bool) (*rawSchema, error)` (P-PERF-1):
   - `yaml.NewDecoder(r)` + `dec.KnownFields(strict)`
   - On error: wrap in `*ParseError{Path: "<root>", Message: "yaml decode failed", Inner: err}`
 
 ### Step 3.2 — buildSchema (Phase 2a — typed objects + defaults)
 
-- [ ] Implement `buildSchema(raw *rawSchema) *Schema` per `business-logic-model.md` §1 "Phase 2a":
+- [x] Implement `buildSchema(raw *rawSchema) *Schema` per `business-logic-model.md` §1 "Phase 2a":
   - Create Service map with `make(map[ServiceID]*Service, len(raw.Services))` (P-PERF-2)
   - For each raw service: create `*Service` with defaults applied
   - For each raw operation: create `*Operation` with back-pointer to its Service (R-STR-2 invariant satisfied at construction)
-- [ ] Implement default helpers (top of `parse.go` or shared `helpers.go`):
+- [x] Implement default helpers (top of `parse.go` or shared `helpers.go`):
   ```go
   func intDefault(p *int, def int) int
   func float64Default(p *float64, def float64) float64
   func durationDefault(p *time.Duration, def time.Duration) time.Duration
   ```
-- [ ] Implement enum parsers: `parseServiceKind`, `parseProtocol`, `parseBackoff`, `parseFaultKind`. Return zero value for unknown strings (validate.go will report invalid enum as error D-?, but parser stays lenient to defer YAML errors to Validate).
+- [x] Implement enum parsers: `parseServiceKind`, `parseProtocol`, `parseBackoff`, `parseFaultKind`. Return zero value for unknown strings (validate.go will report invalid enum as error D-?, but parser stays lenient to defer YAML errors to Validate).
   - **Actually**: on unknown enum strings, return a sentinel "Invalid" value (e.g., `ServiceKind(-1)`). validate.go checks this.
 
 ### Step 3.3 — resolveReferences (Phase 2b — collect errors)
 
-- [ ] Implement `resolveReferences(schema *Schema, raw *rawSchema) error`:
+- [x] Implement `resolveReferences(schema *Schema, raw *rawSchema) error`:
   - Iterate raw services and resolve each operation's `Calls` via `resolveCallNode`
   - Iterate raw journeys and resolve each step's operation via `resolveStep`
   - Iterate raw faults and resolve targets via `resolveFaultTarget`
   - Collect errors into `[]error`, return `errors.Join(errs...)`
-- [ ] Implement `resolveCallNode(schema, owningSvc, owningOp, rc, path string)`:
+- [x] Implement `resolveCallNode(schema, owningSvc, owningOp, rc, path string)`:
   - Variant check (hasTo XOR hasParallel) → R-STR-7
   - If Parallel: recursively call resolveCallNode for each child
   - If To: lookup target Operation, build Edge with defaults via float64Default etc., recurse into RecoveryPolicy
-- [ ] Implement `resolveStep(schema, rs, path string)`:
+- [x] Implement `resolveStep(schema, rs, path string)`:
   - Variant check (Op or Parallel)
   - If Op set: lookup Operation via service+operation strings
   - If Parallel: recurse
-- [ ] Implement `resolveFaultTarget(schema, spec, path string)`:
+- [x] Implement `resolveFaultTarget(schema, spec, path string)`:
   - Parse the `target` string: `node:<svc>` | `operation:<svc>.<op>` | `edge:<svc>.<op>-><svc>.<op>`
   - Return `FaultTarget{Kind, Service|Operation|Edge}` with resolved pointer
   - For `edge:` target, search the schema for matching `*Edge` (linear scan acceptable for small schemas)
-- [ ] Implement `resolveRecoveryPolicy(schema, owningOp, rp, path string)`:
+- [x] Implement `resolveRecoveryPolicy(schema, owningOp, rp, path string)`:
   - Each fallback edge's `From` is set to `owningOp` (R-STR-8 invariant satisfied at construction)
   - Parse `OnExhausted` enum
-- [ ] Implement `lookupOperation(schema, svcName, opName string)`:
+- [x] Implement `lookupOperation(schema, svcName, opName string)`:
   - Return `&ParseError{Path: path, Message: ...}` on miss
 
 ### Step 3.4 — Build verification (still expected to fail without Validate / MarshalYAML)
 
-- [ ] `go vet ./topology/parse.go` — should compile in isolation if Validate is declared. We'll need to stub Validate temporarily:
+- [x] `go vet ./topology/parse.go` — should compile in isolation if Validate is declared. We'll need to stub Validate temporarily:
   - Add a temporary `func Validate(s *Schema) error { return nil }` in parse.go — REMOVE in Phase 4 after validate.go is created.
 
 ---
