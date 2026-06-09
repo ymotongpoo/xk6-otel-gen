@@ -255,29 +255,29 @@
 
 ### Step 5.1 — Implement Schema-level Marshaler
 
-- [ ] Create `topology/marshal.go`.
-- [ ] Implement `(*Schema).MarshalYAML() (any, error)` per P-MARSHAL-1:
+- [x] Create `topology/marshal.go`.
+- [x] Implement `(*Schema).MarshalYAML() (any, error)` per P-MARSHAL-1:
   - Build `*rawSchema` with services sorted by ServiceID, journeys by name, faults in declaration order.
 
 ### Step 5.2 — Helper functions
 
-- [ ] `sortedServiceIDs(m map[ServiceID]*Service) []ServiceID`
-- [ ] `sortedKeys[V any](m map[string]V) []string`
-- [ ] `marshalService(svc *Service) *rawService`
-- [ ] `marshalOperations(ops map[string]*Operation) []*rawOperation` (operations sorted by name, then call sequence preserved)
-- [ ] `marshalCallNodes(nodes []*CallNode) []*rawCallNode`
-- [ ] `marshalCallNode(n *CallNode) *rawCallNode` (handles variant)
-- [ ] `marshalEdge(e *Edge) *rawCallNode`
-- [ ] `marshalRecoveryPolicy(rp *RecoveryPolicy) *rawRecoveryPolicy`
-- [ ] `marshalJourney(j *Journey) *rawJourney`
-- [ ] `marshalStep(s *Step) *rawStep`
-- [ ] `marshalFault(f FaultSpec) *rawFault`
-- [ ] `marshalFaultTarget(t FaultTarget) string` (returns `node:<svc>` / `operation:<svc>.<op>` / `edge:<svc>.<op>-><svc>.<op>`)
-- [ ] `ptrInt(v int) *int`, `ptrFloat64(v float64) *float64`, `ptrDuration(v time.Duration) *time.Duration`
+- [x] `sortedServiceIDs(m map[ServiceID]*Service) []ServiceID`
+- [x] `sortedKeys[V any](m map[string]V) []string`
+- [x] `marshalService(svc *Service) *rawService`
+- [x] `marshalOperations(ops map[string]*Operation) []*rawOperation` (operations sorted by name, then call sequence preserved)
+- [x] `marshalCallNodes(nodes []*CallNode) []*rawCallNode`
+- [x] `marshalCallNode(n *CallNode) *rawCallNode` (handles variant)
+- [x] `marshalEdge(e *Edge) *rawCallNode`
+- [x] `marshalRecoveryPolicy(rp *RecoveryPolicy) *rawRecoveryPolicy`
+- [x] `marshalJourney(j *Journey) *rawJourney`
+- [x] `marshalStep(s *Step) *rawStep`
+- [x] `marshalFault(f FaultSpec) *rawFault`
+- [x] `marshalFaultTarget(t FaultTarget) string` (returns `node:<svc>` / `operation:<svc>.<op>` / `edge:<svc>.<op>-><svc>.<op>`)
+- [x] `ptrInt(v int) *int`, `ptrFloat64(v float64) *float64`, `ptrDuration(v time.Duration) *time.Duration`
 
 ### Step 5.3 — Build check
 
-- [ ] `go build ./topology/...` — succeeds.
+- [x] `go build ./topology/...` — succeeds.
 
 ---
 
