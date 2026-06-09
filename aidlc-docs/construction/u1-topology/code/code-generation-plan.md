@@ -201,30 +201,30 @@
 
 ### Step 4.1 — Top-level Validate
 
-- [ ] Create `topology/validate.go`.
-- [ ] Remove the temporary `Validate` stub from `parse.go`.
-- [ ] Implement `Validate(s *Schema) error` per `nfr-design-patterns.md` §1 P-PERF-5:
+- [x] Create `topology/validate.go`.
+- [x] Remove the temporary `Validate` stub from `parse.go`.
+- [x] Implement `Validate(s *Schema) error` per `nfr-design-patterns.md` §1 P-PERF-5:
   - Phase A (structural): call 8 validateXxx (R-STR-1..8) in order, collect errors
   - Phase B (domain): call `validateDomainRanges` (D-1..D-14), collect errors
   - Return `errors.Join(errs...)`
 
 ### Step 4.2 — Structural validators
 
-- [ ] Implement `validateMapKeyConsistency(s)` — R-STR-1: `s.Services[id].Name == id`.
-- [ ] Implement `validateBackPointers(s)` — R-STR-2: `op.Service == svc && svc.Operations[op.Name] == op`.
-- [ ] Implement `validateNoOrphanReferences(s)` — R-STR-3: every `Edge.From` and `Edge.To` is in schema. (Note: resolveReferences should already prevent this, but Validate re-checks as a safety net.)
-- [ ] Implement `validateDAG(s)` per P-VAL-DAG (Kahn's algorithm):
+- [x] Implement `validateMapKeyConsistency(s)` — R-STR-1: `s.Services[id].Name == id`.
+- [x] Implement `validateBackPointers(s)` — R-STR-2: `op.Service == svc && svc.Operations[op.Name] == op`.
+- [x] Implement `validateNoOrphanReferences(s)` — R-STR-3: every `Edge.From` and `Edge.To` is in schema. (Note: resolveReferences should already prevent this, but Validate re-checks as a safety net.)
+- [x] Implement `validateDAG(s)` per P-VAL-DAG (Kahn's algorithm):
   - Build map[*Operation]int of in-degrees
   - BFS from in-degree-0 operations
   - If visited count < total ops, report cycle with affected operation names sorted alphabetically
-- [ ] Implement `validateJourneyReachability(s)` — R-STR-5: each `step.Op != nil` for non-Parallel steps; recurse into Parallel.
-- [ ] Implement `validateFaultTargets(s)` — R-STR-6: each `FaultSpec.Target` has exactly one of Service/Operation/Edge set per Kind.
-- [ ] Implement `validateCallNodeVariants(s)` — R-STR-7: each `CallNode` has exactly one of Edge or Parallel set.
-- [ ] Implement `validateRecoveryPolicyOwnership(s)` — R-STR-8: each `fallback[i].From == 親 Edge.From`.
+- [x] Implement `validateJourneyReachability(s)` — R-STR-5: each `step.Op != nil` for non-Parallel steps; recurse into Parallel.
+- [x] Implement `validateFaultTargets(s)` — R-STR-6: each `FaultSpec.Target` has exactly one of Service/Operation/Edge set per Kind.
+- [x] Implement `validateCallNodeVariants(s)` — R-STR-7: each `CallNode` has exactly one of Edge or Parallel set.
+- [x] Implement `validateRecoveryPolicyOwnership(s)` — R-STR-8: each `fallback[i].From == 親 Edge.From`.
 
 ### Step 4.3 — Domain validators
 
-- [ ] Implement `validateDomainRanges(s)` per `business-rules.md` §3.2 (D-1..D-14):
+- [x] Implement `validateDomainRanges(s)` per `business-rules.md` §3.2 (D-1..D-14):
   - `Service.Replicas >= 1`
   - `Edge.ErrorRate ∈ [0,1]`
   - `Edge.Timeout >= 0`
@@ -241,11 +241,11 @@
 
 ### Step 4.4 — Traversal helpers
 
-- [ ] Implement `forEachOutgoingEdge(s, fn)`, `forEachEdgeInCalls(calls, fn)`, `outgoingTargets(op)`, `identifyOp(op)` per `nfr-design-patterns.md` §4.
+- [x] Implement `forEachOutgoingEdge(s, fn)`, `forEachEdgeInCalls(calls, fn)`, `outgoingTargets(op)`, `identifyOp(op)` per `nfr-design-patterns.md` §4.
 
 ### Step 4.5 — Build check
 
-- [ ] `go build ./topology/...` — succeeds.
+- [x] `go build ./topology/...` — succeeds.
 
 ---
 

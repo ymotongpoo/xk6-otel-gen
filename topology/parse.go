@@ -551,7 +551,3 @@ func parseExhaustedAction(s string) ExhaustedAction {
 		return invalidExhaustedAction
 	}
 }
-
-func Validate(*Schema) error {
-	return nil
-}
