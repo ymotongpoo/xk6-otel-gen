@@ -91,7 +91,7 @@ tail -f logs/codex-u7-*.log
 
 ### Safety guarantees
 
-- **Sandbox**: writes confined to the workspace (`sandbox_mode=workspace-write` in `.codex/config.toml`).
+- **Sandbox**: `danger-full-access` (`.codex/config.toml`). The user has explicitly granted full autonomous execution authority for these batch runs. Initially the runners used `workspace-write`, but Codex CLI 0.137's workspace-write mode marks `.git/` as read-only, which blocks the mandatory per-phase Conventional Commits flow (`Unable to create .git/index.lock`). danger-full-access removes that restriction. The `read_only_paths` config entry (best-effort enforcement) and the prompt-level "do not edit aidlc-docs/" rule remain in place to constrain what Codex can touch in practice.
 - **Network**: enabled — required for Codex to autonomously fetch Go modules (`go get`, `go mod tidy`). The user has explicitly granted this permission for long-running unattended execution. Codex still cannot escape the workspace for writes.
 - **Read-only paths**: `aidlc-docs/`, `.aidlc-rule-details/`, `CLAUDE.md`, `AGENTS.md` declared read-only in the config (best-effort enforcement; in addition, the plan itself instructs Codex not to modify these except for documented exceptions like appending to `audit.md`).
 - **Pre-launch git check**: aborts if the working tree is dirty so all Codex commits attribute cleanly to a known baseline.

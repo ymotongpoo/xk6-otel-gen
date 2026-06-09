@@ -184,7 +184,7 @@ PROMPT_EOF
 # ----------------------------------------------------------------------------
 # Launch Codex
 # ----------------------------------------------------------------------------
-log "launching codex exec (workspace-write sandbox, network=enabled, approval_policy=never)"
+log "launching codex exec (danger-full-access sandbox, network=enabled, approval_policy=never)"
 log "log file: ${LOG_FILE}"
 log "hard timeout: ${CODEX_TIMEOUT}s"
 
@@ -210,9 +210,15 @@ log "hard timeout: ${CODEX_TIMEOUT}s"
 } | tee -a "${LOG_FILE}"
 
 set +e
+# Sandbox: danger-full-access is required because Codex CLI 0.137's
+# workspace-write mode treats .git/ as read-only, which breaks the
+# mandatory per-phase Conventional Commits flow. The user has
+# explicitly granted full autonomy for this batch runner. Mitigations:
+# read_only_paths in .codex/config.toml + prompt-level "do not edit
+# aidlc-docs/" rule + no auto-push.
 timeout --kill-after=30s "${CODEX_TIMEOUT}" \
   codex exec \
-    --sandbox workspace-write \
+    --sandbox danger-full-access \
     -c approval_policy="never" \
     --skip-git-repo-check \
     - < <(printf '%s' "${PROMPT}") \
