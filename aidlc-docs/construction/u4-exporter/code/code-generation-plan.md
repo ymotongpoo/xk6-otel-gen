@@ -278,25 +278,25 @@ No standalone test in this phase — exporter factory is exercised via `New` tes
 
 ### Step 7.1 — Create `exporter/shared.go`
 
-- [ ] Define unexported package-level vars `sharedMu sync.Mutex`, `sharedOnce sync.Once`, `sharedPipeline *Pipeline`, `sharedInitErr error`.
-- [ ] Implement `GetShared(factory func() (*Pipeline, error)) (*Pipeline, error)` using `sharedOnce.Do`.
-- [ ] Implement `SetShared(p *Pipeline) error` per NFR-D `logical-components.md` LC-6.
-- [ ] Implement `ResetShared()` — replaces `sharedOnce` with a new instance and clears the cached values under `sharedMu`. Doc comment: "Intended for tests only."
-- [ ] All exported identifiers have GoDoc; `ResetShared` doc explicitly says "tests only" and warns about goroutines holding the previous Pipeline.
+- [x] Define unexported package-level vars `sharedMu sync.Mutex`, `sharedOnce sync.Once`, `sharedPipeline *Pipeline`, `sharedInitErr error`.
+- [x] Implement `GetShared(factory func() (*Pipeline, error)) (*Pipeline, error)` using `sharedOnce.Do`.
+- [x] Implement `SetShared(p *Pipeline) error` per NFR-D `logical-components.md` LC-6.
+- [x] Implement `ResetShared()` — replaces `sharedOnce` with a new instance and clears the cached values under `sharedMu`. Doc comment: "Intended for tests only."
+- [x] All exported identifiers have GoDoc; `ResetShared` doc explicitly says "tests only" and warns about goroutines holding the previous Pipeline.
 
 ### Step 7.2 — Unit test `exporter/shared_test.go`
 
-- [ ] All tests call `exporter.ResetShared()` at the start (and `t.Cleanup(exporter.ResetShared)` for safety).
-- [ ] `TestGetShared_CachesSuccess` — factory called once, second `GetShared` returns same pointer.
-- [ ] `TestGetShared_CachesError` — factory returns error, second `GetShared` returns same error (factory NOT re-called).
-- [ ] `TestSetShared_BeforeAnyGet` — `SetShared(p)` succeeds, then `GetShared(factory)` returns p without calling factory.
-- [ ] `TestSetShared_AfterGet_Fails` — `*SharedError{Reason:"already_initialized"}`.
-- [ ] `TestSetShared_Nil_Fails` — `*SharedError{Reason:"not_set"}`.
-- [ ] **NOTE**: these tests **must NOT run in parallel** with other tests touching shared state. Use `t.Parallel()` only within subtests that don't touch the holder, or run shared_test.go single-threaded.
+- [x] All tests call `exporter.ResetShared()` at the start (and `t.Cleanup(exporter.ResetShared)` for safety).
+- [x] `TestGetShared_CachesSuccess` — factory called once, second `GetShared` returns same pointer.
+- [x] `TestGetShared_CachesError` — factory returns error, second `GetShared` returns same error (factory NOT re-called).
+- [x] `TestSetShared_BeforeAnyGet` — `SetShared(p)` succeeds, then `GetShared(factory)` returns p without calling factory.
+- [x] `TestSetShared_AfterGet_Fails` — `*SharedError{Reason:"already_initialized"}`.
+- [x] `TestSetShared_Nil_Fails` — `*SharedError{Reason:"not_set"}`.
+- [x] **NOTE**: these tests **must NOT run in parallel** with other tests touching shared state. Use `t.Parallel()` only within subtests that don't touch the holder, or run shared_test.go single-threaded.
 
 ### Phase 7 commit
 
-- [ ] `git add exporter/shared.go exporter/shared_test.go && git commit -m "feat(exporter): add shared Pipeline holder with sync.Once and ResetShared"`
+- [x] `git add exporter/shared.go exporter/shared_test.go && git commit -m "feat(exporter): add shared Pipeline holder with sync.Once and ResetShared"`
 
 ---
 
