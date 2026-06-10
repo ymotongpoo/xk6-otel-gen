@@ -169,6 +169,26 @@ func TestStaticSetCache_GetPut(t *testing.T) {
 	}
 }
 
+func TestAllowedAttrKeys_IncludesEmittedKeys(t *testing.T) {
+	t.Parallel()
+
+	keys := []string{
+		string(semconv.ServiceNameKey),
+		string(semconv.HTTPRequestMethodKey),
+		string(semconv.HTTPResponseStatusCodeKey),
+		string(semconv.RPCGRPCStatusCodeKey),
+		string(semconv.DBOperationNameKey),
+		string(semconv.MessagingOperationNameKey),
+		string(semconv.ErrorTypeKey),
+		"peer.service",
+	}
+	for _, key := range keys {
+		if _, ok := allowedAttrKeys[key]; !ok {
+			t.Fatalf("allowedAttrKeys missing %q", key)
+		}
+	}
+}
+
 func makeAttrEdge(sourceKind, targetKind topology.ServiceKind, protocol topology.Protocol) (*topology.Service, *topology.Edge) {
 	source := &topology.Service{Name: "source", Kind: sourceKind, Replicas: 1}
 	target := &topology.Service{Name: "target", Kind: targetKind, Replicas: 1}

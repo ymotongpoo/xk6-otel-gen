@@ -62,10 +62,10 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Unit**: U3 (Signal Synthesizer)
-- **Completed Units**: U7, U1, U4
-- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → U3 → U2 → U5 → U6 → U8
-- **Status**: U4 code generation completed through Phase 14 with exporter coverage 82.5%, `go test -race -count=1 ./...` clean, and Docker-backed exporter integration passing. Next construction focus is U3.
+- **Current Unit**: U2 (Journey Engine)
+- **Completed Units**: U7, U1, U4, U3
+- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → [✓ U3 complete] → U2 → U5 → U6 → U8
+- **Status**: U3 code generation completed through Phase 14 with synth coverage 84.0%, `go test -race -count=1 ./...` clean, benchmarks within NFR-U3-6 budgets, and Docker-backed synth integration passing. Next construction focus is U2.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)

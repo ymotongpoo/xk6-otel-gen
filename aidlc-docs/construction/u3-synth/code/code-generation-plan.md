@@ -436,32 +436,32 @@
 
 ### Step 14.1 — Run full suite
 
-- [ ] `go build ./...` succeeds.
-- [ ] `go vet ./synth/...` clean.
-- [ ] `go test -race -count=1 ./...` passes.
-- [ ] `go test -cover ./synth/...` ≥ 80%.
-- [ ] `go test -bench=. -benchmem ./synth/...` shows all bench within NFR-U3-6 budgets (or document failures).
-- [ ] `golangci-lint run ./synth/...` passes.
-- [ ] `go test -tags=integration ./synth/integration/...` passes (with Docker available).
+- [x] `go build ./...` succeeds.
+- [x] `go vet ./synth/...` clean.
+- [x] `go test -race -count=1 ./...` passes.
+- [x] `go test -cover ./synth/...` ≥ 80%.
+- [x] `go test -bench=. -benchmem ./synth/...` shows all bench within NFR-U3-6 budgets (or document failures).
+- [x] `golangci-lint run ./synth/...` passes.
+- [x] `go test -tags=integration ./synth/integration/...` passes (with Docker available).
 
 ### Step 14.2 — Create `aidlc-docs/construction/u3-synth/code/code-generation-summary.md`
 
-- [ ] File list with line counts (production + test).
-- [ ] Verification results (coverage %, bench numbers).
-- [ ] Deviations from plan (if any).
-- [ ] Recent commits (`git log --oneline | head -15`).
+- [x] File list with line counts (production + test).
+- [x] Verification results (coverage %, bench numbers).
+- [x] Deviations from plan (if any).
+- [x] Recent commits (`git log --oneline | head -15`).
 
 ### Step 14.3 — Mark all plan checkboxes [x]
 
-- [ ] Walk back through this plan; verify every `[ ]` is `[x]`. Document any intentionally skipped items.
+- [x] Walk back through this plan; verify every `[ ]` is `[x]`. Document any intentionally skipped items.
 
 ### Step 14.4 — Update `aidlc-docs/aidlc-state.md`
 
-- [ ] Mark U3 complete. Set Current Unit to U2 (Journey Engine).
+- [x] Mark U3 complete. Set Current Unit to U2 (Journey Engine).
 
 ### Phase 14 commit
 
-- [ ] `git add aidlc-docs/ && git commit -m "chore(u3-synth): finalize code-generation-summary and checkbox state"`
+- [x] `git add aidlc-docs/ && git commit -m "chore(u3-synth): finalize code-generation-summary and checkbox state"`
 
 ---
 
