@@ -296,20 +296,20 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Step 7.1 — Replace `k6otelgen/doc.go` placeholder
 
-- [ ] Full package documentation per NFR-D §5.1:
+- [x] Full package documentation per NFR-D §5.1:
   - JS usage example (setup → iteration → teardown)
   - `--out otel-gen=...` IMPORTANT warning
   - State model (singleton vs per-VU)
 
 ### Step 7.2 — Create `k6otelgen/doc_test.go`
 
-- [ ] `ExampleNew` — `rm := k6otelgen.New(); _ = rm`. Output: empty.
-- [ ] `ExampleRootModule_NewModuleInstance` — comment-based usage hint, no executable code needed (mock vu construction is complex).
-- [ ] Examples must compile.
+- [x] `ExampleNew` — `rm := k6otelgen.New(); _ = rm`. Output: empty.
+- [x] `ExampleRootModule_NewModuleInstance` — comment-based usage hint, no executable code needed (mock vu construction is complex).
+- [x] Examples must compile.
 
 ### Phase 7 commit
 
-- [ ] `git add k6otelgen/doc.go k6otelgen/doc_test.go && git commit -m "docs(k6otelgen): add package documentation with --out warning and Example functions"`
+- [x] `git add k6otelgen/doc.go k6otelgen/doc_test.go && git commit -m "docs(k6otelgen): add package documentation with --out warning and Example functions"`
 
 ---
 
