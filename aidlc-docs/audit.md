@@ -895,3 +895,20 @@ Notable deviations (per code-generation-summary.md):
 U2 patch (Phase 1) succeeded cleanly. journey.NewEngineWithSeed exposes deterministic seeding for U5 per-VU isolation. U5 fully complete; U6 (k6 Output) is next."
 
 **Context**: U5 Code Generation — Part 2 complete; awaiting Continue to Next Stage approval before moving to U6 (k6 Output Module).
+
+
+## U6 k6output — FD Plan Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T16:30:00Z
+**User Input**: "完了しました" (all 13 [Answer]: tags filled with A in u6-k6output-fd-plan.md). Q5 user clarification: confirmed that U6 metric conversion targets k6 runner's real-measured metrics (http_req_*, vus, iterations), NOT synth-generated pseudo-telemetry. Therefore the dedicated service.name="xk6-otel-gen-runner" Resource is correct (independent from synth's per-service Resources like "checkout").
+
+**AI Response**: "All 13 recommended options selected; no contradictions. The Q5 clarification cemented the design separation: U6 emits k6 runner's actual observability data (k6.* namespace, runner Resource), while U3 synth emits simulated microservice telemetry (semconv standard namespaces, per-service Resources). Both share the same OTLP endpoint via U4 Pipeline but appear as distinct services to OTel Collector and backend dashboards.
+
+Generated 3 FD artifacts under aidlc-docs/construction/u6-k6output/functional-design/:
+
+(1) business-logic-model.md — Package responsibilities (dual-function k6 Output module), explicit separation table for k6-runner real metrics vs synth pseudo-telemetry, k6 SDK lifecycle walkthrough (init → setup → Start → AddMetricSamples → Stop), --out args parsing (k/v syntax), Config priority (JS > --out > env > built-in via exporter.GetShared sync.Once), Pipeline acquisition in Start() with cache hit semantics, k6 metric → OTel instrument mapping table (Trend→Histogram / Counter→Counter / Gauge→Gauge / Rate→Counter for failures only), 11-entry sample of k6 metric → OTel name mapping, Runner Resource (xk6-otel-gen-runner) with note on U4 Pipeline.MetricExporter() requirement, queue + flush goroutine batching with 1s ticker and 100-entry channel, Stop() lifecycle (flush drain → Pipeline.Shutdown 30s timeout → always-nil return), fail-fast Start() error handling, k6 tag → k6.tag.* attribute prefix, 3 PBT properties.
+
+(2) business-rules.md — Output Registration ('otel-gen' name), --out args parsing rules (10 keys + warn-ignore for unknown), Config priority enforcement via GetShared sync.Once, k6 metric → OTel mapping rules (snake_case → dot.notation, type-to-instrument table, unit hardcoded mapping, dynamic vs eager instrument construction), Resource attribute mandatory/optional split, sample batching rules (100-entry channel + 1s ticker + drop oldest on full), Stop() ordering with timeout (5s flush + 30s shutdown), Start() error formatting, 3 testable properties with rapid sketches, performance soft targets.
+
+(3) domain-entities.md — Output (opaque), Params (internal config representation distinct from exporter.Config for future extensibility), ConfigError with Kind enum (invalid_args/invalid_protocol/type_mismatch/invalid_url), 5 method contracts (New/Description/Start/AddMetricSamples/Stop) with idempotency and thread-safety notes, 5 production + 4 test file layout, import dependencies including U4 patch requirement, **explicit coordination requirements**: (a) U4 must add Pipeline.MetricExporter() sdkmetric.Exporter for runner MeterProvider construction (minor SemVer bump), (b) U7 must add ValidK6Sample/AnyK6Sample and ValidOutputParams/AnyOutputParams generators (FD §7.2)."
+
+**Context**: U6 FD — artifacts generated, awaiting approval. Two coordination phases will be required in CG Plan: U4 Pipeline.MetricExporter() patch + U7 generators.
