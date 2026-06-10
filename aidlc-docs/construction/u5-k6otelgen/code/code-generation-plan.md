@@ -134,32 +134,32 @@
 
 ### Step 3.1 — Create `k6otelgen/config.go`
 
-- [ ] Implement `optsToConfig(opts map[string]any) (exporter.Config, error)` per NFR-D §4.2:
+- [x] Implement `optsToConfig(opts map[string]any) (exporter.Config, error)` per NFR-D §4.2:
   - 10 known fields (endpoint, protocol, insecure, headers, compression, timeout, batchSize, batchTimeout, maxQueueSize, resourceOverrides)
   - type assertions with `*ConfigError{Kind: "type_mismatch", Path, Inner}` on failure
   - protocol values: "grpc" / "http", others → `*ConfigError{Kind: "invalid_protocol"}`
   - unknown keys: silently ignore (forward-compat) — log via k6 SDK if available, else no-op
-- [ ] Implement `toDuration(v any) (time.Duration, error)`:
+- [x] Implement `toDuration(v any) (time.Duration, error)`:
   - int64 / float64 → milliseconds
   - string → time.ParseDuration
   - other → error
-- [ ] Implement `toStringMap(v any) (map[string]string, error)`:
+- [x] Implement `toStringMap(v any) (map[string]string, error)`:
   - map[string]any → map[string]string with numeric coercion (int / float → strconv)
-- [ ] Internal helpers, brief comments.
+- [x] Internal helpers, brief comments.
 
 ### Step 3.2 — Unit test `k6otelgen/config_test.go`
 
-- [ ] `TestOptsToConfig_AllFields_HappyPath`.
-- [ ] `TestOptsToConfig_TypeMismatch_*` (table-driven for each field).
-- [ ] `TestOptsToConfig_InvalidProtocol`.
-- [ ] `TestOptsToConfig_UnknownKey_Ignored`.
-- [ ] `TestToDuration_*` (number / string / error).
-- [ ] `TestToStringMap_*` (basic / numeric coercion / error).
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestOptsToConfig_AllFields_HappyPath`.
+- [x] `TestOptsToConfig_TypeMismatch_*` (table-driven for each field).
+- [x] `TestOptsToConfig_InvalidProtocol`.
+- [x] `TestOptsToConfig_UnknownKey_Ignored`.
+- [x] `TestToDuration_*` (number / string / error).
+- [x] `TestToStringMap_*` (basic / numeric coercion / error).
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 3 commit
 
-- [ ] `git add k6otelgen/config.go k6otelgen/config_test.go && git commit -m "feat(k6otelgen): add JS opts decoder with timeout/headers coercion"`
+- [x] `git add k6otelgen/config.go k6otelgen/config_test.go && git commit -m "feat(k6otelgen): add JS opts decoder with timeout/headers coercion"`
 
 ---
 
