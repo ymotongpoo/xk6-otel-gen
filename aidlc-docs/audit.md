@@ -813,3 +813,21 @@ U2 fully complete; U5 (k6 JS Module) is next."
 (3) domain-entities.md — RootModule struct with sync.Once fields, ModuleInstance with per-VU Engine/Synthesizer/handle, TopologyHandle with name/engine/module references, JS-visible Stats struct with js: field tags, ConfigError type with Kind enumeration (already_loaded/already_configured/not_loaded/path_mismatch/file_not_found/parse_error/validate_error), JS-callable API table (top-level 4 methods + handle 2 methods), method contracts (New/NewModuleInstance/Exports/Load/Configure/Stats/Journeys/RunJourney) with idempotency and thread-safety properties, file layout (6 production + 4 test), import deps (k6/js/modules + grafana/sobek + topology/exporter/synth/journey, NO direct OTel SDK), U7 generator request (2 pairs = 4 funcs: ConfigureOpts/LoadPath), Application Design §C5 amendments (Stats field naming, ctx source confirmation, Configure priority, Load cache semantics, ConfigError.Kind enumeration, Shutdown delegation note)."
 
 **Context**: U5 FD — artifacts generated, awaiting approval (Step 5/6 GATE).
+
+
+## U5 k6otelgen — NFR-R Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T15:00:00Z
+**User Input**: "完了しました" — 13 answers with relaxed performance stance:
+- Q1=B (no init latency target)
+- Q2=A "でも厳密にこの目標を目指さなくていいですよ" (soft target)
+- Q3=A, Q5=A, Q6=A, Q7=A, Q8=A, Q9=A, Q10=A, Q11=A, Q12=A, Q13=A
+- Q4=C "数ミリ秒くらいなら全然許容できるので、無理はしないで" (no explicit RunJourney overhead target)
+
+**AI Response**: "Documented in NFR-R that U5 latency targets are 'monitoring guidance' rather than CI-blocking thresholds, with explicit note at top of nfr-requirements.md. NFR-U5-6 Performance section calls each target either 'no target', 'guidance', 'target', or quotes the user's soft acceptance phrase for RunJourney.
+
+Generated 2 NFR-R artifacts:
+(1) nfr-requirements.md — 14 applicable NFRs (NFR-U5-1 API Stability with SemVer for JS top-level + handle methods + opts decode rules + Stats field names, NFR-U5-2 ConfigError.Kind 7-value enum SemVer rules, NFR-U5-3 Process Singleton Lifecycle with no init target, NFR-U5-4 Per-VU Lifecycle <5ms, NFR-U5-5 Concurrency race-clean, NFR-U5-6 Performance with soft targets, NFR-U5-7 Memory <200KB/VU, NFR-U5-8 No self-metric, NFR-U5-9 Documentation with --out warning, NFR-U5-10 Testability with modulestest.NewRuntime + 80% coverage + integration with real k6 binary, NFR-U5-11 Pipeline Shutdown Dependency on U6, NFR-U5-12 Filesystem Access via k6 SDK sandbox only, NFR-U5-13 Compatibility, NFR-U5-14 PBT compliance) + 12 N/A categories + 11-item DoD checklist + 5 risks + cross-unit dependency requests.
+
+(2) tech-stack-decisions.md — 7 production deps (k6 SDK + sobek + 4 local xk6-otel-gen packages + stdlib), 4 test deps (rapid + testify + modulestest + testutil/generators), integration deps (xk6 + Docker + Collector), 7 rejected alternatives (goja direct, pipeline in JS, full path-traversal check, class-based JS API, multi-configure, self-stats, JS-side shutdown), CI integration table, cross-unit dependency summary, migration notes for k6 SDK / sobek / local-unit upgrades, 4 open questions for NFR Design / future."
+
+**Context**: U5 NFR-R — artifacts generated, awaiting approval.
