@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/codes"
+	otellog "go.opentelemetry.io/otel/log"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
@@ -438,6 +440,101 @@ func TestFinishSpan_ErrorTypeRequired_Property(t *testing.T) {
 	t.Skip("waits for ValidMetricInput generator from Phase 11")
 }
 
+func TestEmitLog_Success(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, recorder := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	syn.EmitLog(context.Background(), LogInput{
+		Service:  makeSpanService("frontend", topology.KindApplication),
+		Severity: otellog.SeverityInfo,
+		Body:     "frontend handled request",
+	})
+
+	record := requireSingleLog(t, recorder)
+	if record.Severity() != otellog.SeverityInfo {
+		t.Fatalf("Severity = %v, want Info", record.Severity())
+	}
+	if got := record.Body().AsString(); got != "frontend handled request" {
+		t.Fatalf("Body = %q", got)
+	}
+	if record.Timestamp().IsZero() {
+		t.Fatal("Timestamp is zero")
+	}
+	if record.ObservedTimestamp().IsZero() {
+		t.Fatal("ObservedTimestamp is zero")
+	}
+}
+
+func TestEmitLog_NilService_Panics(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	requirePanic(t, func() {
+		syn.EmitLog(context.Background(), LogInput{Body: "missing service"})
+	})
+}
+
+func TestEmitLog_EmptyBody_DefaultFallback(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, recorder := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	syn.EmitLog(context.Background(), LogInput{Service: makeSpanService("frontend", topology.KindApplication)})
+
+	record := requireSingleLog(t, recorder)
+	if got := record.Body().AsString(); got != "frontend event" {
+		t.Fatalf("Body = %q, want frontend event", got)
+	}
+	if record.Severity() != otellog.SeverityInfo {
+		t.Fatalf("Severity = %v, want Info", record.Severity())
+	}
+}
+
+func TestEmitLog_AttributesPropagated(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, recorder := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	syn.EmitLog(context.Background(), LogInput{
+		Service: makeSpanService("frontend", topology.KindApplication),
+		Body:    "with attrs",
+		Attributes: map[string]any{
+			"attempt": 2,
+			"cache":   true,
+			"route":   "/checkout",
+		},
+	})
+
+	attrs := logAttrs(requireSingleLog(t, recorder))
+	if attrs["attempt"] != "2" {
+		t.Fatalf("attempt = %q, want 2", attrs["attempt"])
+	}
+	if attrs["cache"] != "true" {
+		t.Fatalf("cache = %q, want true", attrs["cache"])
+	}
+	if attrs["route"] != "/checkout" {
+		t.Fatalf("route = %q, want /checkout", attrs["route"])
+	}
+}
+
+func TestEmitLog_ServiceNameAuto(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, recorder := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	syn.EmitLog(context.Background(), LogInput{
+		Service: makeSpanService("frontend", topology.KindApplication),
+		Body:    "service attr",
+	})
+
+	attrs := logAttrs(requireSingleLog(t, recorder))
+	if attrs[string(semconv.ServiceNameKey)] != "frontend" {
+		t.Fatalf("service.name = %q, want frontend", attrs[string(semconv.ServiceNameKey)])
+	}
+}
+
 func requireSingleSpan(t *testing.T, spans tracetest.SpanStubs) tracetest.SpanStub {
 	t.Helper()
 
@@ -498,6 +595,43 @@ func histogramPoint(t *testing.T, reader metricReader, name string) metricdata.H
 	}
 	t.Fatalf("histogram %q not found", name)
 	return metricdata.HistogramDataPoint[float64]{}
+}
+
+func requireSingleLog(t *testing.T, recorder *logRecorder) sdklog.Record {
+	t.Helper()
+
+	records := recorder.Records()
+	if len(records) != 1 {
+		t.Fatalf("logs = %d, want 1", len(records))
+	}
+	return records[0]
+}
+
+func logAttrs(record sdklog.Record) map[string]string {
+	attrs := map[string]string{}
+	record.WalkAttributes(func(kv otellog.KeyValue) bool {
+		attrs[kv.Key] = logValueString(kv.Value)
+		return true
+	})
+	return attrs
+}
+
+func logValueString(value otellog.Value) string {
+	switch value.Kind() {
+	case otellog.KindString:
+		return value.AsString()
+	case otellog.KindBool:
+		if value.AsBool() {
+			return "true"
+		}
+		return "false"
+	case otellog.KindInt64:
+		return value.String()
+	case otellog.KindFloat64:
+		return value.String()
+	default:
+		return value.String()
+	}
 }
 
 type metricReader interface {

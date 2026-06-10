@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
@@ -121,7 +123,34 @@ func (s *defaultSynthesizer) RecordMetric(ctx context.Context, in MetricInput) {
 }
 
 func (s *defaultSynthesizer) EmitLog(ctx context.Context, in LogInput) {
-	panic("synth: EmitLog: not implemented")
+	if in.Service == nil {
+		panic("synth: EmitLog: Service must not be nil")
+	}
+
+	severity := in.Severity
+	if severity == log.SeverityUndefined {
+		severity = log.SeverityInfo
+	}
+	body := in.Body
+	if body == "" {
+		body = string(in.Service.Name) + " event"
+	}
+
+	record := log.Record{}
+	now := time.Now()
+	record.SetTimestamp(now)
+	record.SetObservedTimestamp(now)
+	record.SetSeverity(severity)
+	record.SetBody(log.StringValue(body))
+	for key, value := range in.Attributes {
+		record.AddAttributes(log.KeyValue{Key: key, Value: toLogValue(value)})
+	}
+	record.AddAttributes(log.KeyValue{
+		Key:   string(semconv.ServiceNameKey),
+		Value: log.StringValue(string(in.Service.Name)),
+	})
+
+	s.logger.Emit(ctx, record)
 }
 
 func mustHistogram(meter metric.Meter, name, unit string) metric.Float64Histogram {
@@ -281,4 +310,48 @@ func finishAttrs(policy attributePolicy, outcome Outcome) []attribute.KeyValue {
 
 func spanName(svc *topology.Service, op string) string {
 	return string(svc.Name) + "." + op
+}
+
+func toLogValue(value any) log.Value {
+	switch v := value.(type) {
+	case nil:
+		return log.StringValue("")
+	case log.Value:
+		return v
+	case string:
+		return log.StringValue(v)
+	case bool:
+		return log.BoolValue(v)
+	case int:
+		return log.IntValue(v)
+	case int8:
+		return log.Int64Value(int64(v))
+	case int16:
+		return log.Int64Value(int64(v))
+	case int32:
+		return log.Int64Value(int64(v))
+	case int64:
+		return log.Int64Value(v)
+	case uint:
+		return log.Int64Value(int64(v))
+	case uint8:
+		return log.Int64Value(int64(v))
+	case uint16:
+		return log.Int64Value(int64(v))
+	case uint32:
+		return log.Int64Value(int64(v))
+	case uint64:
+		if v <= uint64(^uint(0)>>1) {
+			return log.Int64Value(int64(v))
+		}
+		return log.StringValue(fmt.Sprint(v))
+	case float32:
+		return log.Float64Value(float64(v))
+	case float64:
+		return log.Float64Value(v)
+	case []byte:
+		return log.BytesValue(v)
+	default:
+		return log.StringValue(fmt.Sprint(v))
+	}
 }

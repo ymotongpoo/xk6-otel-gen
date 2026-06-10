@@ -265,25 +265,25 @@
 
 ### Step 7.1 — Add `EmitLog` to `synth/synthesizer.go`
 
-- [ ] Validate input (panic on nil Service).
-- [ ] Default Severity (Info if Undefined).
-- [ ] Default Body fallback if empty.
-- [ ] Build `log.Record` with Timestamp/ObservedTimestamp=Now, Severity, Body, attrs.
-- [ ] Add semconv `service.name` to record attrs automatically.
-- [ ] Implement `toLogValue(any) log.Value` helper for `LogInput.Attributes` map values.
-- [ ] `logger.Emit(ctx, record)`.
+- [x] Validate input (panic on nil Service).
+- [x] Default Severity (Info if Undefined).
+- [x] Default Body fallback if empty.
+- [x] Build `log.Record` with Timestamp/ObservedTimestamp=Now, Severity, Body, attrs.
+- [x] Add semconv `service.name` to record attrs automatically.
+- [x] Implement `toLogValue(any) log.Value` helper for `LogInput.Attributes` map values.
+- [x] `logger.Emit(ctx, record)`.
 
 ### Step 7.2 — Unit test additions
 
-- [ ] `TestEmitLog_Success` — Severity=Info, custom Body → record captured by helpers_test logRecorder.
-- [ ] `TestEmitLog_NilService_Panics`.
-- [ ] `TestEmitLog_EmptyBody_DefaultFallback` — empty Body → "<svc> event" or similar.
-- [ ] `TestEmitLog_AttributesPropagated` — custom Attributes map keys all show up.
-- [ ] `TestEmitLog_ServiceNameAuto` — service.name attribute always present.
+- [x] `TestEmitLog_Success` — Severity=Info, custom Body → record captured by helpers_test logRecorder.
+- [x] `TestEmitLog_NilService_Panics`.
+- [x] `TestEmitLog_EmptyBody_DefaultFallback` — empty Body → "<svc> event" or similar.
+- [x] `TestEmitLog_AttributesPropagated` — custom Attributes map keys all show up.
+- [x] `TestEmitLog_ServiceNameAuto` — service.name attribute always present.
 
 ### Phase 7 commit
 
-- [ ] `git add synth/synthesizer.go synth/synthesizer_test.go synth/helpers_test.go && git commit -m "feat(synth): add EmitLog with default Body fallback and service.name auto-attribute"`
+- [x] `git add synth/synthesizer.go synth/synthesizer_test.go synth/helpers_test.go && git commit -m "feat(synth): add EmitLog with default Body fallback and service.name auto-attribute"`
 
 ---
 
