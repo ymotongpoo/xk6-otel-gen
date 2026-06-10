@@ -14,6 +14,7 @@ func TestApplyRecovery_FirstFallbackSucceeds(t *testing.T) {
 	engine, node, fallback := newRecoveryFixture(t, topology.ExhaustedPropagate)
 	outcome := engine.impl.applyRecovery(context.Background(), node, primaryFailureOutcome())
 
+	assertOutcomeMatches(t, outcome, Outcome{Success: true, StatusCode: 200})
 	if !outcome.Success {
 		t.Fatalf("Outcome.Success = false, want true")
 	}

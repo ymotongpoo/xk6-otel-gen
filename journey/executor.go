@@ -121,7 +121,6 @@ func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcom
 	for _, child := range node.Children {
 		childOutcome := e.executeNode(spanCtx, child, childParent)
 		if !childOutcome.Success {
-			childParent = &childOutcome
 			break
 		}
 	}

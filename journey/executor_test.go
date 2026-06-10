@@ -13,6 +13,7 @@ func TestExecute_NilArgs_ReturnsError(t *testing.T) {
 	t.Parallel()
 
 	engine, plan, _ := newExecutablePlan(t, newTestSchema(t))
+	//nolint:staticcheck // Execute explicitly accepts nil to return ExecuteError{Kind:"nil_ctx"}.
 	if err := engine.Execute(nil, plan); executeErrorKind(err) != "nil_ctx" {
 		t.Fatalf("Execute(nil, plan) error = %v, want nil_ctx", err)
 	}
