@@ -105,28 +105,28 @@
 
 ### Step 2.1 — Create `synth/resource.go`
 
-- [ ] Define package-level `synthInstanceNamespace = uuid.NewSHA1(uuid.NameSpaceDNS, []byte("xk6-otel-gen/synth"))`.
-- [ ] Implement `InstanceID(svcName string, idx int) string` (deterministic UUID v5).
-- [ ] Implement `BuildResource(svc *topology.Service, instanceIdx int) *resource.Resource` per NFR-D LC-2.
-- [ ] Panic format per NFR-D Q7=A.
-- [ ] svc.Language → `process.runtime.name` with explanatory comment.
-- [ ] svc.Framework → `synth.service.framework` custom attribute.
-- [ ] All exported identifiers have GoDoc.
+- [x] Define package-level `synthInstanceNamespace = uuid.NewSHA1(uuid.NameSpaceDNS, []byte("xk6-otel-gen/synth"))`.
+- [x] Implement `InstanceID(svcName string, idx int) string` (deterministic UUID v5).
+- [x] Implement `BuildResource(svc *topology.Service, instanceIdx int) *resource.Resource` per NFR-D LC-2.
+- [x] Panic format per NFR-D Q7=A.
+- [x] svc.Language → `process.runtime.name` with explanatory comment.
+- [x] svc.Framework → `synth.service.framework` custom attribute.
+- [x] All exported identifiers have GoDoc.
 
 ### Step 2.2 — Unit test `synth/resource_test.go`
 
-- [ ] `TestBuildResource_Minimal` — only required fields populated.
-- [ ] `TestBuildResource_AllFields` — Version, Language, Framework all populated.
-- [ ] `TestBuildResource_NilPanics` — svc nil → panic.
-- [ ] `TestBuildResource_InvalidIdxPanics` — idx < 0 → panic.
-- [ ] `TestBuildResource_EmptyNamePanics` — svc.Name == "" → panic.
-- [ ] `TestInstanceID_Deterministic` — same (name, idx) → same UUID string.
-- [ ] **PBT TP-U3-1** (`TestBuildResource_Idempotent_Property`): mark `t.Skip("waits for ValidService generator from Phase 11")` for now; un-skip in Phase 11.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestBuildResource_Minimal` — only required fields populated.
+- [x] `TestBuildResource_AllFields` — Version, Language, Framework all populated.
+- [x] `TestBuildResource_NilPanics` — svc nil → panic.
+- [x] `TestBuildResource_InvalidIdxPanics` — idx < 0 → panic.
+- [x] `TestBuildResource_EmptyNamePanics` — svc.Name == "" → panic.
+- [x] `TestInstanceID_Deterministic` — same (name, idx) → same UUID string.
+- [x] **PBT TP-U3-1** (`TestBuildResource_Idempotent_Property`): mark `t.Skip("waits for ValidService generator from Phase 11")` for now; un-skip in Phase 11.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 2 commit
 
-- [ ] `git add synth/resource.go synth/resource_test.go && git commit -m "feat(synth): add Resource builder with deterministic service.instance.id"`
+- [x] `git add synth/resource.go synth/resource_test.go && git commit -m "feat(synth): add Resource builder with deterministic service.instance.id"`
 
 ---
 
