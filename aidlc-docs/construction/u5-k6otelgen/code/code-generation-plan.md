@@ -222,72 +222,72 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Step 6.1 — Create `k6otelgen/instance.go`
 
-- [ ] Define `ModuleInstance struct` with all fields per NFR-D §1.2.
-- [ ] Implement `(*ModuleInstance).Exports() modules.Exports` with 4 jsXxx wrappers per NFR-D §4.1.
-- [ ] Implement `(*ModuleInstance).jsConfigure / jsLoad / jsStats / jsJourneys` wrappers per NFR-D §4.2:
+- [x] Define `ModuleInstance struct` with all fields per NFR-D §1.2.
+- [x] Implement `(*ModuleInstance).Exports() modules.Exports` with 4 jsXxx wrappers per NFR-D §4.1.
+- [x] Implement `(*ModuleInstance).jsConfigure / jsLoad / jsStats / jsJourneys` wrappers per NFR-D §4.2:
   - sobek FunctionCall extraction
   - call Go-side method
   - throwJSException on error
   - sobek.Undefined() or runtime.ToValue() return
-- [ ] Implement `(*ModuleInstance).Load(path string) (*TopologyHandle, error)`:
+- [x] Implement `(*ModuleInstance).Load(path string) (*TopologyHandle, error)`:
   - sync.Once Do: ReadFile + Parse + Validate + ApplyFaults
   - on err: set root.schemaErr, return wrapped *ConfigError
   - on subsequent call with different path: `*ConfigError{Kind: "path_mismatch"}`
   - lateInit if handle nil (Engine + Synthesizer + Handle construction)
   - return cached handle
-- [ ] Implement `(*ModuleInstance).Configure(opts map[string]any) error`:
+- [x] Implement `(*ModuleInstance).Configure(opts map[string]any) error`:
   - if root.configured → `*ConfigError{Kind: "already_configured"}`
   - sync.Once Do: optsToConfig + ConfigFromEnv + MergeWith chain
   - set root.config + root.configured = true
-- [ ] Implement `(*ModuleInstance).Stats() (Stats, error)`:
+- [x] Implement `(*ModuleInstance).Stats() (Stats, error)`:
   - getOrBuildPipeline → on err return *ConfigError
   - pipeline.Stats() → map to local `Stats` struct with JS-friendly field names
-- [ ] Implement `(*ModuleInstance).Journeys() []string`:
+- [x] Implement `(*ModuleInstance).Journeys() []string`:
   - if root.schema == nil → return []string{}
   - if i.engine == nil → return []string{} (or root cache)
   - return engine.ListJourneys()
-- [ ] Implement `(*ModuleInstance).getOrBuildPipeline() (*exporter.Pipeline, error)`:
+- [x] Implement `(*ModuleInstance).getOrBuildPipeline() (*exporter.Pipeline, error)`:
   - exporter.GetShared with factory using root.config
-- [ ] Implement `(*ModuleInstance).lateInit() error`:
+- [x] Implement `(*ModuleInstance).lateInit() error`:
   - getOrBuildPipeline
   - synth.NewDefault
   - journey.NewEngineWithSeed(..., per-VU seed)
   - construct handle
-- [ ] Define `Stats struct` with JS-friendly field tags (sobek auto-naming).
-- [ ] All exported identifiers have GoDoc.
+- [x] Define `Stats struct` with JS-friendly field tags (sobek auto-naming).
+- [x] All exported identifiers have GoDoc.
 
 ### Step 6.2 — Create `k6otelgen/helpers_test.go`
 
-- [ ] `newTestRuntime(t) *modulestest.Runtime` per NFR-D §6.1.
-- [ ] `newTestRootModule(t) *RootModule`.
-- [ ] `loadTestSchema(t, runtime, yaml string)` — write yaml to temp file, run JS to load.
-- [ ] `mockSynth` struct + constructor (used in handle_test, pbt_test).
-- [ ] All helpers use `t.Helper()`.
+- [x] `newTestRuntime(t) *modulestest.Runtime` per NFR-D §6.1.
+- [x] `newTestRootModule(t) *RootModule`.
+- [x] `loadTestSchema(t, runtime, yaml string)` — write yaml to temp file, run JS to load.
+- [x] `mockSynth` struct + constructor (used in handle_test, pbt_test).
+- [x] All helpers use `t.Helper()`.
 
 ### Step 6.3 — Create `k6otelgen/instance_test.go`
 
-- [ ] `TestExports_Names` — Exports().Named has 4 keys.
-- [ ] `TestLoad_HappyPath` via runtime — yaml load → handle returned.
-- [ ] `TestLoad_PathMismatch_ReturnsError` — load same RootModule twice with different paths.
-- [ ] `TestLoad_InvalidYAML_ReturnsError`.
-- [ ] `TestConfigure_HappyPath`.
-- [ ] `TestConfigure_AlreadyConfigured_Error`.
-- [ ] `TestConfigure_Merge_JSOverridesEnv` — use t.Setenv to set env, then configure with JS opts, assert root.config matches expected merge.
-- [ ] `TestStats_BeforePipeline_Error` (or HappyPath if pipeline lazy build works without RunJourney).
-- [ ] `TestJourneys_BeforeLoad_Empty`.
-- [ ] `TestJourneys_AfterLoad_Sorted`.
+- [x] `TestExports_Names` — Exports().Named has 4 keys.
+- [x] `TestLoad_HappyPath` via runtime — yaml load → handle returned.
+- [x] `TestLoad_PathMismatch_ReturnsError` — load same RootModule twice with different paths.
+- [x] `TestLoad_InvalidYAML_ReturnsError`.
+- [x] `TestConfigure_HappyPath`.
+- [x] `TestConfigure_AlreadyConfigured_Error`.
+- [x] `TestConfigure_Merge_JSOverridesEnv` — use t.Setenv to set env, then configure with JS opts, assert root.config matches expected merge.
+- [x] `TestStats_BeforePipeline_Error` (or HappyPath if pipeline lazy build works without RunJourney).
+- [x] `TestJourneys_BeforeLoad_Empty`.
+- [x] `TestJourneys_AfterLoad_Sorted`.
 
 ### Step 6.4 — Create `k6otelgen/handle_test.go`
 
-- [ ] `TestHandle_RunJourney_HappyPath` — mockSynth captures BeginSpan, assert it was called.
-- [ ] `TestHandle_RunJourney_UnknownJourney_ThrowsError`.
-- [ ] `TestHandle_RunJourney_CtxPassed` — verify ctx received by mockSynth == vu.Context() pointer.
-- [ ] `TestHandle_Journeys_BeforeLoad_Empty`.
-- [ ] `TestHandle_Journeys_AfterLoad_Returns`.
+- [x] `TestHandle_RunJourney_HappyPath` — mockSynth captures BeginSpan, assert it was called.
+- [x] `TestHandle_RunJourney_UnknownJourney_ThrowsError`.
+- [x] `TestHandle_RunJourney_CtxPassed` — verify ctx received by mockSynth == vu.Context() pointer.
+- [x] `TestHandle_Journeys_BeforeLoad_Empty`.
+- [x] `TestHandle_Journeys_AfterLoad_Returns`.
 
 ### Phase 6 commit
 
-- [ ] `git add k6otelgen/instance.go k6otelgen/instance_test.go k6otelgen/handle_test.go k6otelgen/helpers_test.go && git commit -m "feat(k6otelgen): add ModuleInstance with JS API wrappers and Go implementations"`
+- [x] `git add k6otelgen/instance.go k6otelgen/instance_test.go k6otelgen/handle_test.go k6otelgen/helpers_test.go && git commit -m "feat(k6otelgen): add ModuleInstance with JS API wrappers and Go implementations"`
 
 ---
 
