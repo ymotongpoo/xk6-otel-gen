@@ -422,32 +422,32 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Step 12.1 — Run full suite
 
-- [ ] `go build ./...` succeeds.
-- [ ] `go vet ./k6otelgen/...` clean.
-- [ ] `go test -race -count=1 ./...` passes.
-- [ ] `go test -cover ./k6otelgen/...` ≥ 80%.
-- [ ] `go test -bench=. -benchmem ./k6otelgen/...` shows NewModuleInstance < 5ms.
-- [ ] `golangci-lint run ./k6otelgen/...` passes.
-- [ ] `go test -tags=integration ./k6otelgen/integration/...` passes (with Docker + xk6).
+- [x] `go build ./...` succeeds.
+- [x] `go vet ./k6otelgen/...` clean.
+- [x] `go test -race -count=1 ./...` passes.
+- [x] `go test -cover ./k6otelgen/...` ≥ 80%.
+- [x] `go test -bench=. -benchmem ./k6otelgen/...` shows NewModuleInstance < 5ms.
+- [x] `golangci-lint run ./k6otelgen/...` passes.
+- [x] `go test -tags=integration ./k6otelgen/integration/...` passes (with Docker + xk6).
 
 ### Step 12.2 — Create `aidlc-docs/construction/u5-k6otelgen/code/code-generation-summary.md`
 
-- [ ] File list with line counts (production + test + integration).
-- [ ] Verification results.
-- [ ] Deviations from plan.
-- [ ] Recent commits.
+- [x] File list with line counts (production + test + integration).
+- [x] Verification results.
+- [x] Deviations from plan.
+- [x] Recent commits.
 
 ### Step 12.3 — Mark all plan checkboxes [x]
 
-- [ ] Walk back; verify all `[ ]` are `[x]`.
+- [x] Walk back; verify all `[ ]` are `[x]`.
 
 ### Step 12.4 — Update `aidlc-docs/aidlc-state.md`
 
-- [ ] Mark U5 complete. Set Current Unit to U6 (k6 Output Module).
+- [x] Mark U5 complete. Set Current Unit to U6 (k6 Output Module).
 
 ### Phase 12 commit
 
-- [ ] `git add aidlc-docs/ && git commit -m "chore(u5-k6otelgen): finalize code-generation-summary and checkbox state"`
+- [x] `git add aidlc-docs/ && git commit -m "chore(u5-k6otelgen): finalize code-generation-summary and checkbox state"`
 
 ---
 
