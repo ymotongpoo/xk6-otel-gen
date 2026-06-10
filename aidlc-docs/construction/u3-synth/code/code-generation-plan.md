@@ -203,31 +203,31 @@
 
 ### Step 5.1 — Add `BeginSpan` to `synth/synthesizer.go`
 
-- [ ] Validate input (panic on nil Service, empty Operation, out-of-range InstanceIdx) per NFR-D §2.2.
-- [ ] Compute `direction` from `(svc.Kind, edge, op role)` — for now, derive simple heuristic (Edge nil → Server, Edge non-nil and svc == Edge.From → Client, etc.); document as best-effort and revisit when U2 FD lands.
-- [ ] Call `policyFor` to determine SpanKind + namespace.
-- [ ] Build span attrs via `buildStaticSet` + initial dynamic (typically empty at start).
-- [ ] `tracer.Start(ctx, spanName, ...)`.
-- [ ] `maybeIncActive(ctx, in, policy, +1)`.
-- [ ] Build `FinishSpanFunc` closure with `atomic.Bool` double-call protection + `raceEnabled` panic.
-- [ ] Inside finish closure: SetStatus per Q7 mapping, SetAttributes (outcome dynamics), End with EndTime, `maybeIncActive(-1)`.
-- [ ] Implement `maybeIncActive`, `statusFor`, `finishAttrs` helpers.
-- [ ] Implement `spanName(svc, op)` helper.
+- [x] Validate input (panic on nil Service, empty Operation, out-of-range InstanceIdx) per NFR-D §2.2.
+- [x] Compute `direction` from `(svc.Kind, edge, op role)` — for now, derive simple heuristic (Edge nil → Server, Edge non-nil and svc == Edge.From → Client, etc.); document as best-effort and revisit when U2 FD lands.
+- [x] Call `policyFor` to determine SpanKind + namespace.
+- [x] Build span attrs via `buildStaticSet` + initial dynamic (typically empty at start).
+- [x] `tracer.Start(ctx, spanName, ...)`.
+- [x] `maybeIncActive(ctx, in, policy, +1)`.
+- [x] Build `FinishSpanFunc` closure with `atomic.Bool` double-call protection + `raceEnabled` panic.
+- [x] Inside finish closure: SetStatus per Q7 mapping, SetAttributes (outcome dynamics), End with EndTime, `maybeIncActive(-1)`.
+- [x] Implement `maybeIncActive`, `statusFor`, `finishAttrs` helpers.
+- [x] Implement `spanName(svc, op)` helper.
 
 ### Step 5.2 — Unit test additions to `synth/synthesizer_test.go`
 
-- [ ] `TestBeginSpan_Server_Success` — HTTP server span, finish success, assert in-memory span has correct attrs + Unset status.
-- [ ] `TestBeginSpan_Server_Failure_500` — finish with Success=false, Status=500, ErrorType="http.500" → assert Error status + error.type attr.
-- [ ] `TestBeginSpan_4xx_NoErrorStatus` — Success=false (or true), Status=404 → Status=Unset per semconv.
-- [ ] `TestBeginSpan_Client_HTTP` — Edge non-nil, dir=client → SpanKind=Client + server.address attr.
-- [ ] `TestBeginSpan_InvalidInput_Panics` — table-driven for nil Service, empty Operation, out-of-range InstanceIdx.
-- [ ] `TestFinishSpanFunc_DoubleCall_NoOp` — non-race build: second call is no-op (verify only 1 span ended).
-- [ ] `TestFinishSpanFunc_DoubleCall_RacePanic` — gated by build tag, see if testable in `-race` mode.
-- [ ] `TestActiveRequests_BalancedAfterFinish` — start N spans, finish all, assert UDC value back to 0.
+- [x] `TestBeginSpan_Server_Success` — HTTP server span, finish success, assert in-memory span has correct attrs + Unset status.
+- [x] `TestBeginSpan_Server_Failure_500` — finish with Success=false, Status=500, ErrorType="http.500" → assert Error status + error.type attr.
+- [x] `TestBeginSpan_4xx_NoErrorStatus` — Success=false (or true), Status=404 → Status=Unset per semconv.
+- [x] `TestBeginSpan_Client_HTTP` — Edge non-nil, dir=client → SpanKind=Client + server.address attr.
+- [x] `TestBeginSpan_InvalidInput_Panics` — table-driven for nil Service, empty Operation, out-of-range InstanceIdx.
+- [x] `TestFinishSpanFunc_DoubleCall_NoOp` — non-race build: second call is no-op (verify only 1 span ended).
+- [x] `TestFinishSpanFunc_DoubleCall_RacePanic` — gated by build tag, see if testable in `-race` mode.
+- [x] `TestActiveRequests_BalancedAfterFinish` — start N spans, finish all, assert UDC value back to 0.
 
 ### Phase 5 commit
 
-- [ ] `git add synth/synthesizer.go synth/synthesizer_test.go && git commit -m "feat(synth): add BeginSpan with FinishSpanFunc double-call protection and active_requests tracking"`
+- [x] `git add synth/synthesizer.go synth/synthesizer_test.go && git commit -m "feat(synth): add BeginSpan with FinishSpanFunc double-call protection and active_requests tracking"`
 
 ---
 

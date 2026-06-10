@@ -1,6 +1,18 @@
 package synth
 
-import "testing"
+import (
+	"context"
+	"testing"
+	"time"
+
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ymotongpoo/xk6-otel-gen/topology"
+)
 
 func TestNewDefault_NilProvider_Panics(t *testing.T) {
 	t.Parallel()
@@ -73,4 +85,254 @@ func TestNewDefault_BuildsAllInstruments(t *testing.T) {
 	if s.staticSetCache == nil {
 		t.Fatal("staticSetCache is nil")
 	}
+}
+
+func TestBeginSpan_Server_Success(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	start := time.Unix(1_700_000_000, 0)
+	ctx, finish := syn.BeginSpan(context.Background(), SpanInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /checkout",
+		StartTime:   start,
+		InstanceIdx: 0,
+	})
+	finish(Outcome{Success: true, StatusCode: 200, EndTime: start.Add(20 * time.Millisecond)})
+
+	if ctx == context.Background() {
+		t.Fatal("BeginSpan returned unchanged context")
+	}
+	span := requireSingleSpan(t, spanExporter.GetSpans())
+	if span.Name != "frontend.GET /checkout" {
+		t.Fatalf("span.Name = %q", span.Name)
+	}
+	if span.SpanKind != trace.SpanKindServer {
+		t.Fatalf("SpanKind = %v, want server", span.SpanKind)
+	}
+	if span.Status.Code != codes.Unset {
+		t.Fatalf("Status.Code = %v, want Unset", span.Status.Code)
+	}
+	attrs := resourceAttrs(span.Attributes)
+	requireAttr(t, attrs, semconv.ServiceNameKey, "frontend")
+	requireAttr(t, attrs, semconv.HTTPRequestMethodKey, "GET")
+	requireAttr(t, attrs, semconv.HTTPRouteKey, "/checkout")
+	requireAttr(t, attrs, semconv.HTTPResponseStatusCodeKey, "200")
+}
+
+func TestBeginSpan_Server_Failure_500(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	start := time.Unix(1_700_000_000, 0)
+	_, finish := syn.BeginSpan(context.Background(), SpanInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /checkout",
+		StartTime:   start,
+		InstanceIdx: 0,
+	})
+	finish(Outcome{Success: false, StatusCode: 500, ErrorType: "http.500", EndTime: start.Add(time.Millisecond)})
+
+	span := requireSingleSpan(t, spanExporter.GetSpans())
+	if span.Status.Code != codes.Error {
+		t.Fatalf("Status.Code = %v, want Error", span.Status.Code)
+	}
+	attrs := resourceAttrs(span.Attributes)
+	requireAttr(t, attrs, semconv.HTTPResponseStatusCodeKey, "500")
+	requireAttr(t, attrs, semconv.ErrorTypeKey, "http.500")
+}
+
+func TestBeginSpan_4xx_NoErrorStatus(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	start := time.Unix(1_700_000_000, 0)
+	_, finish := syn.BeginSpan(context.Background(), SpanInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /missing",
+		StartTime:   start,
+		InstanceIdx: 0,
+	})
+	finish(Outcome{Success: false, StatusCode: 404, ErrorType: "http.404", EndTime: start.Add(time.Millisecond)})
+
+	span := requireSingleSpan(t, spanExporter.GetSpans())
+	if span.Status.Code != codes.Unset {
+		t.Fatalf("Status.Code = %v, want Unset", span.Status.Code)
+	}
+}
+
+func TestBeginSpan_Client_HTTP(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	source, edge := makeSpanEdge(topology.KindApplication, topology.KindExternalAPI, topology.ProtocolHTTP)
+	start := time.Unix(1_700_000_000, 0)
+	_, finish := syn.BeginSpan(context.Background(), SpanInput{
+		Service:     source,
+		Edge:        edge,
+		Operation:   "POST /payments",
+		StartTime:   start,
+		InstanceIdx: 0,
+	})
+	finish(Outcome{Success: true, StatusCode: 200, EndTime: start.Add(time.Millisecond)})
+
+	span := requireSingleSpan(t, spanExporter.GetSpans())
+	if span.SpanKind != trace.SpanKindClient {
+		t.Fatalf("SpanKind = %v, want client", span.SpanKind)
+	}
+	attrs := resourceAttrs(span.Attributes)
+	requireAttr(t, attrs, semconv.ServerAddressKey, "target")
+	requireAttr(t, attrs, semconv.URLPathKey, "/payments")
+}
+
+func TestBeginSpan_InvalidInput_Panics(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	tests := []struct {
+		name string
+		in   SpanInput
+	}{
+		{name: "nil service", in: SpanInput{Operation: "GET /", InstanceIdx: 0}},
+		{name: "empty operation", in: SpanInput{Service: makeSpanService("frontend", topology.KindApplication), InstanceIdx: 0}},
+		{name: "out of range", in: SpanInput{Service: makeSpanService("frontend", topology.KindApplication), Operation: "GET /", InstanceIdx: 1}},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			requirePanic(t, func() {
+				syn.BeginSpan(context.Background(), tt.in)
+			})
+		})
+	}
+}
+
+func TestFinishSpanFunc_DoubleCall_NoOp(t *testing.T) {
+	t.Parallel()
+	if raceEnabled {
+		t.Skip("race builds panic on duplicate finish")
+	}
+
+	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	start := time.Unix(1_700_000_000, 0)
+	_, finish := syn.BeginSpan(context.Background(), SpanInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /",
+		StartTime:   start,
+		InstanceIdx: 0,
+	})
+	outcome := Outcome{Success: true, StatusCode: 200, EndTime: start.Add(time.Millisecond)}
+	finish(outcome)
+	finish(outcome)
+
+	if got := len(spanExporter.GetSpans()); got != 1 {
+		t.Fatalf("ended spans = %d, want 1", got)
+	}
+}
+
+func TestFinishSpanFunc_DoubleCall_RacePanic(t *testing.T) {
+	t.Parallel()
+	if !raceEnabled {
+		t.Skip("duplicate finish only panics in race builds")
+	}
+
+	tp, mp, lp, _, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	start := time.Unix(1_700_000_000, 0)
+	_, finish := syn.BeginSpan(context.Background(), SpanInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /",
+		StartTime:   start,
+		InstanceIdx: 0,
+	})
+	outcome := Outcome{Success: true, StatusCode: 200, EndTime: start.Add(time.Millisecond)}
+	finish(outcome)
+	requirePanic(t, func() {
+		finish(outcome)
+	})
+}
+
+func TestActiveRequests_BalancedAfterFinish(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, reader, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	start := time.Unix(1_700_000_000, 0)
+	var finishes []FinishSpanFunc
+	for i := 0; i < 5; i++ {
+		_, finish := syn.BeginSpan(context.Background(), SpanInput{
+			Service:     makeSpanService("frontend", topology.KindApplication),
+			Operation:   "GET /checkout",
+			StartTime:   start.Add(time.Duration(i) * time.Millisecond),
+			InstanceIdx: 0,
+		})
+		finishes = append(finishes, finish)
+	}
+	for i, finish := range finishes {
+		finish(Outcome{Success: true, StatusCode: 200, EndTime: start.Add(time.Duration(i+10) * time.Millisecond)})
+	}
+
+	if got := int64MetricValue(t, reader, "http.server.active_requests"); got != 0 {
+		t.Fatalf("active_requests = %d, want 0", got)
+	}
+}
+
+func requireSingleSpan(t *testing.T, spans tracetest.SpanStubs) tracetest.SpanStub {
+	t.Helper()
+
+	if len(spans) != 1 {
+		t.Fatalf("spans = %d, want 1", len(spans))
+	}
+	return spans[0]
+}
+
+func int64MetricValue(t *testing.T, reader metricReader, name string) int64 {
+	t.Helper()
+
+	var rm metricdata.ResourceMetrics
+	if err := reader.Collect(context.Background(), &rm); err != nil {
+		t.Fatalf("Collect() error = %v", err)
+	}
+	for _, scope := range rm.ScopeMetrics {
+		for _, metric := range scope.Metrics {
+			if metric.Name != name {
+				continue
+			}
+			sum, ok := metric.Data.(metricdata.Sum[int64])
+			if !ok {
+				t.Fatalf("%s data = %T, want metricdata.Sum[int64]", name, metric.Data)
+			}
+			var total int64
+			for _, point := range sum.DataPoints {
+				total += point.Value
+			}
+			return total
+		}
+	}
+	t.Fatalf("metric %q not found", name)
+	return 0
+}
+
+type metricReader interface {
+	Collect(context.Context, *metricdata.ResourceMetrics) error
+}
+
+func makeSpanService(name string, kind topology.ServiceKind) *topology.Service {
+	return &topology.Service{Name: topology.ServiceID(name), Kind: kind, Replicas: 1}
+}
+
+func makeSpanEdge(sourceKind, targetKind topology.ServiceKind, protocol topology.Protocol) (*topology.Service, *topology.Edge) {
+	source := makeSpanService("source", sourceKind)
+	target := makeSpanService("target", targetKind)
+	from := &topology.Operation{Name: "POST /payments", Service: source}
+	to := &topology.Operation{Name: "POST /payments", Service: target}
+	return source, &topology.Edge{From: from, To: to, Protocol: protocol}
 }

@@ -3,10 +3,15 @@ package synth
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ymotongpoo/xk6-otel-gen/topology"
 )
 
 const instrumentationName = "github.com/ymotongpoo/xk6-otel-gen/synth"
@@ -64,7 +69,37 @@ func NewDefault(tp trace.TracerProvider, mp metric.MeterProvider, lp log.LoggerP
 }
 
 func (s *defaultSynthesizer) BeginSpan(ctx context.Context, in SpanInput) (context.Context, FinishSpanFunc) {
-	panic("synth: BeginSpan: not implemented")
+	validateSpanInput(in)
+
+	dir := inferDirection(in.Service, in.Edge)
+	protocol := protocolFor(in.Edge)
+	policy := policyFor(in.Service.Kind, protocol, dir)
+	staticAttrs := s.staticAttrs(in.Service, in.Operation, in.Edge, policy)
+	spanAttrs := make([]attribute.KeyValue, 0, staticAttrs.Len())
+	spanAttrs = append(spanAttrs, staticAttrs.ToSlice()...)
+
+	ctx, span := s.tracer.Start(ctx, spanName(in.Service, in.Operation),
+		trace.WithTimestamp(in.StartTime),
+		trace.WithSpanKind(policy.SpanKind),
+		trace.WithAttributes(spanAttrs...),
+	)
+	s.maybeIncActive(ctx, in, policy, 1)
+
+	var finished atomic.Bool
+	return ctx, func(outcome Outcome) {
+		if !finished.CompareAndSwap(false, true) {
+			if raceEnabled {
+				panic("synth: FinishSpanFunc called more than once")
+			}
+			return
+		}
+		if code := statusFor(policy, outcome); code == codes.Error {
+			span.SetStatus(code, "")
+		}
+		span.SetAttributes(finishAttrs(policy, outcome)...)
+		span.End(trace.WithTimestamp(outcome.EndTime))
+		s.maybeIncActive(ctx, in, policy, -1)
+	}
 }
 
 func (s *defaultSynthesizer) RecordMetric(ctx context.Context, in MetricInput) {
@@ -89,4 +124,106 @@ func mustUDC(meter metric.Meter, name, unit string) metric.Int64UpDownCounter {
 		panic(fmt.Sprintf("synth: NewDefault: build %s: %v", name, err))
 	}
 	return counter
+}
+
+func validateSpanInput(in SpanInput) {
+	if in.Service == nil {
+		panic("synth: BeginSpan: Service must not be nil")
+	}
+	if in.Operation == "" {
+		panic("synth: BeginSpan: Operation must not be empty")
+	}
+	if in.InstanceIdx < 0 || in.InstanceIdx >= in.Service.Replicas {
+		panic(fmt.Sprintf("synth: BeginSpan: InstanceIdx %d out of range [0, %d)", in.InstanceIdx, in.Service.Replicas))
+	}
+}
+
+func (s *defaultSynthesizer) staticAttrs(svc *topology.Service, op string, edge *topology.Edge, policy attributePolicy) attribute.Set {
+	key := cacheKeyFor(svc, op, edge, policy.Direction)
+	if set, ok := s.staticSetCache.get(key); ok {
+		return set
+	}
+	set := buildStaticSet(svc, op, edge, policy)
+	s.staticSetCache.put(key, set)
+	return set
+}
+
+func inferDirection(svc *topology.Service, edge *topology.Edge) direction {
+	if edge == nil {
+		return dirServer
+	}
+	if edge.From != nil && edge.From.Service == svc {
+		if edge.Protocol == topology.ProtocolMessaging {
+			return dirProducer
+		}
+		return dirClient
+	}
+	if edge.To != nil && edge.To.Service == svc {
+		if edge.Protocol == topology.ProtocolMessaging {
+			return dirConsumer
+		}
+		return dirServer
+	}
+	if svc.Kind == topology.KindQueue {
+		return dirProducer
+	}
+	return dirInternal
+}
+
+func protocolFor(edge *topology.Edge) topology.Protocol {
+	if edge == nil {
+		return topology.ProtocolHTTP
+	}
+	return edge.Protocol
+}
+
+func (s *defaultSynthesizer) maybeIncActive(ctx context.Context, in SpanInput, policy attributePolicy, delta int64) {
+	udc := s.activeUDC(policy)
+	if udc == nil {
+		return
+	}
+	if policy.SpanKind != trace.SpanKindServer {
+		return
+	}
+	staticAttrs := s.staticAttrs(in.Service, in.Operation, in.Edge, policy)
+	udc.Add(ctx, delta, metric.WithAttributeSet(staticAttrs))
+}
+
+func (s *defaultSynthesizer) activeUDC(policy attributePolicy) metric.Int64UpDownCounter {
+	switch policy.MetricNamespace {
+	case "http":
+		return s.httpActiveReq
+	case "rpc":
+		return s.rpcActiveReq
+	default:
+		return nil
+	}
+}
+
+func statusFor(policy attributePolicy, outcome Outcome) codes.Code {
+	switch policy.AttributeNamespace {
+	case "http":
+		if outcome.StatusCode >= 500 && outcome.StatusCode <= 599 {
+			return codes.Error
+		}
+		if outcome.StatusCode >= 400 && outcome.StatusCode <= 499 {
+			return codes.Unset
+		}
+	case "rpc":
+		if outcome.StatusCode != 0 {
+			return codes.Error
+		}
+	}
+	if !outcome.Success {
+		return codes.Error
+	}
+	return codes.Unset
+}
+
+func finishAttrs(policy attributePolicy, outcome Outcome) []attribute.KeyValue {
+	return dynamicOutcomeAttrs(policy, outcome)
+}
+
+func spanName(svc *topology.Service, op string) string {
+	return string(svc.Name) + "." + op
 }
