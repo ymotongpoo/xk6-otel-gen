@@ -845,3 +845,13 @@ Critical U2 coordination identified: U5 needs per-VU deterministic seed → requ
 (2) logical-components.md — 6 LCs (doc/module/instance/handle/config/errors) each with 責務 / 公開 API / 実装スケッチ / 依存; component dependency diagram with LC-5 errors as foundation; external package list (k6 SDK + sobek + 4 local xk6-otel-gen packages + stdlib); test component mapping to LCs (9 test files including integration subdir); explicit U2 coordination requirement for NewEngineWithSeed with Code Generation Plan handoff note."
 
 **Context**: U5 NFR-D — artifacts generated, awaiting approval.
+
+
+## U5 k6otelgen — NFR Design Approved & Committed; Code Generation Plan Created
+**Timestamp**: 2026-06-10T16:00:00Z
+**User Input**: "Continue to Next Stage" (approving U5 NFR-D with U2 coordination requirement)
+**AI Response**: "U5 NFR-D committed as c5b8511. Created u5-k6otelgen code-generation-plan.md with 13 phases (Phase 0-12): env+skeleton, **Phase 1 U2 coordination patch (journey.NewEngineWithSeed)**, errors/ConfigError, Config decoder (optsToConfig + toDuration + toStringMap), TopologyHandle, RootModule with init registration, ModuleInstance with jsXxx wrappers + Go-side Load/Configure/Stats/Journeys + helpers_test.go + tests, Documentation with --out warning, U7 generator additions, PBT TP-U5-1..3, Benchmark, Integration test harness with xk6 build + Docker Collector, and final DoD wrap.
+
+Anti-pattern enumeration with 16 items cross-references NFR-D §10. Notes for the implementing agent explicitly call out U2 patch dependency, sobek API specifics (vs goja), modulestest.NewRuntime usage, Configure 2nd-call detection idiom, Pipeline shutdown delegation, Stats field auto-lowercasing, capacity natural-break-point after Phase 7."
+
+**Context**: U5 Code Generation — Part 1 Planning (Step 3/4 GATE).
