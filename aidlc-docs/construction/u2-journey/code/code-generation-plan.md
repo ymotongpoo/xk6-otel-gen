@@ -282,27 +282,27 @@
 
 ### Step 7.1 — Patch `synth/interface.go`
 
-- [ ] Add `Cascaded bool` field to `synth.Outcome` struct. Position it after EndTime for logical grouping (or at the end if EndTime is the convention).
-- [ ] Update GoDoc on Outcome.Cascaded to explain semantics: "Cascaded is set by the caller (typically the Journey Engine) to indicate that this Outcome represents a child step forced to skip execution by an upstream failure. The Synthesizer emits the `synth.cascaded=true` attribute when this is true."
+- [x] Add `Cascaded bool` field to `synth.Outcome` struct. Position it after EndTime for logical grouping (or at the end if EndTime is the convention).
+- [x] Update GoDoc on Outcome.Cascaded to explain semantics: "Cascaded is set by the caller (typically the Journey Engine) to indicate that this Outcome represents a child step forced to skip execution by an upstream failure. The Synthesizer emits the `synth.cascaded=true` attribute when this is true."
 
 ### Step 7.2 — Patch `synth/synthesizer.go`
 
-- [ ] In the finishFn closure (returned by BeginSpan), after the existing SetAttributes call, check `outcome.Cascaded` and if true call `span.SetAttributes(attribute.Bool("synth.cascaded", true))`.
-- [ ] Add `"synth.cascaded"` to `synth/attributes.go` allowedAttrKeys map.
+- [x] In the finishFn closure (returned by BeginSpan), after the existing SetAttributes call, check `outcome.Cascaded` and if true call `span.SetAttributes(attribute.Bool("synth.cascaded", true))`.
+- [x] Add `"synth.cascaded"` to `synth/attributes.go` allowedAttrKeys map.
 
 ### Step 7.3 — Patch tests
 
-- [ ] Add `TestFinishFn_CascadedAttribute` to `synth/synthesizer_test.go` — finish with Outcome.Cascaded=true → span attribute synth.cascaded=true present.
-- [ ] Verify existing tests still pass.
+- [x] Add `TestFinishFn_CascadedAttribute` to `synth/synthesizer_test.go` — finish with Outcome.Cascaded=true → span attribute synth.cascaded=true present.
+- [x] Verify existing tests still pass.
 
 ### Step 7.4 — Update U3 FD/NFR-D docs
 
-- [ ] Update `aidlc-docs/construction/u3-synth/functional-design/domain-entities.md` §1.2 to add Cascaded field. Add a note referencing U2 coordination.
-- [ ] Update `aidlc-docs/construction/u3-synth/nfr-design/nfr-design-patterns.md` (or logical-components.md) to mention synth.cascaded handling in finishFn.
+- [x] Update `aidlc-docs/construction/u3-synth/functional-design/domain-entities.md` §1.2 to add Cascaded field. Add a note referencing U2 coordination.
+- [x] Update `aidlc-docs/construction/u3-synth/nfr-design/nfr-design-patterns.md` (or logical-components.md) to mention synth.cascaded handling in finishFn.
 
 ### Phase 7 commit
 
-- [ ] `git add synth/ aidlc-docs/construction/u3-synth/ && git commit -m "feat(synth): add Outcome.Cascaded marker for journey engine integration"`
+- [x] `git add synth/ aidlc-docs/construction/u3-synth/ && git commit -m "feat(synth): add Outcome.Cascaded marker for journey engine integration"`
 
 ---
 

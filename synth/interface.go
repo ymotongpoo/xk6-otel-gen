@@ -62,6 +62,11 @@ type Outcome struct {
 	StatusCode int
 	ErrorType  string
 	EndTime    time.Time
+	// Cascaded is set by the caller, typically the Journey Engine, to indicate
+	// that this Outcome represents a child step forced to skip execution by an
+	// upstream failure. The Synthesizer emits synth.cascaded=true when this is
+	// true.
+	Cascaded bool
 }
 
 // FinishSpanFunc finishes a span after the journey engine knows the operation

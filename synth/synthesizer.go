@@ -99,6 +99,9 @@ func (s *defaultSynthesizer) BeginSpan(ctx context.Context, in SpanInput) (conte
 			span.SetStatus(code, "")
 		}
 		span.SetAttributes(finishAttrs(policy, outcome)...)
+		if outcome.Cascaded {
+			span.SetAttributes(attribute.Bool("synth.cascaded", true))
+		}
 		span.End(trace.WithTimestamp(outcome.EndTime))
 		s.maybeIncActive(ctx, in, policy, -1)
 	}

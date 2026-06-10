@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	otellog "go.opentelemetry.io/otel/log"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
@@ -144,6 +145,32 @@ func TestBeginSpan_Server_Failure_500(t *testing.T) {
 	attrs := resourceAttrs(span.Attributes)
 	requireAttr(t, attrs, semconv.HTTPResponseStatusCodeKey, "500")
 	requireAttr(t, attrs, semconv.ErrorTypeKey, "http.500")
+}
+
+func TestFinishFn_CascadedAttribute(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	start := time.Unix(1_700_000_000, 0)
+	_, finish := syn.BeginSpan(context.Background(), SpanInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /checkout",
+		StartTime:   start,
+		InstanceIdx: 0,
+	})
+	finish(Outcome{
+		Success:    false,
+		StatusCode: 503,
+		ErrorType:  "connection_refused",
+		EndTime:    start.Add(time.Millisecond),
+		Cascaded:   true,
+	})
+
+	span := requireSingleSpan(t, spanExporter.GetSpans())
+	if !hasBoolAttr(span.Attributes, attribute.Key("synth.cascaded"), true) {
+		t.Fatalf("span attributes = %v, want synth.cascaded=true", span.Attributes)
+	}
 }
 
 func TestBeginSpan_4xx_NoErrorStatus(t *testing.T) {
@@ -622,6 +649,15 @@ func logValueString(value otellog.Value) string {
 	default:
 		return value.String()
 	}
+}
+
+func hasBoolAttr(kvs []attribute.KeyValue, key attribute.Key, want bool) bool {
+	for _, kv := range kvs {
+		if kv.Key == key && kv.Value.AsBool() == want {
+			return true
+		}
+	}
+	return false
 }
 
 type metricReader interface {

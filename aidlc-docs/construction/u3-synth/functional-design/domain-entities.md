@@ -70,12 +70,16 @@ type Outcome struct {
     StatusCode int               // HTTP / gRPC code; 0 if not applicable
     ErrorType  string            // semconv-compliant error.type value; empty on success
     EndTime    time.Time         // engine-provided end timestamp
+    Cascaded   bool              // U2 coordination: upstream failure forced this step to skip
 }
 
 // FinishSpanFunc must be called exactly once after the Outcome is known.
 // Calling it more than once is a programmer error (may panic in race-detection builds).
 type FinishSpanFunc func(outcome Outcome)
 ```
+
+U2 coordination note: when `Outcome.Cascaded` is true, the default Synthesizer emits
+the custom span attribute `synth.cascaded=true` from `FinishSpanFunc`.
 
 ### 1.3 不変条件 (SpanInput / Outcome)
 

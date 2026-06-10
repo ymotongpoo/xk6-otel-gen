@@ -240,6 +240,9 @@ func (s *defaultSynthesizer) BeginSpan(ctx context.Context, in SpanInput) (conte
         span.SetStatus(statusFor(in, outcome))
         // SetAttributes (dynamic outcome attrs)
         span.SetAttributes(finishAttrs(in, outcome, policy)...)
+        if outcome.Cascaded {
+            span.SetAttributes(attribute.Bool("synth.cascaded", true))
+        }
         // End
         span.End(trace.WithTimestamp(outcome.EndTime))
         // active_requests -1
@@ -247,6 +250,11 @@ func (s *defaultSynthesizer) BeginSpan(ctx context.Context, in SpanInput) (conte
     }
 }
 ```
+
+U2 coordination: `Outcome.Cascaded=true` is a Journey Engine marker for a child
+step skipped by upstream failure. The finish closure emits
+`synth.cascaded=true` as a custom span attribute; it is intentionally separate
+from the reusable Semantic Conventions dynamic outcome helper.
 
 `raceEnabled` は build tag で切り替え:
 ```go

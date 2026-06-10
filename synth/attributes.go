@@ -200,6 +200,7 @@ var allowedAttrKeys = map[string]struct{}{
 	string(semconv.ErrorTypeKey):                {},
 	"peer.service":                              {},
 	"outcome":                                   {},
+	"synth.cascaded":                            {},
 	"synth.service.framework":                   {},
 }
 
