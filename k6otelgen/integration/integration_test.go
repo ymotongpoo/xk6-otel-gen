@@ -3,7 +3,6 @@
 package integration
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -12,9 +11,6 @@ import (
 func TestIntegration_EndToEnd(t *testing.T) {
 	requireDocker(t)
 	xk6 := requireXK6(t)
-	if _, err := os.Stat(filepath.Join(repoRoot(t), "k6output")); err != nil {
-		t.Skipf("k6output is not implemented yet; U6 will enable --out otel-gen integration: %v", err)
-	}
 
 	testdata := filepath.Join(repoRoot(t), "k6otelgen", "integration", "testdata")
 	endpoint, cleanup := startCollector(t, testdata)
