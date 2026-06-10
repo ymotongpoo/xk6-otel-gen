@@ -62,10 +62,10 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Unit**: U2 (Journey Engine)
-- **Completed Units**: U7, U1, U4, U3
-- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → [✓ U3 complete] → U2 → U5 → U6 → U8
-- **Status**: U3 code generation completed through Phase 14 with synth coverage 84.0%, `go test -race -count=1 ./...` clean, benchmarks within NFR-U3-6 budgets, and Docker-backed synth integration passing. Next construction focus is U2.
+- **Current Unit**: U5 (k6 JS Module)
+- **Completed Units**: U7, U1, U4, U3, U2
+- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → [✓ U3 complete] → [✓ U2 complete] → U5 → U6 → U8
+- **Status**: U2 code generation completed through Phase 14 with journey coverage 80.9%, `go test -race -count=1 ./...` clean, benchmarks within NFR-U2-6 budgets, and Docker-backed journey integration passing. Next construction focus is U5.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)
