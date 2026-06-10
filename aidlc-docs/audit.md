@@ -967,3 +967,26 @@ Cross-references all NFR-R Open Questions §7 (queue size default 100, range [10
 (2) logical-components.md — 5 LCs (LC-0 doc / LC-1 output / LC-2 params / LC-3 convert / LC-4 errors) each with 責務 / 公開 API / 実装スケッチ / 依存; component dependency diagram with LC-4 errors as foundation and LC-1 output as integration; external package list including direct OTel SDK imports (sdk/metric, metric, sdk/resource, attribute, semconv/v1.27.0) plus exporter with required U4 patch; test component mapping to LCs (9 test files including integration subdir); explicit U4 coordination section repeating Pipeline.MetricExporter() requirement with backward-compatible minor bump rationale and CG Plan phase handoff note."
 
 **Context**: U6 NFR-D — artifacts generated, awaiting approval. Two CG Plan coordination phases identified: U4 Pipeline.MetricExporter() patch + U7 generators.
+
+
+## U6 k6output — NFR Design Approved & Committed; Code Generation Plan Created
+**Timestamp**: 2026-06-10T18:00:00Z
+**User Input**: "Continue to Next Stage" (approving U6 NFR-D with U4 coordination requirement)
+**AI Response**: "U6 NFR-D committed as 853400e. Created u6-k6output code-generation-plan.md with 13 phases (Phase 0-12):
+- Phase 0: env+skeleton
+- **Phase 1: U4 coordination patch (Pipeline.MetricExporter() accessor)** — minor SemVer bump on U4
+- Phase 2: errors + ConfigError
+- Phase 3: Args parser (params.go) with queueSize range validate
+- Phase 4: Sample converter (convert.go) with instrumentMap + tagSetCache + 11 knownK6Metrics
+- Phase 5: Output lifecycle (output.go) with sync.Once-guarded Start/Stop, flush goroutine, AddMetricSamples with drop-oldest + helpers_test.go
+- Phase 6: Documentation with --out args reference table + ExampleNew
+- Phase 7: PBT TP-U6-1..3 (example-based TP-U6-1, rapid for 2/3)
+- Phase 8: Benchmarks for strict per-sample budgets (<1µs push, <5µs flush)
+- Phase 9: U7 generator additions (k6 Sample + OutputParams pairs)
+- Phase 10: Integration test harness with xk6 build + Docker Collector
+- **Phase 11: Un-guard U5 integration test now that U6 lands**
+- Phase 12: Final wrap + DoD
+
+22-item anti-pattern enumeration cross-references NFR-D §9. Notes for the implementing agent call out U4 patch dependency, k6 SDK API specifics (output.Output / output.Params / metrics.Sample / Sample.Tags shape), OTel Gauge availability, k6 metric name verification against actual go.k6.io/k6/metrics, exporter.ResetShared test helper usage, build version ldflags injection."
+
+**Context**: U6 Code Generation — Part 1 Planning (Step 3/4 GATE).
