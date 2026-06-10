@@ -84,11 +84,6 @@ func TestInstanceID_Deterministic(t *testing.T) {
 	}
 }
 
-func TestBuildResource_Idempotent_Property(t *testing.T) {
-	t.Parallel()
-	t.Skip("waits for ValidService generator from Phase 11")
-}
-
 func resourceAttrs(kvs []attribute.KeyValue) map[attribute.Key]string {
 	attrs := make(map[attribute.Key]string, len(kvs))
 	for _, kv := range kvs {

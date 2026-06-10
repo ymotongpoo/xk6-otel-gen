@@ -169,11 +169,6 @@ func TestStaticSetCache_GetPut(t *testing.T) {
 	}
 }
 
-func TestSpanAttributes_AllowedKeysOnly_Property(t *testing.T) {
-	t.Parallel()
-	t.Skip("waits for ValidSpanInput generator from Phase 11")
-}
-
 func makeAttrEdge(sourceKind, targetKind topology.ServiceKind, protocol topology.Protocol) (*topology.Service, *topology.Edge) {
 	source := &topology.Service{Name: "source", Kind: sourceKind, Replicas: 1}
 	target := &topology.Service{Name: "target", Kind: targetKind, Replicas: 1}

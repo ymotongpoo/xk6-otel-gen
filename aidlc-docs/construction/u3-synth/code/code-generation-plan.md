@@ -314,15 +314,15 @@
 
 ### Step 9.1 — Create `synth/pbt_test.go`
 
-- [ ] `TestBuildResource_Idempotent_Property` (TP-U3-1) using existing `generators.ValidService`:
+- [x] `TestBuildResource_Idempotent_Property` (TP-U3-1) using existing `generators.ValidService`:
   - draw svc, draw idx in [0, svc.Replicas), call BuildResource twice, assert resource.Equal.
-- [ ] `TestSpanAttributes_AllowedKeysOnly_Property` (TP-U3-2) using locally-built SpanInputs (don't wait for ValidSpanInput):
+- [x] `TestSpanAttributes_AllowedKeysOnly_Property` (TP-U3-2) using locally-built SpanInputs (don't wait for ValidSpanInput):
   - generate (ServiceKind, EdgeKind, Operation, direction) combinations, call BeginSpan + finish, capture span attributes from in-memory exporter, assert all keys ∈ `allowedAttrKeys`.
-- [ ] All tests call `t.Parallel()`.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 9 commit
 
-- [ ] `git add synth/pbt_test.go && git commit -m "test(synth): add PBT for BuildResource idempotency and allowed attribute keys"`
+- [x] `git add synth/pbt_test.go && git commit -m "test(synth): add PBT for BuildResource idempotency and allowed attribute keys"`
 
 ---
 
