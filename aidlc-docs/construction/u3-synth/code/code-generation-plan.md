@@ -171,30 +171,30 @@
 
 ### Step 4.1 — Create `synth/race_on.go` and `synth/race_off.go`
 
-- [ ] `race_on.go` with `//go:build race` + `const raceEnabled = true`.
-- [ ] `race_off.go` with `//go:build !race` + `const raceEnabled = false`.
+- [x] `race_on.go` with `//go:build race` + `const raceEnabled = true`.
+- [x] `race_off.go` with `//go:build !race` + `const raceEnabled = false`.
 
 ### Step 4.2 — Create `synth/synthesizer.go` (struct + NewDefault only)
 
-- [ ] Define `defaultSynthesizer` struct with all 9 instrument fields + tracer/meter/logger/staticSetCache (per NFR-D LC-4).
-- [ ] Implement `NewDefault(tp, mp, lp) Synthesizer`:
+- [x] Define `defaultSynthesizer` struct with all 9 instrument fields + tracer/meter/logger/staticSetCache (per NFR-D LC-4).
+- [x] Implement `NewDefault(tp, mp, lp) Synthesizer`:
   - nil-check panic (Q4=A)
   - `meter := mp.Meter("github.com/ymotongpoo/xk6-otel-gen/synth")`
   - tracer / logger similarly
   - 9 instrument creation via `mustHistogram` / `mustUDC` helpers (panic on err)
   - return `*defaultSynthesizer`.
-- [ ] All public identifiers have full GoDoc.
+- [x] All public identifiers have full GoDoc.
 
 ### Step 4.3 — Unit test `synth/synthesizer_test.go` (skeleton)
 
-- [ ] `TestNewDefault_NilProvider_Panics` — each of tp/mp/lp nil → panic.
-- [ ] `TestNewDefault_BuildsAllInstruments` — uses `tracetest`+`ManualReader` providers, asserts all 9 instruments are non-nil.
-- [ ] Add `helpers_test.go` with `newTestProviders(t)` helper (skeleton).
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestNewDefault_NilProvider_Panics` — each of tp/mp/lp nil → panic.
+- [x] `TestNewDefault_BuildsAllInstruments` — uses `tracetest`+`ManualReader` providers, asserts all 9 instruments are non-nil.
+- [x] Add `helpers_test.go` with `newTestProviders(t)` helper (skeleton).
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 4 commit
 
-- [ ] `git add synth/synthesizer.go synth/race_on.go synth/race_off.go synth/synthesizer_test.go synth/helpers_test.go && git commit -m "feat(synth): add defaultSynthesizer skeleton with eager instrument creation"`
+- [x] `git add synth/synthesizer.go synth/race_on.go synth/race_off.go synth/synthesizer_test.go synth/helpers_test.go && git commit -m "feat(synth): add defaultSynthesizer skeleton with eager instrument creation"`
 
 ---
 
