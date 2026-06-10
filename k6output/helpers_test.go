@@ -1,11 +1,14 @@
 package k6output
 
 import (
+	"context"
 	"net/url"
 	"sync"
 	"testing"
+	"time"
 
 	"go.k6.io/k6/output"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/ymotongpoo/xk6-otel-gen/exporter"
 )
@@ -49,4 +52,26 @@ func recordingLogger() (func(string, ...any), *[]string) {
 	return func(format string, args ...any) {
 		logs = append(logs, format)
 	}, &logs
+}
+
+func newManualTestOutput(t *testing.T) (*Output, *sdkmetric.ManualReader) {
+	t.Helper()
+
+	reader := sdkmetric.NewManualReader()
+	mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(reader))
+	o := &Output{
+		params:        defaultParams(),
+		meterProvider: mp,
+		setCache:      &tagSetCache{},
+		logger:        func(string, ...any) {},
+	}
+	if err := o.buildKnownInstruments(); err != nil {
+		t.Fatalf("buildKnownInstruments() error = %v", err)
+	}
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = mp.Shutdown(ctx)
+	})
+	return o, reader
 }

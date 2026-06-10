@@ -81,6 +81,16 @@ func TestTagSetCache_Get_CacheHit(t *testing.T) {
 	}
 }
 
+func TestTagSetCache_Get_NilCache(t *testing.T) {
+	t.Parallel()
+
+	var cache *tagSetCache
+	set := cache.get(map[string]string{"method": "GET"})
+	if value, ok := set.Value("k6.tag.method"); !ok || value.AsString() != "GET" {
+		t.Fatalf("k6.tag.method = %q/%v, want GET/true", value.AsString(), ok)
+	}
+}
+
 func TestK6UnitHint(t *testing.T) {
 	t.Parallel()
 
@@ -103,6 +113,14 @@ func TestK6UnitHint(t *testing.T) {
 				t.Fatalf("k6UnitHint(%q) = %q, want %q", tt.name, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestKnownMetricSpec_NotFound(t *testing.T) {
+	t.Parallel()
+
+	if spec, ok := knownMetricSpec("unknown"); ok || spec.k6Name != "" {
+		t.Fatalf("knownMetricSpec(unknown) = %#v, %v; want zero false", spec, ok)
 	}
 }
 

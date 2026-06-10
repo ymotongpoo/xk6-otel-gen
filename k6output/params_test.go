@@ -231,6 +231,49 @@ func TestParseHeaders_Malformed(t *testing.T) {
 	}
 }
 
+func TestExporterConfig_OnlyProvidedFieldsAndCopiesHeaders(t *testing.T) {
+	t.Parallel()
+
+	params, err := parseOutArgs("endpoint=localhost:4318,headers=api-key:abc,batchSize=64")
+	if err != nil {
+		t.Fatalf("parseOutArgs() error = %v, want nil", err)
+	}
+	cfg := params.exporterConfig()
+	if cfg.Endpoint != "localhost:4318" || cfg.BatchSize != 64 {
+		t.Fatalf("exporterConfig() = %#v, want provided endpoint and batchSize", cfg)
+	}
+	if cfg.Timeout != 0 || cfg.MaxQueueSize != 0 {
+		t.Fatalf("exporterConfig() filled unprovided defaults: %#v", cfg)
+	}
+	params.Headers["api-key"] = "mutated"
+	if cfg.Headers["api-key"] != "abc" {
+		t.Fatalf("Headers alias source map, got %q", cfg.Headers["api-key"])
+	}
+}
+
+func TestBuildPipelineConfig_AllProvidedFields(t *testing.T) {
+	t.Parallel()
+
+	params, err := parseOutArgs("endpoint=localhost:4318,protocol=http,insecure=false,headers=api-key:abc,compression=,timeout=2s,batchSize=64,batchTimeout=200ms,maxQueueSize=128,queueSize=20")
+	if err != nil {
+		t.Fatalf("parseOutArgs() error = %v, want nil", err)
+	}
+	cfg := buildPipelineConfig(params)
+	if cfg.Endpoint != "localhost:4318" ||
+		cfg.Protocol != exporter.ProtocolHTTP ||
+		cfg.Insecure ||
+		cfg.Compression != "" ||
+		cfg.Timeout != 2*time.Second ||
+		cfg.BatchSize != 64 ||
+		cfg.BatchTimeout != 200*time.Millisecond ||
+		cfg.MaxQueueSize != 128 {
+		t.Fatalf("buildPipelineConfig() = %#v, want provided fields", cfg)
+	}
+	if !reflect.DeepEqual(cfg.Headers, map[string]string{"api-key": "abc"}) {
+		t.Fatalf("Headers = %#v, want api-key", cfg.Headers)
+	}
+}
+
 func assertConfigError(t *testing.T, err error, kind, field, value string) {
 	t.Helper()
 
