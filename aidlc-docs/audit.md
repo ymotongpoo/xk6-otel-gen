@@ -912,3 +912,44 @@ Generated 3 FD artifacts under aidlc-docs/construction/u6-k6output/functional-de
 (3) domain-entities.md — Output (opaque), Params (internal config representation distinct from exporter.Config for future extensibility), ConfigError with Kind enum (invalid_args/invalid_protocol/type_mismatch/invalid_url), 5 method contracts (New/Description/Start/AddMetricSamples/Stop) with idempotency and thread-safety notes, 5 production + 4 test file layout, import dependencies including U4 patch requirement, **explicit coordination requirements**: (a) U4 must add Pipeline.MetricExporter() sdkmetric.Exporter for runner MeterProvider construction (minor SemVer bump), (b) U7 must add ValidK6Sample/AnyK6Sample and ValidOutputParams/AnyOutputParams generators (FD §7.2)."
 
 **Context**: U6 FD — artifacts generated, awaiting approval. Two coordination phases will be required in CG Plan: U4 Pipeline.MetricExporter() patch + U7 generators.
+
+
+## U6 k6output — NFR-R Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T17:00:00Z
+**User Input**: "完了しました" — 13 answers with two notable refinements:
+- Q1=C ("100ms前後はあくまで目安でよい") — soft target only
+- Q4=C ("30 sec は目安で良い") — soft target only
+- Q5=X (formula-based memory estimate, cardinality-driven, not fixed cap)
+- Q7=A with question ("queueのサイズは大きくすると他のユニットに影響あるんでしたっけ？") — user proposed making queue size configurable
+
+**AI Response**: "Acknowledged user clarifications:
+
+1. Q1/Q4 latency targets demoted to soft / guidance level (NFR-U6-4 labels them as guidance with explicit non-blocking note).
+
+2. Q5 memory: replaced fixed cap with explicit formula:
+   Memory ≈ Base + (queueCapacity × ~10KB) + (N_instruments × ~1KB) + (N_attributeSets × ~100B)
+   Documented 4 workload scenarios from low to pathological cardinality with estimates (1.5MB low / 12MB pathological 100k unique URLs).
+
+3. Q7 queue size: confirmed no cross-unit impact — queue affects U6 memory only, not other units' state nor Pipeline shutdown timing. Added `--out otel-gen=queueSize=N` argument (default 100, range [10, 10000]) per user proposal. Documented in NFR-U6-6 with the explicit no-impact note.
+
+Generated 2 NFR-R artifacts:
+
+(1) nfr-requirements.md — 13 applicable NFRs:
+- NFR-U6-1 API Stability (args SemVer)
+- NFR-U6-2 Output Lifecycle (New/Start/AddMetricSamples/Stop with Stop-always-nil)
+- NFR-U6-3 strict per-sample budgets (AddMetricSamples <1µs, FlushLoop <5µs) — these stay strict because they affect k6 hot path
+- NFR-U6-4 soft lifecycle latencies (Start ~100ms guidance, Stop ~30s guidance) per Q1/Q4=C
+- NFR-U6-5 formula-based memory (4 workload scenarios)
+- NFR-U6-6 configurable queue with explicit cross-unit impact analysis (none)
+- NFR-U6-7 Concurrency
+- NFR-U6-8 No self-metric (delegate to U4 Stats)
+- NFR-U6-9 Documentation with --out reference table
+- NFR-U6-10 Testability with xk6 integration
+- NFR-U6-11 Compatibility (Go 1.25 + k6 SDK pin + OTel SDK direct import)
+- NFR-U6-12 PBT compliance summary
+- NFR-U6-13 Cardinality strategy (U6 no internal safeguard, k6 user + Collector responsibility)
++ 12 N/A categories + DoD 14-item + 5 risks + cross-unit requests (U4 patch + U7 generators).
+
+(2) tech-stack-decisions.md — production deps (k6 SDK + OTel SDK direct + exporter), 5 test deps, integration via xk6+Docker, 7 rejected alternatives (synth Resource reuse, synth MeterProvider reuse, sync emit, self-rolled OTLP, semconv name rewrite, internal cardinality limit, Stop-with-error), CI table with strict-vs-soft bench distinction, cross-unit summary, migration notes for k6 SDK / OTel SDK / exporter upgrades, 5 open questions for NFR-D / future."
+
+**Context**: U6 NFR-R — artifacts generated, awaiting approval.
