@@ -331,18 +331,18 @@
 
 ### Step 10.1 — Create `synth/bench_test.go`
 
-- [ ] `BenchmarkBuildResource` — fixed svc, idx=0.
-- [ ] `BenchmarkBeginSpan_HTTP_Server` — fixed SpanInput (svc kind=application, edge nil), include finish call.
-- [ ] `BenchmarkRecordMetric_HTTP_Server` — fixed MetricInput.
-- [ ] `BenchmarkEmitLog` — fixed LogInput.
-- [ ] All use ManualReader / tracetest providers (no exporter network call).
-- [ ] `b.ReportAllocs()`.
-- [ ] Verify locally: ns/op meets NFR-U3-6 (<10µs / <5µs / <10µs / <50µs).
-- [ ] If a benchmark fails the budget, document the gap in code-generation-summary.md but do not block — note as TODO for sync.Pool fallback per NFR-D §1.2.4.
+- [x] `BenchmarkBuildResource` — fixed svc, idx=0.
+- [x] `BenchmarkBeginSpan_HTTP_Server` — fixed SpanInput (svc kind=application, edge nil), include finish call.
+- [x] `BenchmarkRecordMetric_HTTP_Server` — fixed MetricInput.
+- [x] `BenchmarkEmitLog` — fixed LogInput.
+- [x] All use ManualReader / tracetest providers (no exporter network call).
+- [x] `b.ReportAllocs()`.
+- [x] Verify locally: ns/op meets NFR-U3-6 (<10µs / <5µs / <10µs / <50µs).
+- [x] If a benchmark fails the budget, document the gap in code-generation-summary.md but do not block — note as TODO for sync.Pool fallback per NFR-D §1.2.4.
 
 ### Phase 10 commit
 
-- [ ] `git add synth/bench_test.go && git commit -m "test(synth): add benchmarks for per-call latency targets"`
+- [x] `git add synth/bench_test.go && git commit -m "test(synth): add benchmarks for per-call latency targets"`
 
 ---
 
