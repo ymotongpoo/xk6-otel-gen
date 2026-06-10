@@ -1,23 +1,17 @@
 package k6otelgen
 
 import (
-	"context"
-
 	"github.com/grafana/sobek"
 
 	"github.com/ymotongpoo/xk6-otel-gen/journey"
 )
 
-type vuContextProvider interface {
-	vuContext() context.Context
-}
-
 // TopologyHandle is the JS-visible object returned by load.
 type TopologyHandle struct {
 	runtime  *sobek.Runtime
 	engine   *journey.Engine
-	module   any
-	instance vuContextProvider
+	module   *RootModule
+	instance *ModuleInstance
 	name     string
 }
 

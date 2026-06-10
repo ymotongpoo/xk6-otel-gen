@@ -194,26 +194,26 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Step 5.1 — Create `k6otelgen/module.go`
 
-- [ ] Define `RootModule struct` with all fields per NFR-D §1.1 (schemaOnce / schemaErr / schema / overlay / loadedPath / configureOnce / configureErr / config / configured / handle).
-- [ ] Implement `init()` calling `modules.Register("k6/x/otel-gen", New())`.
-- [ ] Implement `New() *RootModule` returning fresh zero state.
-- [ ] Implement `(*RootModule).NewModuleInstance(vu modules.VU) modules.Instance`:
+- [x] Define `RootModule struct` with all fields per NFR-D §1.1 (schemaOnce / schemaErr / schema / overlay / loadedPath / configureOnce / configureErr / config / configured / handle).
+- [x] Implement `init()` calling `modules.Register("k6/x/otel-gen", New())`.
+- [x] Implement `New() *RootModule` returning fresh zero state.
+- [x] Implement `(*RootModule).NewModuleInstance(vu modules.VU) modules.Instance`:
   - Construct `*ModuleInstance` with root + vu
   - If schema not loaded, return partial instance (lateInit will fire on Load)
   - If schema loaded: getOrBuildPipeline, create synth.NewDefault, journey.NewEngineWithSeed with `time.UnixNano() XOR vu.State().VUID`, create handle
-- [ ] All exported identifiers have GoDoc.
+- [x] All exported identifiers have GoDoc.
 
 ### Step 5.2 — Unit test `k6otelgen/module_test.go`
 
-- [ ] `TestNew_ReturnsZeroState`.
-- [ ] `TestNewModuleInstance_BeforeLoad_PartialInstance` (schema nil OK).
-- [ ] `TestNewModuleInstance_AfterLoad_BuildsEngine` (need to load first via Phase 6, may need to inline simple yaml).
-- [ ] Helper `newTestRootModule(t) *RootModule` available (placeholder; full helpers in Phase 6).
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestNew_ReturnsZeroState`.
+- [x] `TestNewModuleInstance_BeforeLoad_PartialInstance` (schema nil OK).
+- [x] `TestNewModuleInstance_AfterLoad_BuildsEngine` (need to load first via Phase 6, may need to inline simple yaml).
+- [x] Helper `newTestRootModule(t) *RootModule` available (placeholder; full helpers in Phase 6).
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 5 commit
 
-- [ ] `git add k6otelgen/module.go k6otelgen/module_test.go && git commit -m "feat(k6otelgen): add RootModule with init registration and NewModuleInstance"`
+- [x] `git add k6otelgen/module.go k6otelgen/module_test.go && git commit -m "feat(k6otelgen): add RootModule with init registration and NewModuleInstance"`
 
 ---
 
