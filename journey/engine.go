@@ -5,7 +5,6 @@ import (
 	"math/rand/v2"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
@@ -64,9 +63,4 @@ func (e *Engine) ListJourneys() []string {
 	keys := make([]string, len(e.impl.journeyKeys))
 	copy(keys, e.impl.journeyKeys)
 	return keys
-}
-
-func newDefaultRand() *rand.Rand {
-	seed := uint64(time.Now().UnixNano())
-	return rand.New(rand.NewPCG(seed, seed^0x9e3779b97f4a7c15))
 }

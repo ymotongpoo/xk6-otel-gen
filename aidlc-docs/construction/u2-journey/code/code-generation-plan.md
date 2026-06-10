@@ -173,22 +173,22 @@
 
 ### Step 4.1 — Create `journey/replica.go`
 
-- [ ] Implement `newDefaultRand() *rand.Rand` using `rand.NewPCG(seed1, seed2)` (math/rand/v2).
-- [ ] Implement `(*engineImpl).randIntN(n int) int` with mutex protection.
-- [ ] Implement `(*engineImpl).randFloat64() float64` with mutex protection.
-- [ ] Internal helpers, brief comments.
+- [x] Implement `newDefaultRand() *rand.Rand` using `rand.NewPCG(seed1, seed2)` (math/rand/v2).
+- [x] Implement `(*engineImpl).randIntN(n int) int` with mutex protection.
+- [x] Implement `(*engineImpl).randFloat64() float64` with mutex protection.
+- [x] Internal helpers, brief comments.
 
 ### Step 4.2 — Unit test `journey/replica_test.go`
 
-- [ ] `TestRandIntN_ZeroOrOne_ReturnsZero` — n=0 or n=1 → 0.
-- [ ] `TestRandIntN_Range` — n=10, draw 1000 times, verify all in [0, 10).
-- [ ] `TestRandFloat64_Range` — draw 1000 times, verify all in [0.0, 1.0).
-- [ ] `TestRand_Concurrent_NoRace` — concurrent randIntN calls from multiple goroutines (race detector verifies safety).
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestRandIntN_ZeroOrOne_ReturnsZero` — n=0 or n=1 → 0.
+- [x] `TestRandIntN_Range` — n=10, draw 1000 times, verify all in [0, 10).
+- [x] `TestRandFloat64_Range` — draw 1000 times, verify all in [0.0, 1.0).
+- [x] `TestRand_Concurrent_NoRace` — concurrent randIntN calls from multiple goroutines (race detector verifies safety).
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 4 commit
 
-- [ ] `git add journey/replica.go journey/replica_test.go && git commit -m "feat(journey): add per-Engine random source with mutex protection"`
+- [x] `git add journey/replica.go journey/replica_test.go && git commit -m "feat(journey): add per-Engine random source with mutex protection"`
 
 ---
 
