@@ -108,29 +108,29 @@
 
 ### Step 2.1 — Create `journey/engine.go`
 
-- [ ] Define `Engine struct { impl *engineImpl }` (opaque public, internal pointer).
-- [ ] Define `engineImpl struct { schema, overlay, synth, plans, journeyKeys, rand, rmu }` per NFR-D §1.1.
-- [ ] Implement `NewEngine(schema, overlay, syn) *Engine`:
+- [x] Define `Engine struct { impl *engineImpl }` (opaque public, internal pointer).
+- [x] Define `engineImpl struct { schema, overlay, synth, plans, journeyKeys, rand, rmu }` per NFR-D §1.1.
+- [x] Implement `NewEngine(schema, overlay, syn) *Engine`:
   - nil-check panic with formatted message ("journey: NewEngine: ... must not be nil")
   - Initialize plans map, rand source via `newDefaultRand()`
   - Loop `schema.Journeys`, call `e.impl.buildPlan(name)` (stubbed for now, fully implemented in Phase 3), populate plans + journeyKeys
   - Sort journeyKeys
   - Panic if buildPlan returns error (NewEngine fail-fast)
-- [ ] Implement `(*Engine).ListJourneys() []string` returning copy of `journeyKeys`.
-- [ ] All public identifiers have GoDoc.
+- [x] Implement `(*Engine).ListJourneys() []string` returning copy of `journeyKeys`.
+- [x] All public identifiers have GoDoc.
 
 > **NOTE**: `buildPlan` body is added in Phase 3. For Phase 2, stub buildPlan to return `&Plan{JourneyName: name, Root: &Node{}}` so NewEngine compiles and passes minimal tests.
 
 ### Step 2.2 — Unit test `journey/engine_test.go`
 
-- [ ] `TestNewEngine_NilArgs_Panic` — each of schema/overlay/syn nil → panic.
-- [ ] `TestNewEngine_EmptySchema` — schema with no Journeys → no panic, ListJourneys returns empty slice.
-- [ ] `TestListJourneys_SortedKeys` — schema with 3 journeys → ListJourneys returns sorted slice.
-- [ ] `TestListJourneys_ReturnsCopy` — caller modifying returned slice doesn't affect Engine internal state.
+- [x] `TestNewEngine_NilArgs_Panic` — each of schema/overlay/syn nil → panic.
+- [x] `TestNewEngine_EmptySchema` — schema with no Journeys → no panic, ListJourneys returns empty slice.
+- [x] `TestListJourneys_SortedKeys` — schema with 3 journeys → ListJourneys returns sorted slice.
+- [x] `TestListJourneys_ReturnsCopy` — caller modifying returned slice doesn't affect Engine internal state.
 
 ### Phase 2 commit
 
-- [ ] `git add journey/engine.go journey/engine_test.go && git commit -m "feat(journey): add Engine struct with NewEngine and ListJourneys"`
+- [x] `git add journey/engine.go journey/engine_test.go && git commit -m "feat(journey): add Engine struct with NewEngine and ListJourneys"`
 
 ---
 
