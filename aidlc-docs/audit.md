@@ -1031,3 +1031,39 @@ U4 patch (Phase 1, 9500a99) and U5 un-guard (Phase 11, b67323c) both landed clea
 U6 fully complete; U8 (Samples & Distribution) is the final unit — focuses on examples/ + cmd/ + build configuration for distribution."
 
 **Context**: U6 Code Generation — Part 2 complete; awaiting Continue to Next Stage approval before moving to U8 (final unit).
+
+
+## U8 Samples & Distribution — FD Plan Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T19:00:00Z
+**User Input**: Initial "Continue to Next Stage" with Q3 unanswered. User then sent "Request Changes - Q3回答忘れてたのでしました" to add Q3=A. Critical Q4 change: "X - これはDocker Composeがいいんですか？Kubernetesがいいです" (Kubernetes manifests instead of Docker Compose).
+
+**AI Response**: "Acknowledged user changes:
+1. Q3=A (default 3-phase k6 script pattern) — confirmed; the 2 previously-generated artifacts already assumed Q3=A so no rework needed.
+2. Q4=X Kubernetes — adopted Kubernetes manifests instead of Docker Compose throughout U8 FD. Each example gets a k8s/ subdir with kustomization.yaml + namespace.yaml + collector.yaml + jaeger.yaml + prometheus.yaml + README.md. kind cluster setup documented to lower the entry barrier.
+
+Generated 3 FD artifacts under aidlc-docs/construction/u8-samples/functional-design/:
+
+(1) business-logic-model.md — U8 responsibilities (deliverables: examples/, cmd/, README.md, LICENSE), user journey (kind cluster + xk6 build + kubectl apply + port-forward + k6 run + browse), file structure tree, examples/minimal/ topology (3-tier: frontend/backend/database, 1 journey 'checkout', 1 fault error_rate=0.05 on edge), examples/astroshop/ structure (14 application + 4 dependency services = 18 services per OTel Demo astronomy shop), k6 script Q3=A 3-phase pattern with concrete examples, Kubernetes manifest layout per Q4=X with kustomize + Collector/Jaeger/Prometheus stack, kind setup steps, README.md 12-section structure, cmd/xk6-otel-gen-schema with single -output flag and 50-line main.go sketch, PBT N/A justification, license consistency rule, out-of-scope list (no binary distribution, no Helm chart, no API auto-gen).
+
+(2) business-rules.md — Topology YAML rules (kebab-case service names, snake_case operation names, lognormal latency baseline, Validate-passing), k6 script rules (single import, setup→default→teardown pattern, no thresholds), Kubernetes manifest rules (xk6-otel-gen-demo namespace, ClusterIP services with port-forward UX, conservative resources for kind), README structure rules per file, cmd CLI exit codes (0/1/2), Pattern consistency between minimal and astroshop (same layout, image tags), performance targets (~1GB minimal cluster, ~2GB astroshop, <100ms CLI execution).
+
+(3) domain-entities.md — Single Go API surface (cmd/xk6-otel-gen-schema/main.go's main() function), artifact specifications file-by-file (LICENSE Apache-2.0 fulltext, README.md 12-section breakdown with section descriptions, topology.yaml content invariants, script.js code shape, Collector config yaml with traces+metrics pipelines, k8s/ manifests with concrete sketches), file inventory with line count estimates (~3,000 lines total: examples/minimal ~600, examples/astroshop ~1500, cmd ~150, README ~400, LICENSE ~200), dependencies (cmd uses only stdlib + topology package), no U7 generator request (PBT N/A), Application Design §U8 amendments table (Docker Compose → Kubernetes, prebuilt binary → self-build only, etc.)."
+
+**Context**: U8 FD — artifacts generated, awaiting approval. This is the final unit before Build and Test stage.
+
+
+## U8 Samples & Distribution — Tempo+Grafana Change
+**Timestamp**: 2026-06-10T19:30:00Z
+**User Input**: "JaegerじゃなくてTempo+Grafanaがいいです"
+**AI Response**: "Updated U8 FD to replace Jaeger with Tempo+Grafana, naturally expanding to LGTM-lite stack (Tempo + Loki + Prometheus + Grafana) since synth emits 3 signals (traces/metrics/logs). Loki added so synthesized logs have a visualization target rather than being dropped.
+
+Updated all 3 FD artifacts:
+1. business-logic-model.md §1.1 user journey, §1.2 file tree (k8s/ subdir gains tempo.yaml/loki.yaml/grafana.yaml, removes jaeger.yaml), §4 fully rewritten to LGTM-lite stack with new Collector config (3 pipelines), Grafana datasource provisioning ConfigMap snippet, image pin table updated (Tempo/Loki/Grafana added).
+2. business-rules.md §3.1 manifest layout updated, §3.3 image pin list with Tempo/Loki/Grafana versions, §3.4 service exposure rewritten (Grafana port 3000 is user's primary entry point, Tempo/Loki/Prometheus internal only), §3.5 ConfigMap section notes Grafana datasource + dashboard provisioning.
+3. domain-entities.md §2.5 Collector config rewritten with 3 pipelines + Loki exporter, §2.6 k8s manifests expanded (kustomization.yaml + tempo.yaml + loki.yaml + grafana.yaml sketches added, jaeger.yaml removed), §3 file inventory expanded to ~900 lines/minimal + ~1800 lines/astroshop including dashboard JSON, Application Design amendments table notes the LGTM stack adoption.
+
+Rationale documented: Tempo is OTLP native (vs Jaeger v1 OTLP-via-translation), Grafana unifies all 3 signal viewers, the project synthesizes logs so they should be visible in the demo. User primary entry is Grafana port-forward (port 3000), with Tempo/Loki/Prometheus reachable as cluster-internal datasources auto-provisioned at Grafana startup. Anonymous admin login enabled for demo convenience.
+
+Estimated total artifact size: ~3,300 lines (was ~3,000) due to additional manifests + dashboard JSON."
+
+**Context**: U8 FD update complete, still awaiting approval.
