@@ -193,7 +193,6 @@ synth/
 ├── synthesizer.go            // defaultSynthesizer struct + NewDefault + BeginSpan / RecordMetric / EmitLog 実装
 ├── resource.go               // BuildResource (per-service-instance Resource)
 ├── attributes.go             // (ServiceKind, EdgeKind) → policy マッピング + semconv attribute build helpers + import semconv/v1.27.0
-├── errors.go                 // (もし必要なら) synth-specific error 型
 │
 ├── interface_test.go         // SpanInput / Outcome 不変条件 + 構築可能性
 ├── synthesizer_test.go       // BeginSpan / RecordMetric / EmitLog example-based tests with mock provider
@@ -201,6 +200,11 @@ synth/
 ├── attributes_test.go        // (ServiceKind, EdgeKind) policy mapping + TP-U3-2
 └── pbt_test.go               // TP-U3-1, TP-U3-3, TP-U3-4 (TP-U3-2 は attributes_test.go に同居)
 ```
+
+> **NOTE**: NFR-D `logical-components.md` §LC-5 supersedes the earlier
+> optional `errors.go` layout entry. U3 exposes no error-returning API and uses
+> formatted panic strings for programmer errors, so a synth-specific error type
+> file is intentionally omitted.
 
 詳細は NFR Design ステージで確定。
 

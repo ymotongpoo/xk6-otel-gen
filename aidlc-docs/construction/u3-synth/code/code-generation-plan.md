@@ -418,16 +418,16 @@
 
 ### Step 13.1 — Update `aidlc-docs/construction/u3-synth/functional-design/domain-entities.md`
 
-- [ ] §3 file layout: remove `errors.go` from the list. Add a NOTE pointing to NFR-D §LC-5 for the rationale.
-- [ ] §4 public API list: no change (errors were never exported).
+- [x] §3 file layout: remove `errors.go` from the list. Add a NOTE pointing to NFR-D §LC-5 for the rationale.
+- [x] §4 public API list: no change (errors were never exported).
 
 ### Step 13.2 — Update `business-logic-model.md` (if mentions errors.go)
 
-- [ ] `grep "errors.go" business-logic-model.md business-rules.md` — if found, update.
+- [x] `grep "errors.go" business-logic-model.md business-rules.md` — if found, update.
 
 ### Phase 13 commit
 
-- [ ] `git add aidlc-docs/construction/u3-synth/functional-design/ && git commit -m "docs(synth): reconcile FD with NFR-D — drop errors.go from file layout"`
+- [x] `git add aidlc-docs/construction/u3-synth/functional-design/ && git commit -m "docs(synth): reconcile FD with NFR-D — drop errors.go from file layout"`
 
 ---
 
