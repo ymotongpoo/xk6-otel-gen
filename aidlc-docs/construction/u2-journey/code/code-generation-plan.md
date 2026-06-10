@@ -234,11 +234,11 @@
 
 ### Step 6.1 — Create `journey/executor.go`
 
-- [ ] Implement `(*Engine).Execute(ctx context.Context, plan *Plan) error`:
+- [x] Implement `(*Engine).Execute(ctx context.Context, plan *Plan) error`:
   - nil-check (return `*ExecuteError{Kind: "nil_plan"}` or `"nil_ctx"`)
   - `defer recover()` for top-level panic → `*ExecuteError{Kind: "internal"}`
   - Call `e.impl.executeNode(ctx, plan.Root, nil)`
-- [ ] Implement `(*engineImpl).executeNode(ctx, node, parent) Outcome`:
+- [x] Implement `(*engineImpl).executeNode(ctx, node, parent) Outcome`:
   - virtual fan-out (Parallel != nil) → dispatch to executeParallelGroup
   - cascade check (parent != nil && !parent.Success) → return basic cascade Outcome without span emission (cascade emission added in Phase 8)
   - fault evaluation via foldFaults (handle crash + disconnect + error_rate)
@@ -250,28 +250,28 @@
   - Iterate Children (sequential), recursive executeNode
   - finishFn(toSynthOutcome(...))
   - RecordMetric + EmitLog
-- [ ] Implement `(*engineImpl).executeParallelGroup(ctx, group, parent) Outcome`:
+- [x] Implement `(*engineImpl).executeParallelGroup(ctx, group, parent) Outcome`:
   - sync.WaitGroup + goroutine-per-child with `defer recover()` per child
   - aggregateParallelOutcomes (max latency, any-failure-aggregates)
-- [ ] Helper functions: `pickStatusCode`, `toSynthOutcome`, `waitWithCancel`, `aggregateParallelOutcomes`.
+- [x] Helper functions: `pickStatusCode`, `toSynthOutcome`, `waitWithCancel`, `aggregateParallelOutcomes`.
 
 > **NOTE**: applyRecovery is **not** called in this phase (will be added in Phase 8). Primary failures just produce failure Outcome without retry.
 
 ### Step 6.2 — Unit test `journey/executor_test.go` (happy path)
 
-- [ ] `TestExecute_NilArgs_ReturnsError` — Execute(nil, plan) and Execute(ctx, nil).
-- [ ] `TestExecute_Sequential_HappyPath` — 3-step journey, mockSynth captures BeginSpan calls in order.
-- [ ] `TestExecute_Parallel_HappyPath` — 2-branch parallel, both branches execute.
-- [ ] `TestExecute_CtxCancel_StopsWithin10ms` — cancel ctx during long sleep, verify return < 10ms + ErrorType "context_canceled".
-- [ ] `TestExecute_PanicInSynth_RecoversAndReturns` — mockSynth that panics in BeginSpan → Execute returns *ExecuteError{Kind: "internal"}.
-- [ ] `TestExecute_FaultCrash_FailureOutcome` — FaultCrash on a service → Outcome.Success=false, ErrorType="crashed".
-- [ ] `TestExecute_FaultDisconnect_FailureOutcome` — FaultDisconnect on an edge → ErrorType="connection_refused".
-- [ ] `TestExecute_FaultErrorRate_PrimaryFailureForced` — error_rate=1.0 → primary fails.
-- [ ] Create `journey/helpers_test.go` with `mockSynth`, `newTestSchema`, `newTestOverlay`, `assertOutcomeMatches` helpers per NFR-D §9.1.
+- [x] `TestExecute_NilArgs_ReturnsError` — Execute(nil, plan) and Execute(ctx, nil).
+- [x] `TestExecute_Sequential_HappyPath` — 3-step journey, mockSynth captures BeginSpan calls in order.
+- [x] `TestExecute_Parallel_HappyPath` — 2-branch parallel, both branches execute.
+- [x] `TestExecute_CtxCancel_StopsWithin10ms` — cancel ctx during long sleep, verify return < 10ms + ErrorType "context_canceled".
+- [x] `TestExecute_PanicInSynth_RecoversAndReturns` — mockSynth that panics in BeginSpan → Execute returns *ExecuteError{Kind: "internal"}.
+- [x] `TestExecute_FaultCrash_FailureOutcome` — FaultCrash on a service → Outcome.Success=false, ErrorType="crashed".
+- [x] `TestExecute_FaultDisconnect_FailureOutcome` — FaultDisconnect on an edge → ErrorType="connection_refused".
+- [x] `TestExecute_FaultErrorRate_PrimaryFailureForced` — error_rate=1.0 → primary fails.
+- [x] Create `journey/helpers_test.go` with `mockSynth`, `newTestSchema`, `newTestOverlay`, `assertOutcomeMatches` helpers per NFR-D §9.1.
 
 ### Phase 6 commit
 
-- [ ] `git add journey/executor.go journey/executor_test.go journey/helpers_test.go && git commit -m "feat(journey): add Executor with sequential/parallel dispatch, ctx cancel, and panic recovery"`
+- [x] `git add journey/executor.go journey/executor_test.go journey/helpers_test.go && git commit -m "feat(journey): add Executor with sequential/parallel dispatch, ctx cancel, and panic recovery"`
 
 ---
 
