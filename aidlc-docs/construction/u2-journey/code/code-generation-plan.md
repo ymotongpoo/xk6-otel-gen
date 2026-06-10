@@ -63,19 +63,19 @@
 
 ### Step 0.1 — Verify deps
 
-- [ ] `head -3 go.mod` shows `go 1.25`.
-- [ ] No new external deps required (math/rand/v2 is stdlib).
-- [ ] Optional: scan `go.sum` to confirm `topology`, `synth` are accessible via local module (they are part of the same module).
+- [x] `head -3 go.mod` shows `go 1.25`.
+- [x] No new external deps required (math/rand/v2 is stdlib).
+- [x] Optional: scan `go.sum` to confirm `topology`, `synth` are accessible via local module (they are part of the same module).
 
 ### Step 0.2 — Create journey/ directory skeleton
 
-- [ ] Create `journey/` directory.
-- [ ] Create empty `journey/doc.go` with placeholder `package journey` + TODO comment (full doc in Phase 9).
-- [ ] Verify: `go build ./journey/...` succeeds (empty package).
+- [x] Create `journey/` directory.
+- [x] Create empty `journey/doc.go` with placeholder `package journey` + TODO comment (full doc in Phase 9).
+- [x] Verify: `go build ./journey/...` succeeds (empty package).
 
 ### Phase 0 commit
 
-- [ ] `git add journey/doc.go && git commit -m "build(journey): scaffold package for U2"`
+- [x] `git add journey/doc.go && git commit -m "build(journey): scaffold package for U2"`
 
 ---
 
