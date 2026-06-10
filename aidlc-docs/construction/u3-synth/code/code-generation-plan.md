@@ -292,18 +292,18 @@
 
 ### Step 8.1 — Replace `synth/doc.go` placeholder
 
-- [ ] Full package doc per NFR-D §5.2 (overview, usage, lifecycle, semconv version note).
+- [x] Full package doc per NFR-D §5.2 (overview, usage, lifecycle, semconv version note).
 
 ### Step 8.2 — Create `synth/doc_test.go`
 
-- [ ] `ExampleNewDefault` — construct + verify.
-- [ ] `ExampleBuildResource` — show Resource construction with svc Replicas + Language + Framework, print attrs.
-- [ ] `ExampleSynthesizer_BeginSpan` — full span lifecycle (BeginSpan → finish).
-- [ ] All Examples must compile + pass `go test ./synth/...`.
+- [x] `ExampleNewDefault` — construct + verify.
+- [x] `ExampleBuildResource` — show Resource construction with svc Replicas + Language + Framework, print attrs.
+- [x] `ExampleSynthesizer_BeginSpan` — full span lifecycle (BeginSpan → finish).
+- [x] All Examples must compile + pass `go test ./synth/...`.
 
 ### Phase 8 commit
 
-- [ ] `git add synth/doc.go synth/doc_test.go && git commit -m "docs(synth): add package documentation and Example functions"`
+- [x] `git add synth/doc.go synth/doc_test.go && git commit -m "docs(synth): add package documentation and Example functions"`
 
 ---
 
