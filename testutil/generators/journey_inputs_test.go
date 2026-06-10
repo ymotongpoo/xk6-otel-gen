@@ -15,6 +15,7 @@ func TestValidPlan_GeneratesInvariantRespectingValues(t *testing.T) {
 		plan := ValidPlan().Draw(t, "plan")
 		if plan == nil {
 			t.Fatal("ValidPlan produced nil")
+			return
 		}
 		if plan.JourneyName == "" {
 			t.Fatal("ValidPlan produced empty JourneyName")
@@ -33,6 +34,7 @@ func TestValidNode_GeneratesInvariantRespectingValues(t *testing.T) {
 		node := ValidNode().Draw(t, "node")
 		if node == nil {
 			t.Fatal("ValidNode produced nil")
+			return
 		}
 		assertValidJourneyNode(t, node)
 	})
