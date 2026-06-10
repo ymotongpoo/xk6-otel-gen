@@ -683,3 +683,38 @@ Plan Phase 10 checkboxes back-filled to reflect the manual 26b565a commit."
 **User Input**: "Continue to Next Stage" (approving U3 NFR-D with errors.go reasoning fix)
 **AI Response**: "U3 NFR-D committed as 2ffaa53 with corrected errors.go rationale (per-channel audit table + decoupled-from-panic-decision note + future re-introduction triggers). Created u3-synth code-generation-plan.md with 15 phases (Phase 0-14): deps+skeleton, interface+IO types, resource builder with UUID v5, attribute policy with semconv constants and staticSetCache, synthesizer skeleton with eager instrument creation, BeginSpan+FinishSpanFunc with atomic.Bool double-call protection, RecordMetric with hybrid static+dynamic strategy, EmitLog, documentation with 3 Examples, PBT TP-U3-1 and TP-U3-2 (independently), Benchmark, U7 generator additions (8 funcs + optional ValidErrorType) with TP-U3-3 and TP-U3-4 un-skip, integration harness with -tags=integration aligned to U4, FD revision phase to remove errors.go from FD layout, and final DoD verification. 15-item anti-pattern enumeration cross-references NFR-D §9."
 **Context**: U3 Code Generation — Part 1 Planning (Step 3/4 GATE).
+
+
+## U3 synth — Code Generation Completed (Single Codex Session)
+**Timestamp**: 2026-06-10T04:36:20Z
+**User Input**: Codex completed Phase 0-14 in a single run. Final commit 30e47e2. 15 new commits. Coverage 84.0%. All 4 benchmarks well under budget.
+**AI Response**: "U3 Code Generation complete in a single Codex session — no capacity interruption this time (vs U4's 2-session split). 15 commits delivered: df5213c (deps+skeleton), cbf4873 (interface), 1537b5e (resource), e2e9e9c (attributes), 3a241b9 (synthesizer skeleton), 3a7c03f (BeginSpan), e966851 (RecordMetric), e6a0a4d (EmitLog), c9cdf2c (docs+Examples), 3f9d232 (PBT TP-U3-1/2), 8c83661 (benchmarks), 1d630a9 (U7 generators), d472676 (integration harness), 97fb53a (FD revision for errors.go removal), 30e47e2 (final summary).
+
+DoD all-green:
+- go build ./...: pass
+- go vet ./synth/...: pass
+- go test -race -count=1 ./...: pass
+- go test -cover ./synth/...: 84.0% (above 80% target)
+- BenchmarkBuildResource: 4658 ns/op (target <50000), BenchmarkBeginSpan: 7256 ns/op (<10000), BenchmarkRecordMetric: 1531 ns/op (<5000), BenchmarkEmitLog: 1049 ns/op (<10000) — all well within NFR-U3-6 budgets
+- go test -tags=integration ./synth/integration/...: pass with Docker
+- golangci-lint run ./synth/...: pass
+
+Notable deviations (documented in code-generation-summary.md):
+1. Phase 0 used `go list go.opentelemetry.io/otel/semconv/v1.27.0` instead of grepping go.sum (semconv is sub-package of otel module — accurate verification).
+2. Plan's older 'EdgeKind' wording mapped to actual topology.Protocol field (U1 already implemented Protocol; consistency win).
+3. semconv v1.27.0 actual const names DBOperationNameKey / MessagingOperationNameKey used (minor naming variance from plan's hint).
+4. synth/pbt_test.go placed in external `synth_test` package to avoid import cycle once testutil/generators imports synth — same architectural pattern Codex used in U4.
+5. synth/testdata/otel-logs/ gitignored because integration tests recreate it (sensible cleanup).
+
+Bench highlights: BeginSpan at 7.3µs / 24 allocs / 4.7KB is the bottleneck (closest to budget). RecordMetric at 1.5µs / 10 allocs / 896B benefits from the hybrid static+dynamic attribute strategy. EmitLog at 1µs / 1 alloc is excellent.
+
+U3 fully complete; U2 (Journey Engine) is next."
+
+**Context**: U3 Code Generation — Part 2 complete; awaiting Continue to Next Stage approval before moving to U2 (Journey Engine).
+
+
+## U3 synth — Code Generation Approved & Committed; U2 FD Plan Issued
+**Timestamp**: 2026-06-10T05:00:00Z
+**User Input**: "Continue to Next Stage" (approving U3 codegen completion: 16 commits, coverage 84%, all 4 benchmarks within budget)
+**AI Response**: "U3 fully approved. Proceeding to U2 (Journey Engine) Functional Design. Created u2-journey-fd-plan.md with 14 [Answer]: questions covering: BuildPlan algorithm (DFS recursion vs BFS vs lazy), Plan immutability for race-free multi-VU Execute, parallel execution model (sync.WaitGroup vs errgroup vs worker pool), child span context propagation, recovery flow control (sequential vs parallel fallback), OnExhausted 3 modes (propagate/return_default/succeed_silently) semantics, cascade propagation conditions (recovery exhausted + propagate only), fault application order (crash > disconnect > error_rate_override > latency_inflation), replica selection strategy (per-step random / per-VU sticky / weighted) — explicitly addressing U3's open responsibility, time management (real time.Sleep vs simulated), error.type taxonomy with fixed enum-like const set, 5+ PBT properties (BuildPlan Idempotency, all-operations-visited, conditional cascade, error.type allowed set, time monotonicity), U7 generator additions (3 pairs + AllowedErrorTypes const slice), and file split (8 production + 6 test files for the most complex unit so far)."
+**Context**: U2 FD — Step 5 GATE (awaiting user answers to 14 questions).
