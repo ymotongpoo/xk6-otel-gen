@@ -361,15 +361,15 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Step 10.1 — Create `k6otelgen/bench_test.go`
 
-- [ ] `BenchmarkNewModuleInstance` — fresh RootModule + loaded schema, repeated NewModuleInstance calls (simulating VU creation).
-- [ ] `BenchmarkLoad` — fresh RootModule + load() (single call due to sync.Once).
-- [ ] `BenchmarkConfigure` — fresh RootModule + Configure(opts).
-- [ ] Soft target verification: NewModuleInstance < 5ms.
-- [ ] `b.ReportAllocs()`.
+- [x] `BenchmarkNewModuleInstance` — fresh RootModule + loaded schema, repeated NewModuleInstance calls (simulating VU creation).
+- [x] `BenchmarkLoad` — fresh RootModule + load() (single call due to sync.Once).
+- [x] `BenchmarkConfigure` — fresh RootModule + Configure(opts).
+- [x] Soft target verification: NewModuleInstance < 5ms.
+- [x] `b.ReportAllocs()`.
 
 ### Phase 10 commit
 
-- [ ] `git add k6otelgen/bench_test.go && git commit -m "test(k6otelgen): add benchmarks for NewModuleInstance/Load/Configure"`
+- [x] `git add k6otelgen/bench_test.go && git commit -m "test(k6otelgen): add benchmarks for NewModuleInstance/Load/Configure"`
 
 ---
 

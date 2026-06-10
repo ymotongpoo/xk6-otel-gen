@@ -76,7 +76,7 @@ func loadTestSchema(t *testing.T, rt *modulestest.Runtime, yaml string) string {
 	return path
 }
 
-func writeTempYAML(t *testing.T, yaml string) string {
+func writeTempYAML(t testing.TB, yaml string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "topology.yaml")
 	if err := os.WriteFile(path, []byte(yaml), 0o600); err != nil {
