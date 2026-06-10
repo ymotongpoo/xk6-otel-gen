@@ -80,23 +80,23 @@
 
 ### Step 1.1 — Create `synth/interface.go`
 
-- [ ] Define `Synthesizer` interface (`BeginSpan`, `RecordMetric`, `EmitLog`) per NFR-D `logical-components.md` LC-1.
-- [ ] Define `SpanInput` struct (Service, Edge, Operation, StartTime, InstanceIdx).
-- [ ] Define `MetricInput` struct (Service, Edge, Operation, Latency, Outcome, InstanceIdx).
-- [ ] Define `LogInput` struct (Service, Severity, Body, Attributes).
-- [ ] Define `Outcome` struct (Success, StatusCode, ErrorType, EndTime).
-- [ ] Define `FinishSpanFunc` type alias.
-- [ ] All exported identifiers have GoDoc referencing semconv v1.27.0 + journey engine usage.
+- [x] Define `Synthesizer` interface (`BeginSpan`, `RecordMetric`, `EmitLog`) per NFR-D `logical-components.md` LC-1.
+- [x] Define `SpanInput` struct (Service, Edge, Operation, StartTime, InstanceIdx).
+- [x] Define `MetricInput` struct (Service, Edge, Operation, Latency, Outcome, InstanceIdx).
+- [x] Define `LogInput` struct (Service, Severity, Body, Attributes).
+- [x] Define `Outcome` struct (Success, StatusCode, ErrorType, EndTime).
+- [x] Define `FinishSpanFunc` type alias.
+- [x] All exported identifiers have GoDoc referencing semconv v1.27.0 + journey engine usage.
 
 ### Step 1.2 — Unit test `synth/interface_test.go`
 
-- [ ] `TestSpanInput_FieldAccess` — sanity construction with all fields populated.
-- [ ] `TestOutcome_FieldAccess` — sanity construction.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestSpanInput_FieldAccess` — sanity construction with all fields populated.
+- [x] `TestOutcome_FieldAccess` — sanity construction.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 1 commit
 
-- [ ] `git add synth/interface.go synth/interface_test.go && git commit -m "feat(synth): add Synthesizer interface and IO types"`
+- [x] `git add synth/interface.go synth/interface_test.go && git commit -m "feat(synth): add Synthesizer interface and IO types"`
 
 ---
 
