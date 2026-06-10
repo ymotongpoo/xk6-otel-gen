@@ -414,16 +414,16 @@
 
 ### Step 12.1 — Create `journey/bench_test.go`
 
-- [ ] `BenchmarkBuildPlan_Typical` — fixed Schema with 1 journey of depth 5 / 15 operations.
-- [ ] `BenchmarkExecute_PureOverhead` — execute typical journey with mockSynth and effectiveLatency=0 (sleep skip). Measure per-step overhead.
-- [ ] `BenchmarkListJourneys` — Engine with 5 journeys.
-- [ ] All use `b.ReportAllocs()`.
-- [ ] Verify locally: BuildPlan < 1ms / op, per-step pure overhead < 50µs.
-- [ ] If a benchmark misses budget, document in code-generation-summary.md and consider Q1 fallback (per-VU rand or rand/v2 global).
+- [x] `BenchmarkBuildPlan_Typical` — fixed Schema with 1 journey of depth 5 / 15 operations.
+- [x] `BenchmarkExecute_PureOverhead` — execute typical journey with mockSynth and effectiveLatency=0 (sleep skip). Measure per-step overhead.
+- [x] `BenchmarkListJourneys` — Engine with 5 journeys.
+- [x] All use `b.ReportAllocs()`.
+- [x] Verify locally: BuildPlan < 1ms / op, per-step pure overhead < 50µs.
+- [x] If a benchmark misses budget, document in code-generation-summary.md and consider Q1 fallback (per-VU rand or rand/v2 global).
 
 ### Phase 12 commit
 
-- [ ] `git add journey/bench_test.go && git commit -m "test(journey): add benchmarks for BuildPlan and Execute pure overhead"`
+- [x] `git add journey/bench_test.go && git commit -m "test(journey): add benchmarks for BuildPlan and Execute pure overhead"`
 
 ---
 
