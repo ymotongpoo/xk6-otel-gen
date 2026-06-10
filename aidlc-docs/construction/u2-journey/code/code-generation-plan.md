@@ -349,18 +349,18 @@
 
 ### Step 9.1 — Replace `journey/doc.go` placeholder
 
-- [ ] Full package doc per NFR-D LC-0.
+- [x] Full package doc per NFR-D LC-0.
 
 ### Step 9.2 — Create `journey/doc_test.go`
 
-- [ ] `ExampleNewEngine` — construct engine + ListJourneys.
-- [ ] `ExampleEngine_BuildPlan` — get a Plan from a journey name.
-- [ ] `ExampleEngine_Execute` — full Execute flow with a real (or stub) Synthesizer.
-- [ ] All Examples must compile and pass.
+- [x] `ExampleNewEngine` — construct engine + ListJourneys.
+- [x] `ExampleEngine_BuildPlan` — get a Plan from a journey name.
+- [x] `ExampleEngine_Execute` — full Execute flow with a real (or stub) Synthesizer.
+- [x] All Examples must compile and pass.
 
 ### Phase 9 commit
 
-- [ ] `git add journey/doc.go journey/doc_test.go && git commit -m "docs(journey): add package documentation and Example functions"`
+- [x] `git add journey/doc.go journey/doc_test.go && git commit -m "docs(journey): add package documentation and Example functions"`
 
 ---
 
