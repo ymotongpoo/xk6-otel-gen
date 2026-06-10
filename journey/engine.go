@@ -27,16 +27,6 @@ type engineImpl struct {
 	rmu         sync.Mutex
 }
 
-// Plan is an immutable, precomputed tree of operation invocations for a
-// single journey. Construct Plans with Engine.BuildPlan.
-type Plan struct {
-	JourneyName string
-	Root        *Node
-}
-
-// Node is one operation invocation in a Plan tree.
-type Node struct{}
-
 // NewEngine constructs an Engine and eagerly builds all journey plans.
 func NewEngine(schema *topology.Schema, overlay *topology.FaultOverlay, syn synth.Synthesizer) *Engine {
 	if schema == nil {
@@ -74,10 +64,6 @@ func (e *Engine) ListJourneys() []string {
 	keys := make([]string, len(e.impl.journeyKeys))
 	copy(keys, e.impl.journeyKeys)
 	return keys
-}
-
-func (e *engineImpl) buildPlan(name string) (*Plan, error) {
-	return &Plan{JourneyName: name, Root: &Node{}}, nil
 }
 
 func newDefaultRand() *rand.Rand {

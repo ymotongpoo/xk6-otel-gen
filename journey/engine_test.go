@@ -53,13 +53,7 @@ func TestNewEngine_EmptySchema(t *testing.T) {
 func TestListJourneys_SortedKeys(t *testing.T) {
 	t.Parallel()
 
-	engine := NewEngine(&topology.Schema{
-		Journeys: map[string]*topology.Journey{
-			"checkout": {},
-			"admin":    {},
-			"browse":   {},
-		},
-	}, &topology.FaultOverlay{}, phase2Synth{})
+	engine := NewEngine(phase2SchemaWithJourneys("checkout", "admin", "browse"), &topology.FaultOverlay{}, phase2Synth{})
 
 	want := []string{"admin", "browse", "checkout"}
 	if got := engine.ListJourneys(); !reflect.DeepEqual(got, want) {
@@ -70,12 +64,7 @@ func TestListJourneys_SortedKeys(t *testing.T) {
 func TestListJourneys_ReturnsCopy(t *testing.T) {
 	t.Parallel()
 
-	engine := NewEngine(&topology.Schema{
-		Journeys: map[string]*topology.Journey{
-			"checkout": {},
-			"browse":   {},
-		},
-	}, &topology.FaultOverlay{}, phase2Synth{})
+	engine := NewEngine(phase2SchemaWithJourneys("checkout", "browse"), &topology.FaultOverlay{}, phase2Synth{})
 
 	got := engine.ListJourneys()
 	got[0] = "mutated"
@@ -95,3 +84,25 @@ func (phase2Synth) BeginSpan(ctx context.Context, _ synth.SpanInput) (context.Co
 func (phase2Synth) RecordMetric(context.Context, synth.MetricInput) {}
 
 func (phase2Synth) EmitLog(context.Context, synth.LogInput) {}
+
+func phase2SchemaWithJourneys(names ...string) *topology.Schema {
+	svc := &topology.Service{
+		Name:       "api",
+		Kind:       topology.KindApplication,
+		Replicas:   1,
+		Operations: make(map[string]*topology.Operation),
+	}
+	op := &topology.Operation{Name: "GET /", Service: svc}
+	svc.Operations[op.Name] = op
+	schema := &topology.Schema{
+		Services: map[topology.ServiceID]*topology.Service{svc.Name: svc},
+		Journeys: make(map[string]*topology.Journey, len(names)),
+	}
+	for _, name := range names {
+		schema.Journeys[name] = &topology.Journey{
+			Name:  name,
+			Steps: []*topology.Step{{Op: op}},
+		}
+	}
+	return schema
+}

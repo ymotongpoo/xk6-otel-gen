@@ -139,32 +139,32 @@
 
 ### Step 3.1 — Create `journey/plan.go`
 
-- [ ] Define `Plan struct { JourneyName string; Root *Node }`.
-- [ ] Define `Node struct { Service, Operation, Edge, Parallel, Children }`.
-- [ ] Implement `(*Engine).BuildPlan(name) (*Plan, error)` returning cached plan or `*PlanError{Kind: "unknown_journey"}`.
-- [ ] Implement `(*engineImpl).buildPlan(name) (*Plan, error)` with DFS expansion per NFR-D LC-2:
+- [x] Define `Plan struct { JourneyName string; Root *Node }`.
+- [x] Define `Node struct { Service, Operation, Edge, Parallel, Children }`.
+- [x] Implement `(*Engine).BuildPlan(name) (*Plan, error)` returning cached plan or `*PlanError{Kind: "unknown_journey"}`.
+- [x] Implement `(*engineImpl).buildPlan(name) (*Plan, error)` with DFS expansion per NFR-D LC-2:
   - Look up `j := schema.Journeys[name]`, return `unknown_journey` if missing or `empty_journey` if Steps==0
   - Build root Node by walking j.Steps with `buildStepNode`
   - `buildStepNode` handles Step.Parallel (virtual fan-out) vs Step.Op.Calls (sequential children)
-- [ ] Replace the buildPlan stub from Phase 2 with the real implementation.
-- [ ] All exported identifiers have GoDoc.
+- [x] Replace the buildPlan stub from Phase 2 with the real implementation.
+- [x] All exported identifiers have GoDoc.
 
 > **NOTE**: U1's actual Step / Operation / Call types must be inspected (`topology/types.go`) to wire up correctly. The plan-builder code may need light adaptation if U1's Operation.Calls shape differs from FD's sketch.
 
 ### Step 3.2 — Unit test `journey/plan_test.go`
 
-- [ ] `TestBuildPlan_UnknownJourney_ReturnsError`.
-- [ ] `TestBuildPlan_EmptyJourney_ReturnsError`.
-- [ ] `TestBuildPlan_SingleStep_HappyPath` — verify Root.Service / Operation are populated.
-- [ ] `TestBuildPlan_ParallelSteps` — Step.Parallel creates virtual fan-out Node.
-- [ ] `TestBuildPlan_NestedCalls` — Op.Calls expanded as Children.
-- [ ] **PBT TP-U2-1** (`TestBuildPlan_Idempotent_Property`): mark `t.Skip("waits for ValidSchema generator from testutil/generators (already exists) — implement in Phase 11")` for now.
-- [ ] **PBT TP-U2-2** (`TestBuildPlan_AllOpsVisited_Property`): mark skip same.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestBuildPlan_UnknownJourney_ReturnsError`.
+- [x] `TestBuildPlan_EmptyJourney_ReturnsError`.
+- [x] `TestBuildPlan_SingleStep_HappyPath` — verify Root.Service / Operation are populated.
+- [x] `TestBuildPlan_ParallelSteps` — Step.Parallel creates virtual fan-out Node.
+- [x] `TestBuildPlan_NestedCalls` — Op.Calls expanded as Children.
+- [x] **PBT TP-U2-1** (`TestBuildPlan_Idempotent_Property`): mark `t.Skip("waits for ValidSchema generator from testutil/generators (already exists) — implement in Phase 11")` for now.
+- [x] **PBT TP-U2-2** (`TestBuildPlan_AllOpsVisited_Property`): mark skip same.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 3 commit
 
-- [ ] `git add journey/plan.go journey/plan_test.go && git commit -m "feat(journey): add Plan/Node types and BuildPlan DFS algorithm"`
+- [x] `git add journey/plan.go journey/plan_test.go && git commit -m "feat(journey): add Plan/Node types and BuildPlan DFS algorithm"`
 
 ---
 
