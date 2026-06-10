@@ -342,17 +342,17 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Step 9.1 — Create `k6otelgen/pbt_test.go`
 
-- [ ] `TestLoad_Idempotent_Property` (TP-U5-1):
+- [x] `TestLoad_Idempotent_Property` (TP-U5-1):
   - generate ValidLoadPath, write yaml to it, load twice via runtime, assert same handle
-- [ ] `TestConfigure_Merge_Property` (TP-U5-2):
+- [x] `TestConfigure_Merge_Property` (TP-U5-2):
   - generate ValidConfigureOpts + env vars (t.Setenv), call configure, compute expected merge, assert root.config matches
-- [ ] `TestRunJourney_CtxPassed_Property` (TP-U5-3):
+- [x] `TestRunJourney_CtxPassed_Property` (TP-U5-3):
   - construct test instance with mockSynth, call handle.runJourney, assert mockSynth.contexts contains vu.Context() pointer
-- [ ] All tests call `t.Parallel()`.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 9 commit
 
-- [ ] `git add k6otelgen/pbt_test.go && git commit -m "test(k6otelgen): add PBT for TP-U5-1..3"`
+- [x] `git add k6otelgen/pbt_test.go && git commit -m "test(k6otelgen): add PBT for TP-U5-1..3"`
 
 ---
 
