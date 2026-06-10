@@ -395,17 +395,17 @@
 
 ### Step 11.1 — Create `journey/pbt_test.go`
 
-- [ ] Un-skip Phase 3 PBT tests (`TestBuildPlan_Idempotent_Property`, `TestBuildPlan_AllOpsVisited_Property`) and import `testutil/generators`.
-- [ ] `TestExecute_OutcomeCascadeConditional_Property` (TP-U2-3) — draw Schema with cascade-triggering faults, Execute, walk Outcomes via mockSynth call log, assert: `outcome.Cascaded ⇒ outcome.Success == false ∧ outcome.Latency ≈ 0`.
-- [ ] `TestExecute_OutcomeErrorTypeAllowed_Property` (TP-U2-4) — draw any Schema + faults, Execute, every Outcome.ErrorType is empty OR ∈ AllowedErrorTypes.
-- [ ] `TestExecute_TimeMonotonic_Property` (TP-U2-5) — draw Schema, Execute, walk span chain via mockSynth, assert child.StartTime ≥ parent.StartTime; for each node, finishFn EndTime ≥ BeginSpan StartTime.
-- [ ] All tests call `t.Parallel()`.
+- [x] Un-skip Phase 3 PBT tests (`TestBuildPlan_Idempotent_Property`, `TestBuildPlan_AllOpsVisited_Property`) and import `testutil/generators`.
+- [x] `TestExecute_OutcomeCascadeConditional_Property` (TP-U2-3) — draw Schema with cascade-triggering faults, Execute, walk Outcomes via mockSynth call log, assert: `outcome.Cascaded ⇒ outcome.Success == false ∧ outcome.Latency ≈ 0`.
+- [x] `TestExecute_OutcomeErrorTypeAllowed_Property` (TP-U2-4) — draw any Schema + faults, Execute, every Outcome.ErrorType is empty OR ∈ AllowedErrorTypes.
+- [x] `TestExecute_TimeMonotonic_Property` (TP-U2-5) — draw Schema, Execute, walk span chain via mockSynth, assert child.StartTime ≥ parent.StartTime; for each node, finishFn EndTime ≥ BeginSpan StartTime.
+- [x] All tests call `t.Parallel()`.
 
 > **NOTE**: `testutil/generators` must export the underlying `ValidSchema` already (from U1). If TP-U2-1/TP-U2-2 cannot use `ValidPlan` directly (e.g. ValidPlan generates standalone Plans not tied to a Schema), they can use ValidSchema + BuildPlan(name) for direct verification.
 
 ### Phase 11 commit
 
-- [ ] `git add journey/pbt_test.go && git commit -m "test(journey): add PBT for TP-U2-1..5"`
+- [x] `git add journey/pbt_test.go && git commit -m "test(journey): add PBT for TP-U2-1..5"`
 
 ---
 

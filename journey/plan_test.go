@@ -112,16 +112,6 @@ func TestBuildPlan_NestedCalls(t *testing.T) {
 	}
 }
 
-func TestBuildPlan_Idempotent_Property(t *testing.T) {
-	t.Parallel()
-	t.Skip("waits for ValidSchema generator from testutil/generators (already exists) — implement in Phase 11")
-}
-
-func TestBuildPlan_AllOpsVisited_Property(t *testing.T) {
-	t.Parallel()
-	t.Skip("waits for ValidSchema generator from testutil/generators (already exists) — implement in Phase 11")
-}
-
 func newPlanTestSchema() *topology.Schema {
 	api := &topology.Service{
 		Name:       "api",
