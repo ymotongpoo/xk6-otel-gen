@@ -111,21 +111,21 @@
 
 ### Step 2.1 — Create `k6otelgen/errors.go`
 
-- [ ] Define `ConfigError struct { Kind, Path string; Inner error }` with `Error()` + `Unwrap()` per NFR-D §3.2.
-- [ ] Define `throwJSException(rt *sobek.Runtime, err error)` per NFR-D §3.1.
-- [ ] Define `formatErrorMessage(err error) string` with errors.As switching over ConfigError / exporter.ConfigError / exporter.PipelineError / journey.PlanError / journey.ExecuteError / generic.
-- [ ] All exported identifiers have GoDoc.
+- [x] Define `ConfigError struct { Kind, Path string; Inner error }` with `Error()` + `Unwrap()` per NFR-D §3.2.
+- [x] Define `throwJSException(rt *sobek.Runtime, err error)` per NFR-D §3.1.
+- [x] Define `formatErrorMessage(err error) string` with errors.As switching over ConfigError / exporter.ConfigError / exporter.PipelineError / journey.PlanError / journey.ExecuteError / generic.
+- [x] All exported identifiers have GoDoc.
 
 ### Step 2.2 — Unit test `k6otelgen/errors_test.go`
 
-- [ ] `TestConfigError_Error` formatting with and without Inner.
-- [ ] `TestConfigError_Unwrap`.
-- [ ] `TestFormatErrorMessage_*` for each error type (table-driven).
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestConfigError_Error` formatting with and without Inner.
+- [x] `TestConfigError_Unwrap`.
+- [x] `TestFormatErrorMessage_*` for each error type (table-driven).
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 2 commit
 
-- [ ] `git add k6otelgen/errors.go k6otelgen/errors_test.go && git commit -m "feat(k6otelgen): add ConfigError type and JS exception helpers"`
+- [x] `git add k6otelgen/errors.go k6otelgen/errors_test.go && git commit -m "feat(k6otelgen): add ConfigError type and JS exception helpers"`
 
 ---
 
