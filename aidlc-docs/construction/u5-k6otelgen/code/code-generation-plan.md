@@ -60,20 +60,20 @@
 
 ### Step 0.1 — Add k6 SDK deps
 
-- [ ] `go get go.k6.io/k6@latest` → records `go.k6.io/k6` in go.mod as a direct dependency.
-- [ ] `go get github.com/grafana/sobek@latest` if not already pulled by k6 transitively.
-- [ ] `go mod tidy`.
-- [ ] Verify: `grep -E "go.k6.io/k6|grafana/sobek" go.mod` shows both.
+- [x] `go get go.k6.io/k6@latest` → records `go.k6.io/k6` in go.mod as a direct dependency.
+- [x] `go get github.com/grafana/sobek@latest` if not already pulled by k6 transitively.
+- [x] `go mod tidy`.
+- [x] Verify: `grep -E "go.k6.io/k6|grafana/sobek" go.mod` shows both.
 
 ### Step 0.2 — Create k6otelgen/ skeleton
 
-- [ ] Create `k6otelgen/` directory.
-- [ ] Create empty `k6otelgen/doc.go` placeholder.
-- [ ] Verify: `go build ./k6otelgen/...` succeeds.
+- [x] Create `k6otelgen/` directory.
+- [x] Create empty `k6otelgen/doc.go` placeholder.
+- [x] Verify: `go build ./k6otelgen/...` succeeds.
 
 ### Phase 0 commit
 
-- [ ] `git add go.mod go.sum k6otelgen/doc.go && git commit -m "build(k6otelgen): add k6 SDK and sobek dependencies"`
+- [x] `git add go.mod go.sum k6otelgen/doc.go && git commit -m "build(k6otelgen): add k6 SDK and sobek dependencies"`
 
 ---
 
