@@ -62,10 +62,10 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Unit**: U6 (k6 Output Module)
-- **Completed Units**: U7, U1, U4, U3, U2, U5
-- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → [✓ U3 complete] → [✓ U2 complete] → [✓ U5 complete] → U6 → U8
-- **Status**: U5 code generation completed through Phase 12 with k6otelgen coverage 82.2%, `go test -race -count=1 ./...` clean, benchmarks within NFR-U5 target, and build-tagged integration harness present. Next construction focus is U6.
+- **Current Unit**: U8 (Samples & Distribution)
+- **Completed Units**: U7, U1, U4, U3, U2, U5, U6
+- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → [✓ U3 complete] → [✓ U2 complete] → [✓ U5 complete] → [✓ U6 complete] → U8
+- **Status**: U6 code generation completed through Phase 12 with k6output coverage 86.6%, `go test -race -count=1 ./...` clean, benchmarks within NFR-U6 targets, full lint clean, and build-tagged integration harness present. Next construction focus is U8.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)

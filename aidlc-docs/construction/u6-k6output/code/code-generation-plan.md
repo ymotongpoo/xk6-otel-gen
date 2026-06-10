@@ -57,19 +57,19 @@
 
 ### Step 0.1 — Verify deps
 
-- [ ] `head -3 go.mod` shows `go 1.25`.
-- [ ] `grep -E "go.k6.io/k6|otel/sdk/metric" go.mod` confirms transitive deps from U4/U5 are present.
-- [ ] No new external deps required (k6 SDK + OTel SDK already pulled).
+- [x] `head -3 go.mod` shows `go 1.25`.
+- [x] `grep -E "go.k6.io/k6|otel/sdk/metric" go.mod` confirms transitive deps from U4/U5 are present.
+- [x] No new external deps required (k6 SDK + OTel SDK already pulled).
 
 ### Step 0.2 — Create k6output/ skeleton
 
-- [ ] Create `k6output/` directory.
-- [ ] Create empty `k6output/doc.go` placeholder.
-- [ ] Verify: `go build ./k6output/...` succeeds.
+- [x] Create `k6output/` directory.
+- [x] Create empty `k6output/doc.go` placeholder.
+- [x] Verify: `go build ./k6output/...` succeeds.
 
 ### Phase 0 commit
 
-- [ ] `git add k6output/doc.go && git commit -m "build(k6output): scaffold package for U6"`
+- [x] `git add k6output/doc.go && git commit -m "build(k6output): scaffold package for U6"`
 
 ---
 
@@ -80,7 +80,7 @@
 
 ### Step 1.1 — Modify `exporter/pipeline.go`
 
-- [ ] Add method:
+- [x] Add method:
   ```go
   // MetricExporter returns the underlying OTLP metric exporter used by this
   // Pipeline. Intended for k6output to construct an additional MeterProvider
@@ -91,22 +91,22 @@
   // Shutdown on it directly — use Pipeline.Shutdown for unified lifecycle.
   func (p *Pipeline) MetricExporter() sdkmetric.Exporter { return p.metricExp }
   ```
-- [ ] Verify the internal field is named appropriately (likely `metricExp` based on U4 NFR-D, or adjust based on actual U4 code).
-- [ ] Full GoDoc on the new method.
+- [x] Verify the internal field is named appropriately (likely `metricExp` based on U4 NFR-D, or adjust based on actual U4 code).
+- [x] Full GoDoc on the new method.
 
 ### Step 1.2 — Add `exporter/pipeline_test.go::TestPipeline_MetricExporter`
 
-- [ ] `TestPipeline_MetricExporter_NotNil` — construct Pipeline with valid config, MetricExporter() returns non-nil.
-- [ ] `TestPipeline_MetricExporter_SameAsInternal` — verify identity with the exporter used by Pipeline's own MeterProvider.
+- [x] `TestPipeline_MetricExporter_NotNil` — construct Pipeline with valid config, MetricExporter() returns non-nil.
+- [x] `TestPipeline_MetricExporter_SameAsInternal` — verify identity with the exporter used by Pipeline's own MeterProvider.
 
 ### Step 1.3 — Update U4 docs
 
-- [ ] In `aidlc-docs/construction/u4-exporter/functional-design/domain-entities.md` §4 / §2, add `MetricExporter` to the public API table.
-- [ ] In `aidlc-docs/construction/u4-exporter/nfr-design/logical-components.md` §LC-5 (Pipeline), document the new method and its purpose for k6output integration.
+- [x] In `aidlc-docs/construction/u4-exporter/functional-design/domain-entities.md` §4 / §2, add `MetricExporter` to the public API table.
+- [x] In `aidlc-docs/construction/u4-exporter/nfr-design/logical-components.md` §LC-5 (Pipeline), document the new method and its purpose for k6output integration.
 
 ### Phase 1 commit
 
-- [ ] `git add exporter/pipeline.go exporter/pipeline_test.go aidlc-docs/construction/u4-exporter/ && git commit -m "feat(exporter): add Pipeline.MetricExporter accessor for k6output integration"`
+- [x] `git add exporter/pipeline.go exporter/pipeline_test.go aidlc-docs/construction/u4-exporter/ && git commit -m "feat(exporter): add Pipeline.MetricExporter accessor for k6output integration"`
 
 ---
 
@@ -115,19 +115,19 @@
 
 ### Step 2.1 — Create `k6output/errors.go`
 
-- [ ] Define `ConfigError struct { Kind, Field, Value string; Inner error }` with `Error()` + `Unwrap()` per NFR-D §3.1.
-- [ ] Kind enum: `"invalid_args"`, `"invalid_protocol"`, `"type_mismatch"`, `"invalid_url"`.
-- [ ] All exported identifiers have GoDoc.
+- [x] Define `ConfigError struct { Kind, Field, Value string; Inner error }` with `Error()` + `Unwrap()` per NFR-D §3.1.
+- [x] Kind enum: `"invalid_args"`, `"invalid_protocol"`, `"type_mismatch"`, `"invalid_url"`.
+- [x] All exported identifiers have GoDoc.
 
 ### Step 2.2 — Unit test `k6output/errors_test.go`
 
-- [ ] `TestConfigError_Error` formatting with and without Inner / Field / Value.
-- [ ] `TestConfigError_Unwrap`.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestConfigError_Error` formatting with and without Inner / Field / Value.
+- [x] `TestConfigError_Unwrap`.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 2 commit
 
-- [ ] `git add k6output/errors.go k6output/errors_test.go && git commit -m "feat(k6output): add ConfigError type"`
+- [x] `git add k6output/errors.go k6output/errors_test.go && git commit -m "feat(k6output): add ConfigError type"`
 
 ---
 
@@ -136,34 +136,34 @@
 
 ### Step 3.1 — Create `k6output/params.go`
 
-- [ ] Define `Params struct` per NFR-D §LC-2 (OTLP fields + QueueSize + FlushInterval + ScriptPath).
-- [ ] Implement `defaultParams() Params`:
+- [x] Define `Params struct` per NFR-D §LC-2 (OTLP fields + QueueSize + FlushInterval + ScriptPath).
+- [x] Implement `defaultParams() Params`:
   - Protocol=ProtocolGRPC, Endpoint=localhost:4317, Timeout=10s, BatchSize=512, BatchTimeout=1s, MaxQueueSize=2048
   - QueueSize=100, FlushInterval=1*time.Second
-- [ ] Implement `parseOutArgs(s string) (Params, error)` per NFR-D §4.1:
+- [x] Implement `parseOutArgs(s string) (Params, error)` per NFR-D §4.1:
   - strings.Split by `,` → each token by `=` → applyKV switch
   - validate queueSize range [10, 10000]
   - unknown keys ignored (forward-compat)
-- [ ] Implement `applyKV(p *Params, key, val string) error` for 10 keys.
-- [ ] Implement `parseHeaders(s string) (map[string]string, error)` for `key1:val1;key2:val2` format.
-- [ ] Internal helpers, brief comments.
+- [x] Implement `applyKV(p *Params, key, val string) error` for 10 keys.
+- [x] Implement `parseHeaders(s string) (map[string]string, error)` for `key1:val1;key2:val2` format.
+- [x] Internal helpers, brief comments.
 
 ### Step 3.2 — Unit test `k6output/params_test.go`
 
-- [ ] `TestDefaultParams_Values`.
-- [ ] `TestParseOutArgs_Empty` — empty string → defaults.
-- [ ] `TestParseOutArgs_AllKeys_HappyPath` — table-driven for each of 10 keys.
-- [ ] `TestParseOutArgs_InvalidProtocol`.
-- [ ] `TestParseOutArgs_TypeMismatch_*` (insecure / timeout / batchSize numeric parse failures).
-- [ ] `TestParseOutArgs_QueueSizeOutOfRange` (< 10 and > 10000).
-- [ ] `TestParseOutArgs_UnknownKey_Ignored`.
-- [ ] `TestParseOutArgs_MalformedToken` — no `=` in token.
-- [ ] `TestParseHeaders_*` (basic / multiple / malformed).
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestDefaultParams_Values`.
+- [x] `TestParseOutArgs_Empty` — empty string → defaults.
+- [x] `TestParseOutArgs_AllKeys_HappyPath` — table-driven for each of 10 keys.
+- [x] `TestParseOutArgs_InvalidProtocol`.
+- [x] `TestParseOutArgs_TypeMismatch_*` (insecure / timeout / batchSize numeric parse failures).
+- [x] `TestParseOutArgs_QueueSizeOutOfRange` (< 10 and > 10000).
+- [x] `TestParseOutArgs_UnknownKey_Ignored`.
+- [x] `TestParseOutArgs_MalformedToken` — no `=` in token.
+- [x] `TestParseHeaders_*` (basic / multiple / malformed).
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 3 commit
 
-- [ ] `git add k6output/params.go k6output/params_test.go && git commit -m "feat(k6output): add --out args parser with queueSize range validation"`
+- [x] `git add k6output/params.go k6output/params_test.go && git commit -m "feat(k6output): add --out args parser with queueSize range validation"`
 
 ---
 
@@ -172,29 +172,29 @@
 
 ### Step 4.1 — Create `k6output/convert.go`
 
-- [ ] Define `k6MetricSpec struct { k6Name, otelName, unit string; instType instrumentType }`.
-- [ ] Define `instrumentType int` with constants `tInstCounter`, `tInstHistogram`, `tInstGauge`.
-- [ ] Define `knownK6Metrics []k6MetricSpec` for the 11 standard k6 metrics per NFR-D §1.2.
-- [ ] Define `instrumentMap struct { counters, histograms, gauges sync.Map }`.
-- [ ] Define `tagSetCache struct { sets sync.Map }` per NFR-D §1.4.
-- [ ] Implement `hashTags(tags map[string]string) string` (sorted keys joined per NFR-D §1.4).
-- [ ] Implement `(*tagSetCache).get(tags) attribute.Set` with cache + `attribute.NewSet`.
-- [ ] Implement `k6UnitHint(name string) string` for known unit hints.
-- [ ] Implement `dotted(s string) string` for `_` → `.` substitution.
-- [ ] Internal helpers, brief comments.
+- [x] Define `k6MetricSpec struct { k6Name, otelName, unit string; instType instrumentType }`.
+- [x] Define `instrumentType int` with constants `tInstCounter`, `tInstHistogram`, `tInstGauge`.
+- [x] Define `knownK6Metrics []k6MetricSpec` for the 11 standard k6 metrics per NFR-D §1.2.
+- [x] Define `instrumentMap struct { counters, histograms, gauges sync.Map }`.
+- [x] Define `tagSetCache struct { sets sync.Map }` per NFR-D §1.4.
+- [x] Implement `hashTags(tags map[string]string) string` (sorted keys joined per NFR-D §1.4).
+- [x] Implement `(*tagSetCache).get(tags) attribute.Set` with cache + `attribute.NewSet`.
+- [x] Implement `k6UnitHint(name string) string` for known unit hints.
+- [x] Implement `dotted(s string) string` for `_` → `.` substitution.
+- [x] Internal helpers, brief comments.
 
 ### Step 4.2 — Unit test `k6output/convert_test.go`
 
-- [ ] `TestKnownK6Metrics_TableComplete` — assert 11 entries with correct OTel names.
-- [ ] `TestHashTags_*` — sorted invariance, empty map, single tag.
-- [ ] `TestTagSetCache_Get_CacheHit` — second call with same tags returns same Set (deep equality + pointer? per Set's value semantics).
-- [ ] `TestK6UnitHint_*` (table-driven).
-- [ ] `TestDotted_*` — `http_req_duration` → `http.req.duration`.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestKnownK6Metrics_TableComplete` — assert 11 entries with correct OTel names.
+- [x] `TestHashTags_*` — sorted invariance, empty map, single tag.
+- [x] `TestTagSetCache_Get_CacheHit` — second call with same tags returns same Set (deep equality + pointer? per Set's value semantics).
+- [x] `TestK6UnitHint_*` (table-driven).
+- [x] `TestDotted_*` — `http_req_duration` → `http.req.duration`.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 4 commit
 
-- [ ] `git add k6output/convert.go k6output/convert_test.go && git commit -m "feat(k6output): add k6 sample converter with instrument cache and tag set hashing"`
+- [x] `git add k6output/convert.go k6output/convert_test.go && git commit -m "feat(k6output): add k6 sample converter with instrument cache and tag set hashing"`
 
 ---
 
@@ -203,53 +203,53 @@
 
 ### Step 5.1 — Create `k6output/output.go`
 
-- [ ] Define `Output struct` with all fields per NFR-D §1.1.
-- [ ] Implement `init()` calling `output.RegisterExtension("otel-gen", New)`.
-- [ ] Implement `New(params output.Params) (output.Output, error)`:
+- [x] Define `Output struct` with all fields per NFR-D §1.1.
+- [x] Implement `init()` calling `output.RegisterExtension("otel-gen", New)`.
+- [x] Implement `New(params output.Params) (output.Output, error)`:
   - parseOutArgs from `params.ConfigArgument`
   - build runnerResource via `buildRunnerResource(params)`
   - return `*Output` (no Pipeline build here)
-- [ ] Implement `buildRunnerResource(params output.Params) *resource.Resource` per NFR-D §4.2.
-- [ ] Implement `(*Output).Description() string` returning a human-readable description with endpoint.
-- [ ] Implement `(*Output).Start() error` per NFR-D §2.1:
+- [x] Implement `buildRunnerResource(params output.Params) *resource.Resource` per NFR-D §4.2.
+- [x] Implement `(*Output).Description() string` returning a human-readable description with endpoint.
+- [x] Implement `(*Output).Start() error` per NFR-D §2.1:
   - sync.Once Do:
     - `exporter.GetShared(factory)` to acquire pipeline
     - build runner MeterProvider with `pipeline.MetricExporter()` wrapped in `NewPeriodicReader`
     - build known instruments
     - start flush goroutine
-- [ ] Implement `(*Output).AddMetricSamples(samples []metrics.SampleContainer)` per NFR-D §2.3 (non-blocking + drop-oldest).
-- [ ] Implement `(*Output).tryPush(s) bool` per NFR-D §2.3.
-- [ ] Implement `(*Output).Stop() error` per NFR-D §2.1 (always nil).
-- [ ] Implement `(*Output).flushLoop()` per NFR-D §2.2.
-- [ ] Implement `(*Output).buildKnownInstruments() error` per NFR-D §1.2.
-- [ ] Implement `(*Output).lookupOrBuildInstrument(name, k6Type, unit) any` per NFR-D §1.3.
-- [ ] Implement `(*Output).emitContainer(container) ` and `(*Output).emitSample(sample)` per NFR-D §LC-3 sketch.
-- [ ] Pluggable logger via `o.logger` field for warn messages (defaults to `log.Printf`).
-- [ ] All exported identifiers have GoDoc.
+- [x] Implement `(*Output).AddMetricSamples(samples []metrics.SampleContainer)` per NFR-D §2.3 (non-blocking + drop-oldest).
+- [x] Implement `(*Output).tryPush(s) bool` per NFR-D §2.3.
+- [x] Implement `(*Output).Stop() error` per NFR-D §2.1 (always nil).
+- [x] Implement `(*Output).flushLoop()` per NFR-D §2.2.
+- [x] Implement `(*Output).buildKnownInstruments() error` per NFR-D §1.2.
+- [x] Implement `(*Output).lookupOrBuildInstrument(name, k6Type, unit) any` per NFR-D §1.3.
+- [x] Implement `(*Output).emitContainer(container) ` and `(*Output).emitSample(sample)` per NFR-D §LC-3 sketch.
+- [x] Pluggable logger via `o.logger` field for warn messages (defaults to `log.Printf`).
+- [x] All exported identifiers have GoDoc.
 
 ### Step 5.2 — Create `k6output/helpers_test.go`
 
-- [ ] `newTestParams(t *testing.T, args string) output.Params`.
-- [ ] `newTestOutput(t *testing.T, args string) *Output` — uses `exporter.ResetShared()` before each call to ensure fresh Pipeline.
-- [ ] `recordingLogger() (func(string, ...any), *[]string)` — captures warn log messages for assertions.
-- [ ] All helpers use `t.Helper()`.
+- [x] `newTestParams(t *testing.T, args string) output.Params`.
+- [x] `newTestOutput(t *testing.T, args string) *Output` — uses `exporter.ResetShared()` before each call to ensure fresh Pipeline.
+- [x] `recordingLogger() (func(string, ...any), *[]string)` — captures warn log messages for assertions.
+- [x] All helpers use `t.Helper()`.
 
 ### Step 5.3 — Unit test `k6output/output_test.go`
 
-- [ ] `TestNew_HappyPath` — endpoint specified, returns *Output without error.
-- [ ] `TestNew_InvalidArgs_ReturnsError` — invalid protocol → *ConfigError.
-- [ ] `TestDescription_ContainsEndpoint`.
-- [ ] `TestStart_Idempotent` — call twice, second call no-op.
-- [ ] `TestStart_PipelineFailure_ReturnsError` — wrong endpoint that triggers GetShared factory failure.
-- [ ] `TestAddMetricSamples_BeforeStart_NoOp` — no panic.
-- [ ] `TestAddMetricSamples_AfterStop_NoOp` — no panic.
-- [ ] `TestStop_Idempotent` — call twice, both return nil.
-- [ ] `TestStop_AlwaysReturnsNil` — even if Pipeline.Shutdown errors, return nil.
-- [ ] All tests call `t.Parallel()` carefully (some require exporter.ResetShared serialization).
+- [x] `TestNew_HappyPath` — endpoint specified, returns *Output without error.
+- [x] `TestNew_InvalidArgs_ReturnsError` — invalid protocol → *ConfigError.
+- [x] `TestDescription_ContainsEndpoint`.
+- [x] `TestStart_Idempotent` — call twice, second call no-op.
+- [x] `TestStart_PipelineFailure_ReturnsError` — wrong endpoint that triggers GetShared factory failure.
+- [x] `TestAddMetricSamples_BeforeStart_NoOp` — no panic.
+- [x] `TestAddMetricSamples_AfterStop_NoOp` — no panic.
+- [x] `TestStop_Idempotent` — call twice, both return nil.
+- [x] `TestStop_AlwaysReturnsNil` — even if Pipeline.Shutdown errors, return nil.
+- [x] All tests call `t.Parallel()` carefully (some require exporter.ResetShared serialization).
 
 ### Phase 5 commit
 
-- [ ] `git add k6output/output.go k6output/output_test.go k6output/helpers_test.go && git commit -m "feat(k6output): add Output lifecycle with sync.Once-guarded Start/Stop and flush goroutine"`
+- [x] `git add k6output/output.go k6output/output_test.go k6output/helpers_test.go && git commit -m "feat(k6output): add Output lifecycle with sync.Once-guarded Start/Stop and flush goroutine"`
 
 ---
 
@@ -258,7 +258,7 @@
 
 ### Step 6.1 — Replace `k6output/doc.go` placeholder
 
-- [ ] Full package documentation per NFR-D §5.1:
+- [x] Full package documentation per NFR-D §5.1:
   - JS shell example with `k6 run --out otel-gen=...`
   - Dual-function explanation
   - Supported --out args reference table (10 keys including queueSize)
@@ -267,11 +267,11 @@
 
 ### Step 6.2 — Create `k6output/doc_test.go`
 
-- [ ] `ExampleNew` — minimal example showing `New(params)` call.
+- [x] `ExampleNew` — minimal example showing `New(params)` call.
 
 ### Phase 6 commit
 
-- [ ] `git add k6output/doc.go k6output/doc_test.go && git commit -m "docs(k6output): add package documentation and Example function"`
+- [x] `git add k6output/doc.go k6output/doc_test.go && git commit -m "docs(k6output): add package documentation and Example function"`
 
 ---
 
@@ -280,20 +280,20 @@
 
 ### Step 7.1 — Create `k6output/pbt_test.go`
 
-- [ ] `TestOutput_Robustness_AllStates` (TP-U6-1, example-based table per NFR-D §6.3):
+- [x] `TestOutput_Robustness_AllStates` (TP-U6-1, example-based table per NFR-D §6.3):
   - covers: Start_AddSamples_Stop / AddSamples_BeforeStart / Stop_BeforeStart / Stop_AfterStop_NoOp / AddSamples_AfterStop
   - assert no panic
-- [ ] `TestCounter_Monotonic_Property` (TP-U6-2, rapid):
+- [x] `TestCounter_Monotonic_Property` (TP-U6-2, rapid):
   - draw N samples with positive Counter values
   - emit via Output, read ManualReader → assert sum matches
-- [ ] `TestTag_Attribute_RoundTrip_Property` (TP-U6-3, rapid):
+- [x] `TestTag_Attribute_RoundTrip_Property` (TP-U6-3, rapid):
   - draw sample with random Tags
   - emit + collect → assert `k6.tag.<key>` attributes present with correct values
-- [ ] All tests call `t.Parallel()` carefully.
+- [x] All tests call `t.Parallel()` carefully.
 
 ### Phase 7 commit
 
-- [ ] `git add k6output/pbt_test.go && git commit -m "test(k6output): add PBT for TP-U6-1..3"`
+- [x] `git add k6output/pbt_test.go && git commit -m "test(k6output): add PBT for TP-U6-1..3"`
 
 ---
 
@@ -302,16 +302,16 @@
 
 ### Step 8.1 — Create `k6output/bench_test.go`
 
-- [ ] `BenchmarkAddMetricSamples` — measure queue push per sample (NFR-U6-3 strict <1µs).
-- [ ] `BenchmarkFlushLoop` — measure flush emit per sample (NFR-U6-3 strict <5µs).
-- [ ] `BenchmarkTagSetCache_Hit` — assert near-zero allocations on cache hit.
-- [ ] `BenchmarkTagSetCache_Miss` — first lookup allocations.
-- [ ] `BenchmarkInstrumentLookup` — sync.Map.Load performance.
-- [ ] All use `b.ReportAllocs()`.
+- [x] `BenchmarkAddMetricSamples` — measure queue push per sample (NFR-U6-3 strict <1µs).
+- [x] `BenchmarkFlushLoop` — measure flush emit per sample (NFR-U6-3 strict <5µs).
+- [x] `BenchmarkTagSetCache_Hit` — assert near-zero allocations on cache hit.
+- [x] `BenchmarkTagSetCache_Miss` — first lookup allocations.
+- [x] `BenchmarkInstrumentLookup` — sync.Map.Load performance.
+- [x] All use `b.ReportAllocs()`.
 
 ### Phase 8 commit
 
-- [ ] `git add k6output/bench_test.go && git commit -m "test(k6output): add benchmarks for per-sample push/flush"`
+- [x] `git add k6output/bench_test.go && git commit -m "test(k6output): add benchmarks for per-sample push/flush"`
 
 ---
 
@@ -320,23 +320,23 @@
 
 ### Step 9.1 — Add `testutil/generators/k6output_inputs.go`
 
-- [ ] Implement `ValidK6Sample(opts ...SampleOption) *rapid.Generator[metrics.Sample]`:
+- [x] Implement `ValidK6Sample(opts ...SampleOption) *rapid.Generator[metrics.Sample]`:
   - Sample with valid Metric (Counter / Trend / Gauge / Rate), positive Value, Tags map (0-5 entries with semconv-friendly keys)
-- [ ] Implement `AnyK6Sample(opts ...SampleOption) *rapid.Generator[metrics.Sample]`:
+- [x] Implement `AnyK6Sample(opts ...SampleOption) *rapid.Generator[metrics.Sample]`:
   - allows negative values, nil Metric, large Tags
-- [ ] Implement `ValidOutputParams(opts ...ParamsOption) *rapid.Generator[k6output.Params]`:
+- [x] Implement `ValidOutputParams(opts ...ParamsOption) *rapid.Generator[k6output.Params]`:
   - valid endpoint, protocol, all U6 Params fields
-- [ ] Implement `AnyOutputParams(opts ...ParamsOption) *rapid.Generator[k6output.Params]`:
+- [x] Implement `AnyOutputParams(opts ...ParamsOption) *rapid.Generator[k6output.Params]`:
   - invalid combinations
-- [ ] Generators follow existing U7 style.
+- [x] Generators follow existing U7 style.
 
 ### Step 9.2 — Add `testutil/generators/k6output_inputs_test.go`
 
-- [ ] Property tests that valid generators produce only invariant-respecting values.
+- [x] Property tests that valid generators produce only invariant-respecting values.
 
 ### Phase 9 commit
 
-- [ ] `git add testutil/generators/k6output_inputs.go testutil/generators/k6output_inputs_test.go && git commit -m "feat(testutil): add k6 sample + output params generators for U6 PBT"`
+- [x] `git add testutil/generators/k6output_inputs.go testutil/generators/k6output_inputs_test.go && git commit -m "feat(testutil): add k6 sample + output params generators for U6 PBT"`
 
 ---
 
@@ -345,28 +345,28 @@
 
 ### Step 10.1 — Create `k6output/integration/testdata/topology.yaml`
 
-- [ ] Minimal valid topology (reuse U5's pattern).
+- [x] Minimal valid topology (reuse U5's pattern).
 
 ### Step 10.2 — Create `k6output/integration/testdata/script.js`
 
-- [ ] k6 script that uses `otelgen.load()` + `runJourney()` plus a few HTTP-like operations to generate k6 native samples (http_req_duration etc.).
+- [x] k6 script that uses `otelgen.load()` + `runJourney()` plus a few HTTP-like operations to generate k6 native samples (http_req_duration etc.).
 
 ### Step 10.3 — Create `k6output/integration/testdata/collector-config.yaml` + `docker-compose.yaml`
 
-- [ ] OTel Collector with file_exporter, docker-compose pinning collector-contrib image (reuse U5 tag).
+- [x] OTel Collector with file_exporter, docker-compose pinning collector-contrib image (reuse U5 tag).
 
 ### Step 10.4 — Create `k6output/integration/helpers.go`
 
-- [ ] `requireDocker(t)`, `requireXK6(t)`.
-- [ ] `buildK6Binary(t, modulePath, outputDir) string`.
-- [ ] `startCollector(t, configDir) (endpoint string, cleanup func())`.
-- [ ] `runK6Script(t, k6Bin, scriptPath, ...args) output`.
-- [ ] `readCollectorMetrics(t, path) metricsContent` — file_exporter JSON parser.
+- [x] `requireDocker(t)`, `requireXK6(t)`.
+- [x] `buildK6Binary(t, modulePath, outputDir) string`.
+- [x] `startCollector(t, configDir) (endpoint string, cleanup func())`.
+- [x] `runK6Script(t, k6Bin, scriptPath, ...args) output`.
+- [x] `readCollectorMetrics(t, path) metricsContent` — file_exporter JSON parser.
 
 ### Step 10.5 — Create `k6output/integration/integration_test.go`
 
-- [ ] `//go:build integration`.
-- [ ] `TestIntegration_EndToEnd`:
+- [x] `//go:build integration`.
+- [x] `TestIntegration_EndToEnd`:
   - requireDocker + requireXK6
   - buildK6Binary with this extension
   - startCollector
@@ -377,11 +377,11 @@
 
 ### Step 10.6 — Create `k6output/integration/README.md`
 
-- [ ] Document Docker + xk6 requirement.
+- [x] Document Docker + xk6 requirement.
 
 ### Phase 10 commit
 
-- [ ] `git add k6output/integration/ && git commit -m "test(k6output): add integration test harness with xk6 build and Docker Collector"`
+- [x] `git add k6output/integration/ && git commit -m "test(k6output): add integration test harness with xk6 build and Docker Collector"`
 
 ---
 
@@ -392,18 +392,18 @@
 
 ### Step 11.1 — Modify `k6otelgen/integration/integration_test.go`
 
-- [ ] Remove the U6 absence guard.
-- [ ] Add `--out otel-gen=...` to the k6 script invocation.
-- [ ] Ensure U5 integration test now flows through U6 for shutdown trigger.
+- [x] Remove the U6 absence guard.
+- [x] Add `--out otel-gen=...` to the k6 script invocation.
+- [x] Ensure U5 integration test now flows through U6 for shutdown trigger.
 
 ### Step 11.2 — Verify
 
-- [ ] `go test -tags=integration ./k6otelgen/integration/...` passes (with Docker + xk6).
-- [ ] `go test -tags=integration ./k6output/integration/...` passes.
+- [x] `go test -tags=integration ./k6otelgen/integration/...` passes (with Docker + xk6).
+- [x] `go test -tags=integration ./k6output/integration/...` passes.
 
 ### Phase 11 commit
 
-- [ ] `git add k6otelgen/integration/ && git commit -m "test(k6otelgen): un-guard U6 dependency in integration tests"`
+- [x] `git add k6otelgen/integration/ && git commit -m "test(k6otelgen): un-guard U6 dependency in integration tests"`
 
 ---
 
@@ -412,33 +412,33 @@
 
 ### Step 12.1 — Run full suite
 
-- [ ] `go build ./...` succeeds.
-- [ ] `go vet ./k6output/...` clean.
-- [ ] `go test -race -count=1 ./...` passes.
-- [ ] `go test -cover ./k6output/...` ≥ 80%.
-- [ ] `go test -bench=. -benchmem ./k6output/...` shows BenchmarkAddMetricSamples < 1µs, BenchmarkFlushLoop < 5µs.
-- [ ] `golangci-lint run ./k6output/...` passes.
-- [ ] `go test -tags=integration ./k6output/integration/...` passes (with Docker + xk6).
-- [ ] `go test -tags=integration ./k6otelgen/integration/...` passes (un-guarded U6 dependency).
+- [x] `go build ./...` succeeds.
+- [x] `go vet ./k6output/...` clean.
+- [x] `go test -race -count=1 ./...` passes.
+- [x] `go test -cover ./k6output/...` ≥ 80%.
+- [x] `go test -bench=. -benchmem ./k6output/...` shows BenchmarkAddMetricSamples < 1µs, BenchmarkFlushLoop < 5µs.
+- [x] `golangci-lint run ./k6output/...` passes.
+- [x] `go test -tags=integration ./k6output/integration/...` passes (with Docker + xk6).
+- [x] `go test -tags=integration ./k6otelgen/integration/...` passes (un-guarded U6 dependency).
 
 ### Step 12.2 — Create `aidlc-docs/construction/u6-k6output/code/code-generation-summary.md`
 
-- [ ] File list with line counts.
-- [ ] Verification results.
-- [ ] Deviations from plan.
-- [ ] Recent commits.
+- [x] File list with line counts.
+- [x] Verification results.
+- [x] Deviations from plan.
+- [x] Recent commits.
 
 ### Step 12.3 — Mark all plan checkboxes [x]
 
-- [ ] Walk back; verify all `[ ]` are `[x]`.
+- [x] Walk back; verify all `[ ]` are `[x]`.
 
 ### Step 12.4 — Update `aidlc-docs/aidlc-state.md`
 
-- [ ] Mark U6 complete. Set Current Unit to U8 (Samples & Distribution).
+- [x] Mark U6 complete. Set Current Unit to U8 (Samples & Distribution).
 
 ### Phase 12 commit
 
-- [ ] `git add aidlc-docs/ && git commit -m "chore(u6-k6output): finalize code-generation-summary and checkbox state"`
+- [x] `git add aidlc-docs/ && git commit -m "chore(u6-k6output): finalize code-generation-summary and checkbox state"`
 
 ---
 
