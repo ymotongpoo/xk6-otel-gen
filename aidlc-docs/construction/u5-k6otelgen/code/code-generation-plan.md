@@ -168,16 +168,16 @@
 
 ### Step 4.1 — Create `k6otelgen/handle.go`
 
-- [ ] Define `TopologyHandle struct` with fields per NFR-D §LC-3 (runtime, engine, module, instance, name).
-- [ ] Implement `(*TopologyHandle).RunJourney(name string)`:
+- [x] Define `TopologyHandle struct` with fields per NFR-D §LC-3 (runtime, engine, module, instance, name).
+- [x] Implement `(*TopologyHandle).RunJourney(name string)`:
   - If engine == nil → throwJSException with `*ConfigError{Kind: "not_loaded"}`
   - `engine.BuildPlan(name)` → on err throwJSException
   - Get ctx from `h.instance.vu.Context()`
   - `engine.Execute(ctx, plan)` → on err throwJSException
-- [ ] Implement `(*TopologyHandle).Journeys() []string`:
+- [x] Implement `(*TopologyHandle).Journeys() []string`:
   - If engine == nil → return empty slice
   - return `engine.ListJourneys()`
-- [ ] All exported identifiers have GoDoc.
+- [x] All exported identifiers have GoDoc.
 
 ### Step 4.2 — Note about test deferral
 
@@ -185,7 +185,7 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Phase 4 commit
 
-- [ ] `git add k6otelgen/handle.go && git commit -m "feat(k6otelgen): add TopologyHandle with RunJourney and Journeys"`
+- [x] `git add k6otelgen/handle.go && git commit -m "feat(k6otelgen): add TopologyHandle with RunJourney and Journeys"`
 
 ---
 
