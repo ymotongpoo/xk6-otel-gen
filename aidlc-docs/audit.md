@@ -799,3 +799,17 @@ Notable Codex-introduced deviations (documented in code-generation-summary.md):
 U2 fully complete; U5 (k6 JS Module) is next."
 
 **Context**: U2 Code Generation — Part 2 complete; awaiting Continue to Next Stage approval before moving to U5 (k6 JS Module).
+
+
+## U5 k6otelgen — FD Plan Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T14:30:00Z
+**User Input**: "完了しました" (all 13 [Answer]: tags filled with A in u5-k6otelgen-fd-plan.md)
+**AI Response**: "All 13 recommended options selected; no contradictions. Generated 3 FD artifacts under aidlc-docs/construction/u5-k6otelgen/functional-design/:
+
+(1) business-logic-model.md — Package responsibilities (frontend k6 module), state boundary table (Schema/Overlay/Pipeline = process singleton in RootModule; Engine/Synthesizer = per-VU in ModuleInstance), k6 lifecycle phase walkthrough (init → setup → per-VU iteration → teardown → U6 Output.Stop), JS-callable API (top-level configure/load/stats/journeys + handle.runJourney/journeys), Load semantics (idempotent cache by path), Configure semantics (JS API > env > built-in merge, single-shot via configureOnce), Pipeline lazy construction via exporter.GetShared, NewModuleInstance flow per VU, RunJourney with vu.Context() propagation honoring NFR-U2-4 10ms cancel guarantee, Stats/Journeys snapshots, Shutdown delegation to U6 (with --out usage warning), 3 PBT properties (TP-U5-1 Load idempotency, TP-U5-2 Configure merge, TP-U5-3 RunJourney ctx).
+
+(2) business-rules.md — Module path 'k6/x/otel-gen', sync.Once-guarded singleton state with explicit invariants (Load same path → cached handle, Load different path → ConfigError, Configure twice → error, RunJourney before Load → error), per-VU random seed strategy (time.UnixNano XOR vu.VUID for independent seeds), JS opts → exporter.Config decode rules (10-field mapping table including timeout as number/string accept), Load path resolution + parse/validate error handling, RunJourney ctx propagation contract, Stats/Journeys mapping, JS exception mapping table (ConfigError/PipelineError/PlanError/ExecuteError → TypeError/Error with formatted message), lifecycle contract per k6 phase, --out warning rationale, 3 testable properties with implementation sketches, performance budgets (init<100µs, configure<500µs, load<50ms, NewModuleInstance<1ms).
+
+(3) domain-entities.md — RootModule struct with sync.Once fields, ModuleInstance with per-VU Engine/Synthesizer/handle, TopologyHandle with name/engine/module references, JS-visible Stats struct with js: field tags, ConfigError type with Kind enumeration (already_loaded/already_configured/not_loaded/path_mismatch/file_not_found/parse_error/validate_error), JS-callable API table (top-level 4 methods + handle 2 methods), method contracts (New/NewModuleInstance/Exports/Load/Configure/Stats/Journeys/RunJourney) with idempotency and thread-safety properties, file layout (6 production + 4 test), import deps (k6/js/modules + grafana/sobek + topology/exporter/synth/journey, NO direct OTel SDK), U7 generator request (2 pairs = 4 funcs: ConfigureOpts/LoadPath), Application Design §C5 amendments (Stats field naming, ctx source confirmation, Configure priority, Load cache semantics, ConfigError.Kind enumeration, Shutdown delegation note)."
+
+**Context**: U5 FD — artifacts generated, awaiting approval (Step 5/6 GATE).
