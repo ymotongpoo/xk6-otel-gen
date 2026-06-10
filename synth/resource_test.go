@@ -1,6 +1,7 @@
 package synth
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/google/uuid"
@@ -91,7 +92,14 @@ func TestBuildResource_Idempotent_Property(t *testing.T) {
 func resourceAttrs(kvs []attribute.KeyValue) map[attribute.Key]string {
 	attrs := make(map[attribute.Key]string, len(kvs))
 	for _, kv := range kvs {
-		attrs[kv.Key] = kv.Value.AsString()
+		switch kv.Value.Type() {
+		case attribute.STRING:
+			attrs[kv.Key] = kv.Value.AsString()
+		case attribute.INT64:
+			attrs[kv.Key] = strconv.FormatInt(kv.Value.AsInt64(), 10)
+		default:
+			attrs[kv.Key] = kv.Value.AsString()
+		}
 	}
 	return attrs
 }

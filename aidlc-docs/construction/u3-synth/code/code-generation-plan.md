@@ -135,32 +135,32 @@
 
 ### Step 3.1 — Create `synth/attributes.go`
 
-- [ ] Define `direction uint8` type with `dirClient`, `dirServer`, `dirProducer`, `dirConsumer`, `dirInternal`, `dirUnset` consts.
-- [ ] Define `attributePolicy struct { SpanKind trace.SpanKind; AttributeNamespace string; MetricNamespace string; Direction direction }`.
-- [ ] Implement `policyFor(svcKind topology.ServiceKind, edgeKind topology.EdgeKind, dir direction) attributePolicy` per FD `business-rules.md` §2.1 table.
-- [ ] Define `cacheKey struct { svcName string; op string; edgeID string; dir direction }`.
-- [ ] Define `staticSetCache struct { sets sync.Map }` with `get` / `put` methods.
-- [ ] Implement `buildStaticSet(svc *topology.Service, op string, edge *topology.Edge, policy attributePolicy) attribute.Set` dispatching to `httpStaticAttrs` / `rpcStaticAttrs` / `dbStaticAttrs` / `messagingStaticAttrs`.
-- [ ] Implement per-namespace static attr builders using semconv constants (semconv.HTTPRequestMethodKey etc.).
-- [ ] Implement `dynamicOutcomeAttrs(policy, outcome) []attribute.KeyValue` for status_code + error.type.
-- [ ] Define `allowedAttrKeys map[string]struct{}` listing all semconv keys this package may emit (per NFR-D §1.2 / TP-U3-2).
-- [ ] Implement `cacheKeyFor(svc, op, edge, dir) cacheKey` helper.
-- [ ] HTTP operation parser: `parseHTTPOp(op string) (method, route string)` (e.g., `"GET /api/users"` → `("GET", "/api/users")`).
-- [ ] Internal helpers — brief comments.
+- [x] Define `direction uint8` type with `dirClient`, `dirServer`, `dirProducer`, `dirConsumer`, `dirInternal`, `dirUnset` consts.
+- [x] Define `attributePolicy struct { SpanKind trace.SpanKind; AttributeNamespace string; MetricNamespace string; Direction direction }`.
+- [x] Implement `policyFor(svcKind topology.ServiceKind, edgeKind topology.EdgeKind, dir direction) attributePolicy` per FD `business-rules.md` §2.1 table.
+- [x] Define `cacheKey struct { svcName string; op string; edgeID string; dir direction }`.
+- [x] Define `staticSetCache struct { sets sync.Map }` with `get` / `put` methods.
+- [x] Implement `buildStaticSet(svc *topology.Service, op string, edge *topology.Edge, policy attributePolicy) attribute.Set` dispatching to `httpStaticAttrs` / `rpcStaticAttrs` / `dbStaticAttrs` / `messagingStaticAttrs`.
+- [x] Implement per-namespace static attr builders using semconv constants (semconv.HTTPRequestMethodKey etc.).
+- [x] Implement `dynamicOutcomeAttrs(policy, outcome) []attribute.KeyValue` for status_code + error.type.
+- [x] Define `allowedAttrKeys map[string]struct{}` listing all semconv keys this package may emit (per NFR-D §1.2 / TP-U3-2).
+- [x] Implement `cacheKeyFor(svc, op, edge, dir) cacheKey` helper.
+- [x] HTTP operation parser: `parseHTTPOp(op string) (method, route string)` (e.g., `"GET /api/users"` → `("GET", "/api/users")`).
+- [x] Internal helpers — brief comments.
 
 ### Step 3.2 — Unit test `synth/attributes_test.go`
 
-- [ ] `TestPolicyFor_AllCombinations` — table-driven over (Service.Kind, Edge.Kind, direction) → expected policy.
-- [ ] `TestBuildStaticSet_HTTP_Server` — Service.Kind=application, Edge.Kind=http, dir=server → expected http.method + http.route attrs.
-- [ ] Similar for HTTP_Client, RPC_Server/Client, DB, Messaging Producer/Consumer.
-- [ ] `TestDynamicOutcomeAttrs_*` — status_code present, error.type on failure, etc.
-- [ ] `TestStaticSetCache_GetPut` — basic sync.Map wrap.
-- [ ] **PBT TP-U3-2** (`TestSpanAttributes_AllowedKeysOnly_Property`): mark `t.Skip("waits for ValidSpanInput generator from Phase 11")` for now.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestPolicyFor_AllCombinations` — table-driven over (Service.Kind, Edge.Kind, direction) → expected policy.
+- [x] `TestBuildStaticSet_HTTP_Server` — Service.Kind=application, Edge.Kind=http, dir=server → expected http.method + http.route attrs.
+- [x] Similar for HTTP_Client, RPC_Server/Client, DB, Messaging Producer/Consumer.
+- [x] `TestDynamicOutcomeAttrs_*` — status_code present, error.type on failure, etc.
+- [x] `TestStaticSetCache_GetPut` — basic sync.Map wrap.
+- [x] **PBT TP-U3-2** (`TestSpanAttributes_AllowedKeysOnly_Property`): mark `t.Skip("waits for ValidSpanInput generator from Phase 11")` for now.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 3 commit
 
-- [ ] `git add synth/attributes.go synth/attributes_test.go && git commit -m "feat(synth): add attribute policy mapping and static/dynamic builders"`
+- [x] `git add synth/attributes.go synth/attributes_test.go && git commit -m "feat(synth): add attribute policy mapping and static/dynamic builders"`
 
 ---
 
