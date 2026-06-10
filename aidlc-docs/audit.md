@@ -732,3 +732,15 @@ U3 fully complete; U2 (Journey Engine) is next."
 (3) domain-entities.md — Engine (opaque), Plan (immutable tree), Node (with mutually-exclusive Children vs Parallel), Outcome with all recovery tracking fields and 6 invariants (Success ↔ ErrorType empty, Cascaded → Latency zero, DefaultUsed/SilentlySucceeded → Success true, FallbackUsed semantics, ErrorType ∈ AllowedErrorTypes), PlanError / ExecuteError types, NewEngine / BuildPlan / Execute / ListJourneys contracts with idempotency and thread-safety properties, 8 production + 6 test file layout (engine.go / plan.go / executor.go / recovery.go / fault.go / replica.go / errors.go + doc.go), import dependencies (topology + synth, NOT OTel SDK or exporter), U7 generator request (3 pairs = 6 funcs: ValidPlan/AnyPlan, ValidNode/AnyNode, ValidEngineOutcome/AnyEngineOutcome + AllowedErrorTypes const reference), Application Design §C2 amendments (random source internalization, error type addition, AllowedErrorTypes const)."
 
 **Context**: U2 FD — artifacts generated, awaiting approval (Step 5/6 GATE).
+
+
+## U2 journey — NFR-R Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T06:00:00Z
+**User Input**: "回答しました" (all 13 [Answer]: tags filled with A in u2-journey-nfr-r-plan.md)
+**AI Response**: "All 13 recommended options selected; no contradictions. Generated 2 NFR-R artifacts:
+
+(1) nfr-requirements.md — 11 applicable NFRs (NFR-U2-1 API Stability with SemVer + Outcome field addition policy, NFR-U2-2 Engine eager BuildPlan lifecycle, NFR-U2-3 Concurrency with per-Engine sync.Mutex rand source, NFR-U2-4 Context Cancellation < 10ms with span close guarantee and cascade-skip behavior, NFR-U2-5 Panic Recovery via defer recover with internal_error Outcome and *ExecuteError return, NFR-U2-6 Performance budgets (BuildPlan <1ms, per-step pure overhead <50µs, ListJourneys <10µs), NFR-U2-7 No self-metric, NFR-U2-8 Documentation with 3 Examples, NFR-U2-9 Testability with mock synth + 80% coverage + PBT TP-U2-1..5 + integration tests, NFR-U2-10 Compatibility Go 1.25 + math/rand/v2, NFR-U2-11 PBT compliance summary) + 11 N/A categories + project NFR traceability + 12-item DoD checklist + risks + cross-unit dependency requests (U1 FaultOverlay API clarification, U7 generators).
+
+(2) tech-stack-decisions.md — 6 production deps (stdlib context/sync/time/math.rand/v2 + topology + synth), 3 test deps (rapid + testify + testutil/generators), Docker integration deps, mock synth strategy (helpers_test.go local struct with thread-safe call log), version strategy with math/rand/v2 adoption rationale, 7 rejected alternatives (errgroup, worker pool, rand v1, SDK concrete types, generics Engine, channel-return Outcome, persisted Plan YAML), CI/lint integration, cross-unit dependency summary, migration notes for math/rand/v2 + Synthesizer interface changes + topology FaultOverlay changes, 6 open questions for NFR Design (mutex contention, stateful PBT, error.type extensibility, weighted/sticky replicas, latency jitter)."
+
+**Context**: U2 NFR-R — artifacts generated, awaiting approval (Step 5/6 GATE).
