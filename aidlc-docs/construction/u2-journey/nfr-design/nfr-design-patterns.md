@@ -60,7 +60,7 @@ NFR-U2-6 の per-step overhead < 50 µs を満たすか bench で確認。k6 高
 
 #### 1.2.2 Seed
 
-`NewEngine` で `rand.New(rand.NewPCG(seed1, seed2))` (rand/v2 の PCG generator) を構築。seed は引数で受け取るか、`time.Now().UnixNano()` を default に。Test では deterministic seed 注入 (`NewEngineWithSeed` 等の test helper、API 表面には出さない)。
+`NewEngine` で `rand.New(rand.NewPCG(seed1, seed2))` (rand/v2 の PCG generator) を構築。seed は引数で受け取るか、`time.Now().UnixNano()` を default に。U5 の per-VU deterministic seeding 用に `NewEngineWithSeed(schema, overlay, syn, seed)` を公開し、通常 caller は time-based seed の `NewEngine` を使う。
 
 ### 1.3 executeNode 直接再帰 (Q2=A)
 

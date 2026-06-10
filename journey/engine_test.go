@@ -3,6 +3,7 @@ package journey
 import (
 	"context"
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
@@ -75,6 +76,21 @@ func TestListJourneys_ReturnsCopy(t *testing.T) {
 	}
 }
 
+func TestNewEngineWithSeed(t *testing.T) {
+	t.Parallel()
+
+	sameSeedA := runSeededEngineInstanceSequence(t, 42, 32)
+	sameSeedB := runSeededEngineInstanceSequence(t, 42, 32)
+	if !reflect.DeepEqual(sameSeedA, sameSeedB) {
+		t.Fatalf("same seed sequences differ:\n%v\n%v", sameSeedA, sameSeedB)
+	}
+
+	differentSeed := runSeededEngineInstanceSequence(t, 43, 32)
+	if reflect.DeepEqual(sameSeedA, differentSeed) {
+		t.Fatalf("different seed sequence unexpectedly matched: %v", sameSeedA)
+	}
+}
+
 type phase2Synth struct{}
 
 func (phase2Synth) BeginSpan(ctx context.Context, _ synth.SpanInput) (context.Context, synth.FinishSpanFunc) {
@@ -84,6 +100,53 @@ func (phase2Synth) BeginSpan(ctx context.Context, _ synth.SpanInput) (context.Co
 func (phase2Synth) RecordMetric(context.Context, synth.MetricInput) {}
 
 func (phase2Synth) EmitLog(context.Context, synth.LogInput) {}
+
+type recordingInstanceSynth struct {
+	mu          sync.Mutex
+	instanceIdx []int
+}
+
+func (s *recordingInstanceSynth) BeginSpan(ctx context.Context, in synth.SpanInput) (context.Context, synth.FinishSpanFunc) {
+	s.mu.Lock()
+	s.instanceIdx = append(s.instanceIdx, in.InstanceIdx)
+	s.mu.Unlock()
+	return ctx, func(synth.Outcome) {}
+}
+
+func (s *recordingInstanceSynth) RecordMetric(context.Context, synth.MetricInput) {}
+
+func (s *recordingInstanceSynth) EmitLog(context.Context, synth.LogInput) {}
+
+func (s *recordingInstanceSynth) sequence() []int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	out := make([]int, len(s.instanceIdx))
+	copy(out, s.instanceIdx)
+	return out
+}
+
+func runSeededEngineInstanceSequence(t *testing.T, seed uint64, runs int) []int {
+	t.Helper()
+
+	schema := phase2SchemaWithJourneys("checkout")
+	for _, svc := range schema.Services {
+		svc.Replicas = 32
+	}
+	overlay := schema.ApplyFaults()
+	syn := &recordingInstanceSynth{}
+	engine := NewEngineWithSeed(schema, overlay, syn, seed)
+	plan, err := engine.BuildPlan("checkout")
+	if err != nil {
+		t.Fatalf("BuildPlan() error = %v", err)
+	}
+	for range runs {
+		if err := engine.Execute(context.Background(), plan); err != nil {
+			t.Fatalf("Execute() error = %v", err)
+		}
+	}
+	return syn.sequence()
+}
 
 func phase2SchemaWithJourneys(names ...string) *topology.Schema {
 	svc := &topology.Service{

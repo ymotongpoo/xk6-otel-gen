@@ -84,25 +84,25 @@
 
 ### Step 1.1 — Modify `journey/engine.go`
 
-- [ ] Add `NewEngineWithSeed(schema *topology.Schema, overlay *topology.FaultOverlay, syn synth.Synthesizer, seed uint64) *Engine`:
+- [x] Add `NewEngineWithSeed(schema *topology.Schema, overlay *topology.FaultOverlay, syn synth.Synthesizer, seed uint64) *Engine`:
   - same behavior as `NewEngine`, but uses `rand.NewPCG(seed, seed^0xdeadbeefcafebabe)` instead of `newDefaultRand()`
-- [ ] Refactor existing `NewEngine(schema, overlay, syn) *Engine` to call `NewEngineWithSeed(..., timeBasedSeed)` where `timeBasedSeed = uint64(time.Now().UnixNano())`.
-- [ ] All identifiers have GoDoc.
+- [x] Refactor existing `NewEngine(schema, overlay, syn) *Engine` to call `NewEngineWithSeed(..., timeBasedSeed)` where `timeBasedSeed = uint64(time.Now().UnixNano())`.
+- [x] All identifiers have GoDoc.
 
 ### Step 1.2 — Add `journey/engine_test.go::TestNewEngineWithSeed`
 
-- [ ] Verify same seed produces deterministic Execute outcomes (with mockSynth recording RunJourney args, observe deterministic random ints / replica idx).
-- [ ] Verify different seed produces different sequences (statistical, with high probability).
-- [ ] Existing `TestNewEngine_*` tests still pass.
+- [x] Verify same seed produces deterministic Execute outcomes (with mockSynth recording RunJourney args, observe deterministic random ints / replica idx).
+- [x] Verify different seed produces different sequences (statistical, with high probability).
+- [x] Existing `TestNewEngine_*` tests still pass.
 
 ### Step 1.3 — Update U2 NFR-D / FD docs
 
-- [ ] In `aidlc-docs/construction/u2-journey/nfr-design/nfr-design-patterns.md` §1.2 (Random source), add note that `NewEngineWithSeed` exposes seed for caller (U5).
-- [ ] In `aidlc-docs/construction/u2-journey/functional-design/domain-entities.md`, add `NewEngineWithSeed` to the public API table.
+- [x] In `aidlc-docs/construction/u2-journey/nfr-design/nfr-design-patterns.md` §1.2 (Random source), add note that `NewEngineWithSeed` exposes seed for caller (U5).
+- [x] In `aidlc-docs/construction/u2-journey/functional-design/domain-entities.md`, add `NewEngineWithSeed` to the public API table.
 
 ### Phase 1 commit
 
-- [ ] `git add journey/engine.go journey/engine_test.go aidlc-docs/construction/u2-journey/ && git commit -m "feat(journey): add NewEngineWithSeed for per-VU deterministic seeding"`
+- [x] `git add journey/engine.go journey/engine_test.go aidlc-docs/construction/u2-journey/ && git commit -m "feat(journey): add NewEngineWithSeed for per-VU deterministic seeding"`
 
 ---
 

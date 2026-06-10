@@ -7,7 +7,11 @@ import (
 
 func newDefaultRand() *rand.Rand {
 	seed := uint64(time.Now().UnixNano())
-	return rand.New(rand.NewPCG(seed, seed^0x9e3779b97f4a7c15))
+	return newRandWithSeed(seed)
+}
+
+func newRandWithSeed(seed uint64) *rand.Rand {
+	return rand.New(rand.NewPCG(seed, seed^0xdeadbeefcafebabe))
 }
 
 func (e *engineImpl) randIntN(n int) int {

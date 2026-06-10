@@ -5,6 +5,7 @@ import (
 	"math/rand/v2"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
@@ -28,6 +29,12 @@ type engineImpl struct {
 
 // NewEngine constructs an Engine and eagerly builds all journey plans.
 func NewEngine(schema *topology.Schema, overlay *topology.FaultOverlay, syn synth.Synthesizer) *Engine {
+	return NewEngineWithSeed(schema, overlay, syn, uint64(time.Now().UnixNano()))
+}
+
+// NewEngineWithSeed constructs an Engine with a deterministic random source
+// derived from seed and eagerly builds all journey plans.
+func NewEngineWithSeed(schema *topology.Schema, overlay *topology.FaultOverlay, syn synth.Synthesizer, seed uint64) *Engine {
 	if schema == nil {
 		panic("journey: NewEngine: schema must not be nil")
 	}
@@ -43,7 +50,7 @@ func NewEngine(schema *topology.Schema, overlay *topology.FaultOverlay, syn synt
 		overlay: overlay,
 		synth:   syn,
 		plans:   make(map[string]*Plan, len(schema.Journeys)),
-		rand:    newDefaultRand(),
+		rand:    newRandWithSeed(seed),
 	}
 	for name := range schema.Journeys {
 		plan, err := impl.buildPlan(name)

@@ -143,6 +143,16 @@ type nodeKey struct {
 | 失敗時 | schema invalid → panic (Schema は事前に Validate 済前提) |
 | Thread-safe | はい (構築後) |
 
+### 2.1.1 `func NewEngineWithSeed(schema *topology.Schema, overlay *topology.FaultOverlay, syn synth.Synthesizer, seed uint64) *Engine`
+
+| 項目 | 内容 |
+|---|---|
+| 引数 | `NewEngine` と同じ 3 つの non-nil 引数 + deterministic random seed |
+| 戻り値 | `*Engine` (concrete 型は `*engineImpl`) |
+| 副作用 | Plans の Build 1 回。random source は `seed` から構築され、U5 の per-VU seed 注入に使う |
+| 失敗時 | schema invalid → panic (Schema は事前に Validate 済前提) |
+| Thread-safe | はい (構築後) |
+
 ### 2.2 `func (e *Engine) BuildPlan(journeyName string) (*Plan, error)`
 
 | 項目 | 内容 |
@@ -205,6 +215,7 @@ journey/
 ```go
 // Constructor
 func NewEngine(schema *topology.Schema, overlay *topology.FaultOverlay, syn synth.Synthesizer) *Engine
+func NewEngineWithSeed(schema *topology.Schema, overlay *topology.FaultOverlay, syn synth.Synthesizer, seed uint64) *Engine
 
 // Engine methods
 func (e *Engine) BuildPlan(journeyName string) (*Plan, error)
