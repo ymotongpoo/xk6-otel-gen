@@ -57,19 +57,19 @@
 
 ### Step 0.1 — Verify deps
 
-- [ ] `grep "semconv/v1.27.0" go.sum` confirms it's a direct dep (added by U4 refactor 622f6cf).
-- [ ] `go get github.com/google/uuid@latest` → `go mod tidy`.
-- [ ] Verify: `grep "github.com/google/uuid" go.mod` shows it as a direct dep.
+- [x] `grep "semconv/v1.27.0" go.sum` confirms it's a direct dep (added by U4 refactor 622f6cf).
+- [x] `go get github.com/google/uuid@latest` → `go mod tidy`.
+- [x] Verify: `grep "github.com/google/uuid" go.mod` shows it as a direct dep.
 
 ### Step 0.2 — Create synth/ directory skeleton
 
-- [ ] Create `synth/` directory.
-- [ ] Create empty `synth/doc.go` with placeholder `package synth` line + TODO comment (full doc in Phase 8).
-- [ ] Verify: `go build ./synth/...` succeeds (empty package).
+- [x] Create `synth/` directory.
+- [x] Create empty `synth/doc.go` with placeholder `package synth` line + TODO comment (full doc in Phase 8).
+- [x] Verify: `go build ./synth/...` succeeds (empty package).
 
 ### Phase 0 commit
 
-- [ ] `git add go.mod go.sum synth/doc.go && git commit -m "build(synth): add uuid dependency for U3"`
+- [x] `git add go.mod go.sum synth/doc.go && git commit -m "build(synth): add uuid dependency for U3"`
 
 ---
 
