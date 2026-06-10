@@ -385,29 +385,29 @@
 
 ### Step 12.1 — Create `synth/testdata/collector-config.yaml`
 
-- [ ] OTLP/gRPC receiver + file_exporter to `/var/log/otel/{traces,metrics,logs}.json` (mimic U4).
+- [x] OTLP/gRPC receiver + file_exporter to `/var/log/otel/{traces,metrics,logs}.json` (mimic U4).
 
 ### Step 12.2 — Create `synth/testdata/docker-compose.yaml`
 
-- [ ] Single `collector` service, mount config + output dir, expose 4317/4318.
+- [x] Single `collector` service, mount config + output dir, expose 4317/4318.
 
 ### Step 12.3 — Create `synth/integration/helpers.go`
 
-- [ ] `StartCollector(t)` / `ReadCollectorTraces` / `ReadCollectorMetrics` / `ReadCollectorLogs` (reuse U4 pattern, but in a new copy or factor out shared module).
-- [ ] `BuildPipeline(t, cfg)` — uses U4's `exporter.New(cfg)` to construct real Pipeline.
+- [x] `StartCollector(t)` / `ReadCollectorTraces` / `ReadCollectorMetrics` / `ReadCollectorLogs` (reuse U4 pattern, but in a new copy or factor out shared module).
+- [x] `BuildPipeline(t, cfg)` — uses U4's `exporter.New(cfg)` to construct real Pipeline.
 
 ### Step 12.4 — Create `synth/integration/integration_test.go`
 
-- [ ] `//go:build integration`.
-- [ ] `TestIntegration_SynthToCollector_ThreeSignals_Correlated` — construct Pipeline, build Synthesizer, run one BeginSpan→finish, RecordMetric, EmitLog with same context, ForceFlush all, Shutdown, read all 3 JSON files, assert same trace_id across all signals.
+- [x] `//go:build integration`.
+- [x] `TestIntegration_SynthToCollector_ThreeSignals_Correlated` — construct Pipeline, build Synthesizer, run one BeginSpan→finish, RecordMetric, EmitLog with same context, ForceFlush all, Shutdown, read all 3 JSON files, assert same trace_id across all signals.
 
 ### Step 12.5 — Add `synth/integration/README.md`
 
-- [ ] Document Docker requirement + invocation.
+- [x] Document Docker requirement + invocation.
 
 ### Phase 12 commit
 
-- [ ] `git add synth/integration/ synth/testdata/ && git commit -m "test(synth): add integration test harness with 3-signal correlation"`
+- [x] `git add synth/integration/ synth/testdata/ && git commit -m "test(synth): add integration test harness with 3-signal correlation"`
 
 ---
 
