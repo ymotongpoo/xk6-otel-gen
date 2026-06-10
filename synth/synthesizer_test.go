@@ -430,16 +430,6 @@ func TestRecordMetric_StaticSetCached(t *testing.T) {
 	}
 }
 
-func TestRecordMetric_HistogramInsertion_Property(t *testing.T) {
-	t.Parallel()
-	t.Skip("waits for ValidMetricInput generator from Phase 11")
-}
-
-func TestFinishSpan_ErrorTypeRequired_Property(t *testing.T) {
-	t.Parallel()
-	t.Skip("waits for ValidMetricInput generator from Phase 11")
-}
-
 func TestEmitLog_Success(t *testing.T) {
 	t.Parallel()
 

@@ -353,28 +353,28 @@
 
 ### Step 11.1 — Add `testutil/generators/synth_inputs.go`
 
-- [ ] Implement `ValidSpanInput(opts ...SpanInputOption) *rapid.Generator[synth.SpanInput]` per FD §6.3.
-- [ ] Implement `AnySpanInput(opts ...SpanInputOption) *rapid.Generator[synth.SpanInput]`.
-- [ ] Same for MetricInput, LogInput, Outcome (4 pairs = 8 funcs).
-- [ ] Optionally: `ValidErrorType() *rapid.Generator[string]` sampling from `SemconvErrorTypes` slice (use when implementing TP-U3-4 in Phase 12).
-- [ ] Each generator follows existing U7 generator style (constants, doc comments).
+- [x] Implement `ValidSpanInput(opts ...SpanInputOption) *rapid.Generator[synth.SpanInput]` per FD §6.3.
+- [x] Implement `AnySpanInput(opts ...SpanInputOption) *rapid.Generator[synth.SpanInput]`.
+- [x] Same for MetricInput, LogInput, Outcome (4 pairs = 8 funcs).
+- [x] Optionally: `ValidErrorType() *rapid.Generator[string]` sampling from `SemconvErrorTypes` slice (use when implementing TP-U3-4 in Phase 12).
+- [x] Each generator follows existing U7 generator style (constants, doc comments).
 
 ### Step 11.2 — Add `testutil/generators/synth_inputs_test.go`
 
-- [ ] `TestValidSpanInput_PassesValidation_Property` — `ValidSpanInput().Draw(t, "in")` produces inputs that don't panic `synth.BeginSpan`.
-- [ ] `TestAnySpanInput_SometimesInvalid_Property` — distribution check.
-- [ ] Same for other generators.
+- [x] `TestValidSpanInput_PassesValidation_Property` — `ValidSpanInput().Draw(t, "in")` produces inputs that don't panic `synth.BeginSpan`.
+- [x] `TestAnySpanInput_SometimesInvalid_Property` — distribution check.
+- [x] Same for other generators.
 
 ### Step 11.3 — Un-skip earlier PBT tests
 
-- [ ] In `synth/pbt_test.go`, add tests using newly available generators:
+- [x] In `synth/pbt_test.go`, add tests using newly available generators:
   - `TestRecordMetric_HistogramInsertion_Property` (TP-U3-3) using `ValidMetricInput`.
   - `TestFinishSpan_ErrorTypeRequired_Property` (TP-U3-4) using `ValidSpanInput` + Outcome with Success=false.
-- [ ] Run `go test -race ./synth/... ./testutil/generators/...` — all pass.
+- [x] Run `go test -race ./synth/... ./testutil/generators/...` — all pass.
 
 ### Phase 11 commit
 
-- [ ] `git add testutil/generators/synth_inputs.go testutil/generators/synth_inputs_test.go synth/pbt_test.go && git commit -m "feat(testutil): add synth IO generators for U3 PBT"`
+- [x] `git add testutil/generators/synth_inputs.go testutil/generators/synth_inputs_test.go synth/pbt_test.go && git commit -m "feat(testutil): add synth IO generators for U3 PBT"`
 
 ---
 
