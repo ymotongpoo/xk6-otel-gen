@@ -84,22 +84,22 @@
 
 ### Step 1.1 — Create `journey/errors.go`
 
-- [ ] Define `PlanError struct { Kind string; Path []string; Inner error }` with `Error()` + `Unwrap()` per NFR-D §3.3.
-- [ ] Define `ExecuteError struct { Kind string; Inner error }` with `Error()` + `Unwrap()`.
-- [ ] Define `AllowedErrorTypes []string` const with the 16 values from FD §11 (timeout, connection_refused, dns_failure, http.{500,502,503,504}, grpc.{unavailable,deadline_exceeded,unauthenticated}, db.{connection_lost,constraint_violation}, crashed, circuit_open, rate_limited, context_canceled).
-- [ ] All exported identifiers have GoDoc.
+- [x] Define `PlanError struct { Kind string; Path []string; Inner error }` with `Error()` + `Unwrap()` per NFR-D §3.3.
+- [x] Define `ExecuteError struct { Kind string; Inner error }` with `Error()` + `Unwrap()`.
+- [x] Define `AllowedErrorTypes []string` const with the 16 values from FD §11 (timeout, connection_refused, dns_failure, http.{500,502,503,504}, grpc.{unavailable,deadline_exceeded,unauthenticated}, db.{connection_lost,constraint_violation}, crashed, circuit_open, rate_limited, context_canceled).
+- [x] All exported identifiers have GoDoc.
 
 ### Step 1.2 — Unit test `journey/errors_test.go`
 
-- [ ] `TestPlanError_Error` — formatting with and without Path.
-- [ ] `TestExecuteError_Error` — formatting with and without Inner.
-- [ ] `TestErrors_Unwrap` — errors.Is integration for both types.
-- [ ] `TestAllowedErrorTypes_NonEmpty_And_Unique`.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestPlanError_Error` — formatting with and without Path.
+- [x] `TestExecuteError_Error` — formatting with and without Inner.
+- [x] `TestErrors_Unwrap` — errors.Is integration for both types.
+- [x] `TestAllowedErrorTypes_NonEmpty_And_Unique`.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 1 commit
 
-- [ ] `git add journey/errors.go journey/errors_test.go && git commit -m "feat(journey): add typed error hierarchy and AllowedErrorTypes constants"`
+- [x] `git add journey/errors.go journey/errors_test.go && git commit -m "feat(journey): add typed error hierarchy and AllowedErrorTypes constants"`
 
 ---
 
