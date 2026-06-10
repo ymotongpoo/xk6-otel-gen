@@ -378,28 +378,28 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Step 11.1 — Create `k6otelgen/integration/testdata/topology.yaml`
 
-- [ ] Minimal valid topology with 2-3 services, 1-2 journeys.
+- [x] Minimal valid topology with 2-3 services, 1-2 journeys.
 
 ### Step 11.2 — Create `k6otelgen/integration/testdata/script.js`
 
-- [ ] k6 JS script using `otelgen.configure`, `otelgen.load`, default function with `topology.runJourney`.
+- [x] k6 JS script using `otelgen.configure`, `otelgen.load`, default function with `topology.runJourney`.
 
 ### Step 11.3 — Create `k6otelgen/integration/testdata/collector-config.yaml` + `docker-compose.yaml`
 
-- [ ] OTel Collector config with file_exporter, docker-compose pinning collector-contrib image.
+- [x] OTel Collector config with file_exporter, docker-compose pinning collector-contrib image.
 
 ### Step 11.4 — Create `k6otelgen/integration/helpers.go`
 
-- [ ] `requireDocker(t)`, `requireXK6(t)` — skip integration tests if tools missing.
-- [ ] `buildK6Binary(t, xk6Path, modulePath, outputDir) string` — exec.Command for `xk6 build --with <modulePath>=.`.
-- [ ] `startCollector(t, configDir) (endpoint string, cleanup func())`.
-- [ ] `runK6Script(t, k6Bin, scriptPath, ...args) output` — exec k6 binary.
-- [ ] `readCollectorTraces(t, path) tracesContent`.
+- [x] `requireDocker(t)`, `requireXK6(t)` — skip integration tests if tools missing.
+- [x] `buildK6Binary(t, xk6Path, modulePath, outputDir) string` — exec.Command for `xk6 build --with <modulePath>=.`.
+- [x] `startCollector(t, configDir) (endpoint string, cleanup func())`.
+- [x] `runK6Script(t, k6Bin, scriptPath, ...args) output` — exec k6 binary.
+- [x] `readCollectorTraces(t, path) tracesContent`.
 
 ### Step 11.5 — Create `k6otelgen/integration/integration_test.go`
 
-- [ ] `//go:build integration`.
-- [ ] `TestIntegration_EndToEnd`:
+- [x] `//go:build integration`.
+- [x] `TestIntegration_EndToEnd`:
   - requireDocker + requireXK6
   - buildK6Binary
   - startCollector with file_exporter
@@ -409,11 +409,11 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Step 11.6 — Create `k6otelgen/integration/README.md`
 
-- [ ] Document Docker + xk6 requirement, invocation.
+- [x] Document Docker + xk6 requirement, invocation.
 
 ### Phase 11 commit
 
-- [ ] `git add k6otelgen/integration/ && git commit -m "test(k6otelgen): add integration test harness with xk6 build and Docker Collector"`
+- [x] `git add k6otelgen/integration/ && git commit -m "test(k6otelgen): add integration test harness with xk6 build and Docker Collector"`
 
 ---
 

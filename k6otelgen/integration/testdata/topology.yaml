@@ -1,0 +1,21 @@
+services:
+  frontend:
+    kind: application
+    replicas: 1
+    operations:
+      - name: GET /
+        calls:
+          - to: { service: checkout, operation: POST /checkout }
+            protocol: http
+            latency: { p50: 5ms, p95: 10ms }
+  checkout:
+    kind: application
+    replicas: 1
+    operations:
+      - name: POST /checkout
+
+journeys:
+  home:
+    steps:
+      - service: frontend
+        operation: GET /
