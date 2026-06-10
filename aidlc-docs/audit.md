@@ -831,3 +831,17 @@ Generated 2 NFR-R artifacts:
 (2) tech-stack-decisions.md — 7 production deps (k6 SDK + sobek + 4 local xk6-otel-gen packages + stdlib), 4 test deps (rapid + testify + modulestest + testutil/generators), integration deps (xk6 + Docker + Collector), 7 rejected alternatives (goja direct, pipeline in JS, full path-traversal check, class-based JS API, multi-configure, self-stats, JS-side shutdown), CI integration table, cross-unit dependency summary, migration notes for k6 SDK / sobek / local-unit upgrades, 4 open questions for NFR Design / future."
 
 **Context**: U5 NFR-R — artifacts generated, awaiting approval.
+
+
+## U5 k6otelgen — NFR Design Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T15:30:00Z
+**User Input**: "完了しました" (all 13 [Answer]: tags filled with A in u5-k6otelgen-nfr-d-plan.md)
+**AI Response**: "All 13 recommended options selected; no contradictions. Generated 2 NFR-D artifacts under aidlc-docs/construction/u5-k6otelgen/nfr-design/:
+
+(1) nfr-design-patterns.md — 11 sections covering Performance (RootModule 3-group sync.Once layout, direct ModuleInstance↔RootModule pointer, exporter.GetShared lazy Pipeline build on first runJourney/stats, NewModuleInstance keeping under 5ms via lazy pipeline + eager synth/engine), Concurrency (sync.Once for singleton state, per-VU local goroutine isolation, per-VU random seed via time.UnixNano XOR vu.VUID), Error (throwJSException panic-with-NewTypeError helper, ConfigError 7-value Kind enum, jsXxx defer-recover for non-sobek panics), API (Exports.Named map with FunctionCall wrappers, sobek.Runtime.ExportTo for opts decode, optsToConfig converter with timeout number/string dual support, TopologyHandle methods auto-mapped to JS via sobek), Documentation (doc.go JS example + --out warning, 2 Example functions), Test (helpers_test.go centralized with modulestest.NewRuntime + mockSynth, PBT pbt_test.go for TP-U5-1..3, integration via in-test xk6 build).
+
+Critical U2 coordination identified: U5 needs per-VU deterministic seed → requires U2 to add NewEngineWithSeed(schema, overlay, syn, seed uint64). This is a minor SemVer bump on U2 (backward-compatible new function). Code Generation Plan must include a phase that patches U2 before U5 main implementation.
+
+(2) logical-components.md — 6 LCs (doc/module/instance/handle/config/errors) each with 責務 / 公開 API / 実装スケッチ / 依存; component dependency diagram with LC-5 errors as foundation; external package list (k6 SDK + sobek + 4 local xk6-otel-gen packages + stdlib); test component mapping to LCs (9 test files including integration subdir); explicit U2 coordination requirement for NewEngineWithSeed with Code Generation Plan handoff note."
+
+**Context**: U5 NFR-D — artifacts generated, awaiting approval.
