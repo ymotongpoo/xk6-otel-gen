@@ -953,3 +953,17 @@ Generated 2 NFR-R artifacts:
 (2) tech-stack-decisions.md — production deps (k6 SDK + OTel SDK direct + exporter), 5 test deps, integration via xk6+Docker, 7 rejected alternatives (synth Resource reuse, synth MeterProvider reuse, sync emit, self-rolled OTLP, semconv name rewrite, internal cardinality limit, Stop-with-error), CI table with strict-vs-soft bench distinction, cross-unit summary, migration notes for k6 SDK / OTel SDK / exporter upgrades, 5 open questions for NFR-D / future."
 
 **Context**: U6 NFR-R — artifacts generated, awaiting approval.
+
+
+## U6 k6output — NFR Design Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T17:30:00Z
+**User Input**: "完了しました" (all 13 [Answer]: tags filled with A in u6-k6output-nfr-d-plan.md)
+**AI Response**: "All 13 recommended options selected; no contradictions. Generated 2 NFR-D artifacts under aidlc-docs/construction/u6-k6output/nfr-design/:
+
+(1) nfr-design-patterns.md — 10 sections covering Performance (3-group Output struct layout, eager+lazy hybrid instrument construction with knownK6Metrics table for 11 standard k6 metrics, sync.Map per-type instrument cache, tagSetCache with sorted-keys joined-string hash for zero-allocation hot path), Concurrency (sync.Once-guarded Start/Stop, context.WithCancel + done channel flushLoop, drop-oldest queue full handling via two-stage select), Error (ConfigError 4-value Kind enum, wrapped fmt.Errorf for Start, always-nil Stop with warn log), API (hand-written --out args parser with strings.Split + applyKV dispatch, runner Resource builder in output.go private helper, U4 patch sketch for Pipeline.MetricExporter() returning sdkmetric.Exporter), Documentation (doc.go with --out args reference table + dual-function explanation), Test (example-based TP-U6-1 + rapid for TP-U6-2/3, ManualReader-backed Pipeline mock via exporter.ResetShared, integration via xk6+Docker — copy of U5 helpers).
+
+Cross-references all NFR-R Open Questions §7 (queue size default 100, range [10,10000]; flush ticker 1s fixed; OTel exemplar future; group hierarchy future), NFR-R requirements traceability §8, and Anti-pattern enumeration §9 with 22 items.
+
+(2) logical-components.md — 5 LCs (LC-0 doc / LC-1 output / LC-2 params / LC-3 convert / LC-4 errors) each with 責務 / 公開 API / 実装スケッチ / 依存; component dependency diagram with LC-4 errors as foundation and LC-1 output as integration; external package list including direct OTel SDK imports (sdk/metric, metric, sdk/resource, attribute, semconv/v1.27.0) plus exporter with required U4 patch; test component mapping to LCs (9 test files including integration subdir); explicit U4 coordination section repeating Pipeline.MetricExporter() requirement with backward-compatible minor bump rationale and CG Plan phase handoff note."
+
+**Context**: U6 NFR-D — artifacts generated, awaiting approval. Two CG Plan coordination phases identified: U4 Pipeline.MetricExporter() patch + U7 generators.
