@@ -763,3 +763,10 @@ Generated 2 NFR-D artifacts under aidlc-docs/construction/u2-journey/nfr-design/
 (2) logical-components.md — 8 LCs (LC-0..LC-7) each with 責務 / 公開 API / 実装スケッチ / 依存; component dependency diagram; external package list (topology + synth + stdlib only, NO OTel SDK / errgroup / math.rand v1); test component mapping to LCs (9 test files + integration/ subdir); explicit U3 coordination requirement for synth.Outcome.Cascaded field addition (minor SemVer bump) with Code Generation Plan handoff note."
 
 **Context**: U2 NFR-D — artifacts generated, awaiting approval (Step 5/6 GATE). Note: U3 coordination for synth.Outcome.Cascaded field addition is flagged as a CG Plan phase requirement.
+
+
+## U2 journey — NFR Design Approved & Committed; Code Generation Plan Created
+**Timestamp**: 2026-06-10T07:00:00Z
+**User Input**: "Continue to Next Stage" (approving U2 NFR-D with U1-FaultOverlay reality + U3 coordination requirement)
+**AI Response**: "U2 NFR-D committed as f23fe8a. Created u2-journey code-generation-plan.md with 15 phases (Phase 0-14): env+skeleton, errors+AllowedErrorTypes, Engine+NewEngine+ListJourneys (buildPlan stubbed), Plan+Node+BuildPlan DFS, Replica selector with math/rand/v2 PCG, Fault adapter (foldFaults bridging U1's 3-method API + sampleEdgeLatency from Edge.LatencyDist), Executor skeleton (happy path without recovery), **Phase 7 U3 coordination — extend synth.Outcome with Cascaded bool field + synth.attributes.go allowlist update + synth tests + U3 FD/NFR-D doc updates**, Recovery+Executor complete with cascade span emission, Documentation with 3 Examples, U7 generator additions (3 pairs), PBT TP-U2-1..5 (Phase 3 PBT un-skip + 3 new), Benchmark, Integration harness with cascade + recovery verification tests, and final DoD wrap. Anti-pattern enumeration with 14 items including U1 actual API constraints and U3 coordination requirements. Notes for the implementing agent explicitly call out U1 FaultOverlay 3-method reality, Edge.LatencyDist source, U3 Outcome extension SemVer minor bump, and natural capacity-split point after Phase 8 if Codex hits limits."
+**Context**: U2 Code Generation — Part 1 Planning (Step 3/4 GATE).
