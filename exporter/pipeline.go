@@ -22,6 +22,8 @@ type Pipeline struct {
 	res   *sdkresource.Resource
 	stats *pipelineStats
 
+	metricExp sdkmetric.Exporter
+
 	shutdownOnce sync.Once
 	shutdownErr  error
 }
@@ -91,11 +93,12 @@ func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipe
 		)),
 	)
 	return &Pipeline{
-		tp:    tp,
-		mp:    mp,
-		lp:    lp,
-		res:   res,
-		stats: stats,
+		tp:        tp,
+		mp:        mp,
+		lp:        lp,
+		res:       res,
+		stats:     stats,
+		metricExp: metricExp,
 	}
 }
 
@@ -107,6 +110,17 @@ func (p *Pipeline) TracerProvider() trace.TracerProvider {
 // MeterProvider returns the Pipeline's shared metric provider.
 func (p *Pipeline) MeterProvider() metric.MeterProvider {
 	return p.mp
+}
+
+// MetricExporter returns the underlying OTLP metric exporter used by this
+// Pipeline. Intended for k6output to construct an additional MeterProvider
+// with a different Resource (e.g., xk6-otel-gen-runner) while sharing the
+// same OTLP connection.
+//
+// The returned exporter is owned by the Pipeline; callers must NOT call
+// Shutdown on it directly. Use Pipeline.Shutdown for unified lifecycle.
+func (p *Pipeline) MetricExporter() sdkmetric.Exporter {
+	return p.metricExp
 }
 
 // LoggerProvider returns the Pipeline's shared log provider.

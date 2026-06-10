@@ -32,6 +32,34 @@ func TestNew_Success(t *testing.T) {
 	_ = p.Shutdown(context.Background())
 }
 
+func TestPipeline_MetricExporter_NotNil(t *testing.T) {
+	t.Parallel()
+
+	p, err := New(validPipelineConfig())
+	if err != nil {
+		t.Fatalf("New() error = %v, want nil", err)
+	}
+	if got := p.MetricExporter(); got == nil {
+		t.Fatal("MetricExporter() = nil, want non-nil")
+	}
+	_ = p.Shutdown(context.Background())
+}
+
+func TestPipeline_MetricExporter_SameAsInternal(t *testing.T) {
+	t.Parallel()
+
+	metricInner := &fakeMetricExporter{}
+	p := newPipelineFromExporters(validPipelineConfig(), sdkresource.Empty(), &pipelineStats{}, &fakeSpanExporter{}, metricInner, &fakeLogExporter{})
+
+	got := p.MetricExporter()
+	if got != p.metricExp {
+		t.Fatalf("MetricExporter() = %v, want internal metric exporter %v", got, p.metricExp)
+	}
+	if got != metricInner {
+		t.Fatalf("MetricExporter() = %v, want constructor exporter %v", got, metricInner)
+	}
+}
+
 func TestNew_ValidationError(t *testing.T) {
 	t.Parallel()
 

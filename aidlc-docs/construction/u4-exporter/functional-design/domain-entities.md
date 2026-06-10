@@ -56,6 +56,7 @@ type Pipeline struct {
 // 公開メソッド一覧 — 詳細は §2 で contract 化
 func (p *Pipeline) TracerProvider() trace.TracerProvider
 func (p *Pipeline) MeterProvider() metric.MeterProvider
+func (p *Pipeline) MetricExporter() sdkmetric.Exporter
 func (p *Pipeline) LoggerProvider() log.LoggerProvider
 func (p *Pipeline) Shutdown(ctx context.Context) error
 func (p *Pipeline) Stats() Stats
@@ -165,7 +166,17 @@ func (e *SharedError) Unwrap() error
 
 (MeterProvider / LoggerProvider も同様)
 
-### 2.6 `func (p *Pipeline) Shutdown(ctx context.Context) error`
+### 2.6 `func (p *Pipeline) MetricExporter() sdkmetric.Exporter`
+
+| 項目 | 内容 |
+|---|---|
+| 戻り値 | Pipeline 内部の OTLP metric exporter |
+| 用途 | U6 `k6output` が runner Resource 用の別 MeterProvider を構築し、同じ OTLP connection を共有する |
+| 所有権 | Pipeline が所有。呼び出し側は直接 Shutdown せず `Pipeline.Shutdown` を使う |
+| 不変 | 同じ Pipeline インスタンスから常に同じ exporter を返す |
+| 副作用 | なし |
+
+### 2.7 `func (p *Pipeline) Shutdown(ctx context.Context) error`
 
 | 項目 | 内容 |
 |---|---|
@@ -175,7 +186,7 @@ func (e *SharedError) Unwrap() error
 | Idempotent | はい (`sync.Once` で初回結果キャッシュ、2 回目以降は同じ error/nil 返却) |
 | Thread-safe | はい (Once + 内部キャッシュ) |
 
-### 2.7 `func (p *Pipeline) Stats() Stats`
+### 2.8 `func (p *Pipeline) Stats() Stats`
 
 | 項目 | 内容 |
 |---|---|
@@ -184,7 +195,7 @@ func (e *SharedError) Unwrap() error
 | Thread-safe | はい (per-field `atomic.Load`) |
 | Note | field 間の atomic 一貫性は保証しない (`business-rules.md` §4.2 参照) |
 
-### 2.8 `func GetShared(factory func() (*Pipeline, error)) (*Pipeline, error)`
+### 2.9 `func GetShared(factory func() (*Pipeline, error)) (*Pipeline, error)`
 
 | 項目 | 内容 |
 |---|---|
@@ -195,7 +206,7 @@ func (e *SharedError) Unwrap() error
 | Thread-safe | はい (`sync.Once`) |
 | 失敗時 | 初回失敗で error をキャッシュ、再試行しない (k6 ラン全体 fail fast、Q9=A) |
 
-### 2.9 `func SetShared(p *Pipeline) error`
+### 2.10 `func SetShared(p *Pipeline) error`
 
 | 項目 | 内容 |
 |---|---|
@@ -203,7 +214,7 @@ func (e *SharedError) Unwrap() error
 | 戻り値 | shared がまだ未初期化なら nil、初期化済みなら `*SharedError{Reason: "already_initialized"}` |
 | 用途 | **テスト用のみ**。production code では使わない (linter で flag) |
 
-### 2.10 `func ResetShared()`
+### 2.11 `func ResetShared()`
 
 | 項目 | 内容 |
 |---|---|
@@ -251,6 +262,7 @@ func (c Config) Validate() error
 // Pipeline methods
 func (p *Pipeline) TracerProvider() trace.TracerProvider
 func (p *Pipeline) MeterProvider() metric.MeterProvider
+func (p *Pipeline) MetricExporter() sdkmetric.Exporter
 func (p *Pipeline) LoggerProvider() log.LoggerProvider
 func (p *Pipeline) Shutdown(ctx context.Context) error
 func (p *Pipeline) Stats() Stats

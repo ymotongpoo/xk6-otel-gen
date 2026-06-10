@@ -18,7 +18,7 @@
 | LC-2 | Resource Builder | `resource.go` | OTel Resource 構築 (auto-detect + override merge) |
 | LC-3 | Exporter Factory | `exporters.go` | trace / metric / log の OTLP exporter 構築 (protocol 分岐) |
 | LC-4 | Stats & Instrumentation | `stats.go` | `pipelineStats` + 信号別 instrumented wrapper |
-| LC-5 | Pipeline | `pipeline.go` | `*Pipeline` 構造体、New、Shutdown、Stats、Provider accessor |
+| LC-5 | Pipeline | `pipeline.go` | `*Pipeline` 構造体、New、Shutdown、Stats、Provider/exporter accessor |
 | LC-6 | Shared Holder | `shared.go` | `GetShared` / `SetShared` / `ResetShared` |
 | LC-7 | Errors | `errors.go` | `PipelineError` / `ConfigError` / `SharedError` |
 
@@ -388,7 +388,8 @@ func (e *loggingExporter) Shutdown(ctx context.Context) error   { return e.inner
 - `New(cfg)` — Config → Pipeline 構築 (partial failure 時は cleanup)
 - `(*Pipeline).Shutdown(ctx)` — 3 Provider を一括 Shutdown (`sync.Once`)
 - `(*Pipeline).Stats()` — `pipelineStats.snapshot()` を呼び出して返す
-- `(*Pipeline).TracerProvider()` / `MeterProvider()` / `LoggerProvider()` — accessor
+- `(*Pipeline).TracerProvider()` / `MeterProvider()` / `LoggerProvider()` — provider accessor
+- `(*Pipeline).MetricExporter()` — U6 `k6output` が runner Resource 用 MeterProvider を構築するための exporter accessor
 - `Stats` 型 (公開)
 
 ### 公開 API
@@ -407,6 +408,7 @@ type Pipeline struct { /* unexported */ }
 func New(cfg Config) (*Pipeline, error)
 func (p *Pipeline) TracerProvider() trace.TracerProvider
 func (p *Pipeline) MeterProvider() metric.MeterProvider
+func (p *Pipeline) MetricExporter() sdkmetric.Exporter
 func (p *Pipeline) LoggerProvider() log.LoggerProvider
 func (p *Pipeline) Shutdown(ctx context.Context) error
 func (p *Pipeline) Stats() Stats
@@ -420,6 +422,7 @@ type Pipeline struct {
     lp    *sdklog.LoggerProvider
     res   *sdkresource.Resource
     stats *pipelineStats
+    metricExp sdkmetric.Exporter
 
     shutdownOnce sync.Once
     shutdownErr  error
@@ -485,6 +488,7 @@ func New(cfg Config) (*Pipeline, error) {
 
 func (p *Pipeline) TracerProvider() trace.TracerProvider { return p.tp }
 func (p *Pipeline) MeterProvider() metric.MeterProvider  { return p.mp }
+func (p *Pipeline) MetricExporter() sdkmetric.Exporter   { return p.metricExp }
 func (p *Pipeline) LoggerProvider() log.LoggerProvider   { return p.lp }
 
 func (p *Pipeline) Shutdown(ctx context.Context) error {
