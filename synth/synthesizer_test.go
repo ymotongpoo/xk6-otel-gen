@@ -285,6 +285,159 @@ func TestActiveRequests_BalancedAfterFinish(t *testing.T) {
 	}
 }
 
+func TestRecordMetric_HTTP_Server(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, reader, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	syn.RecordMetric(context.Background(), MetricInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /checkout",
+		Latency:     25 * time.Millisecond,
+		Outcome:     Outcome{Success: true, StatusCode: 200},
+		InstanceIdx: 0,
+	})
+
+	point := histogramPoint(t, reader, "http.server.request.duration")
+	if point.Count != 1 {
+		t.Fatalf("Count = %d, want 1", point.Count)
+	}
+	attrs := resourceAttrs(point.Attributes.ToSlice())
+	requireAttr(t, attrs, semconv.HTTPRequestMethodKey, "GET")
+	requireAttr(t, attrs, semconv.HTTPRouteKey, "/checkout")
+	requireAttr(t, attrs, semconv.HTTPResponseStatusCodeKey, "200")
+}
+
+func TestRecordMetric_RPC_Client(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, reader, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	source, edge := makeSpanEdge(topology.KindApplication, topology.KindApplication, topology.ProtocolGRPC)
+	syn.RecordMetric(context.Background(), MetricInput{
+		Service:     source,
+		Edge:        edge,
+		Operation:   "Checkout/Get",
+		Latency:     10 * time.Millisecond,
+		Outcome:     Outcome{Success: false, StatusCode: 14, ErrorType: "grpc.unavailable"},
+		InstanceIdx: 0,
+	})
+
+	point := histogramPoint(t, reader, "rpc.client.duration")
+	attrs := resourceAttrs(point.Attributes.ToSlice())
+	requireAttr(t, attrs, semconv.RPCSystemKey, "grpc")
+	requireAttr(t, attrs, semconv.RPCServiceKey, "target")
+	requireAttr(t, attrs, semconv.RPCGRPCStatusCodeKey, "14")
+	requireAttr(t, attrs, semconv.ErrorTypeKey, "grpc.unavailable")
+}
+
+func TestRecordMetric_DB_Client(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, reader, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	syn.RecordMetric(context.Background(), MetricInput{
+		Service:     &topology.Service{Name: "postgres", Kind: topology.KindDatabase, Replicas: 1, Framework: "postgresql"},
+		Operation:   "SELECT users",
+		Latency:     3 * time.Millisecond,
+		Outcome:     Outcome{Success: true},
+		InstanceIdx: 0,
+	})
+
+	point := histogramPoint(t, reader, "db.client.operation.duration")
+	attrs := resourceAttrs(point.Attributes.ToSlice())
+	requireAttr(t, attrs, semconv.DBSystemKey, "postgresql")
+	requireAttr(t, attrs, semconv.DBOperationNameKey, "SELECT users")
+}
+
+func TestRecordMetric_Messaging_Producer(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, reader, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	source, edge := makeSpanEdge(topology.KindQueue, topology.KindQueue, topology.ProtocolMessaging)
+	syn.RecordMetric(context.Background(), MetricInput{
+		Service:     source,
+		Edge:        edge,
+		Operation:   "orders",
+		Latency:     12 * time.Millisecond,
+		Outcome:     Outcome{Success: true},
+		InstanceIdx: 0,
+	})
+
+	point := histogramPoint(t, reader, "messaging.publish.duration")
+	attrs := resourceAttrs(point.Attributes.ToSlice())
+	requireAttr(t, attrs, semconv.MessagingSystemKey, "kafka")
+	requireAttr(t, attrs, semconv.MessagingOperationNameKey, "publish")
+	requireAttr(t, attrs, semconv.MessagingDestinationNameKey, "target")
+}
+
+func TestRecordMetric_ZeroLatency_StillRecords(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, reader, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	syn.RecordMetric(context.Background(), MetricInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /health",
+		Latency:     0,
+		Outcome:     Outcome{Success: true, StatusCode: 200},
+		InstanceIdx: 0,
+	})
+
+	point := histogramPoint(t, reader, "http.server.request.duration")
+	if point.Count != 1 {
+		t.Fatalf("Count = %d, want 1", point.Count)
+	}
+	if point.Sum != 0 {
+		t.Fatalf("Sum = %f, want 0", point.Sum)
+	}
+}
+
+func TestRecordMetric_StaticSetCached(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, _ := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	s := syn.(*defaultSynthesizer)
+	in := MetricInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /cached",
+		Latency:     time.Millisecond,
+		Outcome:     Outcome{Success: true, StatusCode: 200},
+		InstanceIdx: 0,
+	}
+	policy := policyFor(in.Service.Kind, protocolFor(in.Edge), inferDirection(in.Service, in.Edge))
+	key := cacheKeyFor(in.Service, in.Operation, in.Edge, policy.Direction)
+	if _, ok := s.staticSetCache.get(key); ok {
+		t.Fatal("cache hit before RecordMetric")
+	}
+
+	s.RecordMetric(context.Background(), in)
+	first, ok := s.staticSetCache.get(key)
+	if !ok {
+		t.Fatal("cache miss after first RecordMetric")
+	}
+	s.RecordMetric(context.Background(), in)
+	second, ok := s.staticSetCache.get(key)
+	if !ok {
+		t.Fatal("cache miss after second RecordMetric")
+	}
+	if !first.Equals(&second) {
+		t.Fatalf("cached sets differ: %v vs %v", first.ToSlice(), second.ToSlice())
+	}
+}
+
+func TestRecordMetric_HistogramInsertion_Property(t *testing.T) {
+	t.Parallel()
+	t.Skip("waits for ValidMetricInput generator from Phase 11")
+}
+
+func TestFinishSpan_ErrorTypeRequired_Property(t *testing.T) {
+	t.Parallel()
+	t.Skip("waits for ValidMetricInput generator from Phase 11")
+}
+
 func requireSingleSpan(t *testing.T, spans tracetest.SpanStubs) tracetest.SpanStub {
 	t.Helper()
 
@@ -319,6 +472,32 @@ func int64MetricValue(t *testing.T, reader metricReader, name string) int64 {
 	}
 	t.Fatalf("metric %q not found", name)
 	return 0
+}
+
+func histogramPoint(t *testing.T, reader metricReader, name string) metricdata.HistogramDataPoint[float64] {
+	t.Helper()
+
+	var rm metricdata.ResourceMetrics
+	if err := reader.Collect(context.Background(), &rm); err != nil {
+		t.Fatalf("Collect() error = %v", err)
+	}
+	for _, scope := range rm.ScopeMetrics {
+		for _, metric := range scope.Metrics {
+			if metric.Name != name {
+				continue
+			}
+			histogram, ok := metric.Data.(metricdata.Histogram[float64])
+			if !ok {
+				t.Fatalf("%s data = %T, want metricdata.Histogram[float64]", name, metric.Data)
+			}
+			if len(histogram.DataPoints) != 1 {
+				t.Fatalf("%s datapoints = %d, want 1", name, len(histogram.DataPoints))
+			}
+			return histogram.DataPoints[0]
+		}
+	}
+	t.Fatalf("histogram %q not found", name)
+	return metricdata.HistogramDataPoint[float64]{}
 }
 
 type metricReader interface {

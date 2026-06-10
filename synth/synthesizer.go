@@ -103,7 +103,21 @@ func (s *defaultSynthesizer) BeginSpan(ctx context.Context, in SpanInput) (conte
 }
 
 func (s *defaultSynthesizer) RecordMetric(ctx context.Context, in MetricInput) {
-	panic("synth: RecordMetric: not implemented")
+	validateMetricInput(in)
+
+	dir := inferDirection(in.Service, in.Edge)
+	protocol := protocolFor(in.Edge)
+	policy := policyFor(in.Service.Kind, protocol, dir)
+	histogram := s.histogramFor(policy)
+	if histogram == nil {
+		return
+	}
+	staticAttrs := s.staticAttrs(in.Service, in.Operation, in.Edge, policy)
+	dynamicAttrs := dynamicOutcomeAttrs(policy, in.Outcome)
+	histogram.Record(ctx, in.Latency.Seconds(),
+		metric.WithAttributeSet(staticAttrs),
+		metric.WithAttributes(dynamicAttrs...),
+	)
 }
 
 func (s *defaultSynthesizer) EmitLog(ctx context.Context, in LogInput) {
@@ -135,6 +149,18 @@ func validateSpanInput(in SpanInput) {
 	}
 	if in.InstanceIdx < 0 || in.InstanceIdx >= in.Service.Replicas {
 		panic(fmt.Sprintf("synth: BeginSpan: InstanceIdx %d out of range [0, %d)", in.InstanceIdx, in.Service.Replicas))
+	}
+}
+
+func validateMetricInput(in MetricInput) {
+	if in.Service == nil {
+		panic("synth: RecordMetric: Service must not be nil")
+	}
+	if in.Operation == "" {
+		panic("synth: RecordMetric: Operation must not be empty")
+	}
+	if in.InstanceIdx < 0 || in.InstanceIdx >= in.Service.Replicas {
+		panic(fmt.Sprintf("synth: RecordMetric: InstanceIdx %d out of range [0, %d)", in.InstanceIdx, in.Service.Replicas))
 	}
 }
 
@@ -198,6 +224,35 @@ func (s *defaultSynthesizer) activeUDC(policy attributePolicy) metric.Int64UpDow
 	default:
 		return nil
 	}
+}
+
+func (s *defaultSynthesizer) histogramFor(policy attributePolicy) metric.Float64Histogram {
+	switch policy.MetricNamespace {
+	case "http":
+		if policy.Direction == dirClient {
+			return s.httpClientDur
+		}
+		if policy.Direction == dirServer {
+			return s.httpServerDur
+		}
+	case "rpc":
+		if policy.Direction == dirClient {
+			return s.rpcClientDur
+		}
+		if policy.Direction == dirServer {
+			return s.rpcServerDur
+		}
+	case "db":
+		return s.dbClientDur
+	case "messaging":
+		if policy.Direction == dirProducer {
+			return s.msgProducerDur
+		}
+		if policy.Direction == dirConsumer {
+			return s.msgConsumerDur
+		}
+	}
+	return nil
 }
 
 func statusFor(policy attributePolicy, outcome Outcome) codes.Code {

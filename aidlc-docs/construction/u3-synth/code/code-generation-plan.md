@@ -236,27 +236,27 @@
 
 ### Step 6.1 — Add `RecordMetric` to `synth/synthesizer.go`
 
-- [ ] Validate input (panic on nil Service per NFR-D §3.1).
-- [ ] Determine policy + histogram via internal helpers (`histogramFor(policy)` returns `metric.Float64Histogram` or nil if namespace empty).
-- [ ] Lookup static set in `staticSetCache`; build + cache if miss.
-- [ ] Build dynamic outcome attrs.
-- [ ] `histogram.Record(ctx, latency.Seconds(), WithAttributeSet(static), WithAttributes(dynamic...))`.
-- [ ] Implement `histogramFor(policy)` switching on policy.MetricNamespace + Direction.
+- [x] Validate input (panic on nil Service per NFR-D §3.1).
+- [x] Determine policy + histogram via internal helpers (`histogramFor(policy)` returns `metric.Float64Histogram` or nil if namespace empty).
+- [x] Lookup static set in `staticSetCache`; build + cache if miss.
+- [x] Build dynamic outcome attrs.
+- [x] `histogram.Record(ctx, latency.Seconds(), WithAttributeSet(static), WithAttributes(dynamic...))`.
+- [x] Implement `histogramFor(policy)` switching on policy.MetricNamespace + Direction.
 
 ### Step 6.2 — Unit test additions
 
-- [ ] `TestRecordMetric_HTTP_Server` — record a measurement, ManualReader.Collect → verify histogram data point with expected attrs.
-- [ ] `TestRecordMetric_RPC_Client` — similar.
-- [ ] `TestRecordMetric_DB_Client` — similar.
-- [ ] `TestRecordMetric_Messaging_Producer` — similar.
-- [ ] `TestRecordMetric_ZeroLatency_StillRecords` — Latency=0 should still create data point.
-- [ ] `TestRecordMetric_StaticSetCached` — second call with same (svc, op, edge, dir) reuses cached set (verify via Caches lookup count if possible, or by checking single allocation pattern).
-- [ ] **PBT TP-U3-3** (`TestRecordMetric_HistogramInsertion_Property`): mark `t.Skip("waits for ValidMetricInput generator from Phase 11")`.
-- [ ] **PBT TP-U3-4** (`TestFinishSpan_ErrorTypeRequired_Property`): mark skip same.
+- [x] `TestRecordMetric_HTTP_Server` — record a measurement, ManualReader.Collect → verify histogram data point with expected attrs.
+- [x] `TestRecordMetric_RPC_Client` — similar.
+- [x] `TestRecordMetric_DB_Client` — similar.
+- [x] `TestRecordMetric_Messaging_Producer` — similar.
+- [x] `TestRecordMetric_ZeroLatency_StillRecords` — Latency=0 should still create data point.
+- [x] `TestRecordMetric_StaticSetCached` — second call with same (svc, op, edge, dir) reuses cached set (verify via Caches lookup count if possible, or by checking single allocation pattern).
+- [x] **PBT TP-U3-3** (`TestRecordMetric_HistogramInsertion_Property`): mark `t.Skip("waits for ValidMetricInput generator from Phase 11")`.
+- [x] **PBT TP-U3-4** (`TestFinishSpan_ErrorTypeRequired_Property`): mark skip same.
 
 ### Phase 6 commit
 
-- [ ] `git add synth/synthesizer.go synth/synthesizer_test.go && git commit -m "feat(synth): add RecordMetric with hybrid static+dynamic attribute strategy"`
+- [x] `git add synth/synthesizer.go synth/synthesizer_test.go && git commit -m "feat(synth): add RecordMetric with hybrid static+dynamic attribute strategy"`
 
 ---
 
