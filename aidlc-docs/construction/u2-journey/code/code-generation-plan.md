@@ -197,33 +197,33 @@
 
 ### Step 5.1 — Create `journey/fault.go`
 
-- [ ] Define `foldedFault struct { crashed, disconnected, errorRate, errorType, latencyInflate }` per NFR-D §4.
-- [ ] Implement `(*engineImpl).foldFaults(node *Node) foldedFault`:
+- [x] Define `foldedFault struct { crashed, disconnected, errorRate, errorType, latencyInflate }` per NFR-D §4.
+- [x] Implement `(*engineImpl).foldFaults(node *Node) foldedFault`:
   - Scan `e.overlay.NodeFaults(node.Service)` for FaultCrash + FaultLatencyInflation
   - Scan `e.overlay.EdgeFaults(node.Edge)` (if Edge != nil) for FaultDisconnect + FaultLatencyInflation
   - Look up node.Service.Operations[node.Operation], scan `e.overlay.OperationFaults(op)` for FaultErrorRateOverride + FaultLatencyInflation
-- [ ] Implement `(*engineImpl).sampleInflation(spec topology.FaultSpec) time.Duration`. Code should be defensive: read `spec.Severity` based on U1's actual FaultSpec.Severity shape; if Severity has Delay / Multiplier fields, use them; otherwise return zero with TODO.
-- [ ] Implement `(*engineImpl).sampleEdgeLatency(edge *topology.Edge) time.Duration`:
+- [x] Implement `(*engineImpl).sampleInflation(spec topology.FaultSpec) time.Duration`. Code should be defensive: read `spec.Severity` based on U1's actual FaultSpec.Severity shape; if Severity has Delay / Multiplier fields, use them; otherwise return zero with TODO.
+- [x] Implement `(*engineImpl).sampleEdgeLatency(edge *topology.Edge) time.Duration`:
   - edge nil → `defaultEntryLatency` (= 10 * time.Millisecond)
   - switch on `edge.Latency.Distribution`: "fixed" / "" → P50, "lognormal" → `sampleLognormal(P50, P95)`, "uniform" → `sampleUniform(P50, P95)`, default → P50
-- [ ] Implement `sampleLognormal` / `sampleUniform` helpers (use `e.randFloat64()`).
-- [ ] All internal, brief comments.
+- [x] Implement `sampleLognormal` / `sampleUniform` helpers (use `e.randFloat64()`).
+- [x] All internal, brief comments.
 
 ### Step 5.2 — Unit test `journey/fault_test.go`
 
-- [ ] `TestFoldFaults_Crash` — overlay with FaultCrash on service → ff.crashed=true.
-- [ ] `TestFoldFaults_Disconnect` — overlay with FaultDisconnect on edge → ff.disconnected=true.
-- [ ] `TestFoldFaults_ErrorRate` — overlay with FaultErrorRateOverride on operation → ff.errorRate populated.
-- [ ] `TestFoldFaults_LatencyInflation_Accumulates` — multiple inflation faults → latencies sum.
-- [ ] `TestFoldFaults_Precedence` — crash + disconnect + error_rate + latency_inflation all set → all reflected in foldedFault (Outcome derivation tested in Phase 8).
-- [ ] `TestSampleEdgeLatency_NilEdge_Default` — nil edge → 10 ms.
-- [ ] `TestSampleEdgeLatency_Fixed` — Distribution="" or "fixed" → P50 exactly.
-- [ ] `TestSampleEdgeLatency_Lognormal_InRange` — Distribution="lognormal" → values clustered around P50.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestFoldFaults_Crash` — overlay with FaultCrash on service → ff.crashed=true.
+- [x] `TestFoldFaults_Disconnect` — overlay with FaultDisconnect on edge → ff.disconnected=true.
+- [x] `TestFoldFaults_ErrorRate` — overlay with FaultErrorRateOverride on operation → ff.errorRate populated.
+- [x] `TestFoldFaults_LatencyInflation_Accumulates` — multiple inflation faults → latencies sum.
+- [x] `TestFoldFaults_Precedence` — crash + disconnect + error_rate + latency_inflation all set → all reflected in foldedFault (Outcome derivation tested in Phase 8).
+- [x] `TestSampleEdgeLatency_NilEdge_Default` — nil edge → 10 ms.
+- [x] `TestSampleEdgeLatency_Fixed` — Distribution="" or "fixed" → P50 exactly.
+- [x] `TestSampleEdgeLatency_Lognormal_InRange` — Distribution="lognormal" → values clustered around P50.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 5 commit
 
-- [ ] `git add journey/fault.go journey/fault_test.go && git commit -m "feat(journey): add FaultOverlay adapter with precedence folding and latency sampling"`
+- [x] `git add journey/fault.go journey/fault_test.go && git commit -m "feat(journey): add FaultOverlay adapter with precedence folding and latency sampling"`
 
 ---
 
