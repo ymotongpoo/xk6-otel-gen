@@ -318,22 +318,22 @@ Tests for TopologyHandle require ModuleInstance / RootModule which land in Phase
 
 ### Step 8.1 — Add `testutil/generators/k6otelgen_inputs.go`
 
-- [ ] Implement `ValidConfigureOpts(opts ...ConfigureOptsOption) *rapid.Generator[map[string]any]` per FD §7.2:
+- [x] Implement `ValidConfigureOpts(opts ...ConfigureOptsOption) *rapid.Generator[map[string]any]` per FD §7.2:
   - generates JS-friendly map with valid endpoint / protocol / insecure / headers / timeout etc.
-- [ ] Implement `AnyConfigureOpts(opts ...ConfigureOptsOption) *rapid.Generator[map[string]any]`:
+- [x] Implement `AnyConfigureOpts(opts ...ConfigureOptsOption) *rapid.Generator[map[string]any]`:
   - allows invalid values (negative timeout, unknown protocol, malformed types)
-- [ ] Implement `ValidLoadPath(opts ...LoadPathOption) *rapid.Generator[string]`:
+- [x] Implement `ValidLoadPath(opts ...LoadPathOption) *rapid.Generator[string]`:
   - generates temp dir based relative paths
-- [ ] Implement `AnyLoadPath(opts ...LoadPathOption) *rapid.Generator[string]`:
+- [x] Implement `AnyLoadPath(opts ...LoadPathOption) *rapid.Generator[string]`:
   - allows traversal patterns / unicode / very long paths
 
 ### Step 8.2 — Add `testutil/generators/k6otelgen_inputs_test.go`
 
-- [ ] Property tests that valid generators produce only invariant-respecting values.
+- [x] Property tests that valid generators produce only invariant-respecting values.
 
 ### Phase 8 commit
 
-- [ ] `git add testutil/generators/k6otelgen_inputs.go testutil/generators/k6otelgen_inputs_test.go && git commit -m "feat(testutil): add k6otelgen input generators for U5 PBT"`
+- [x] `git add testutil/generators/k6otelgen_inputs.go testutil/generators/k6otelgen_inputs_test.go && git commit -m "feat(testutil): add k6otelgen input generators for U5 PBT"`
 
 ---
 
