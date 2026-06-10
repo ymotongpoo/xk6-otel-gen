@@ -434,33 +434,33 @@
 
 ### Step 13.1 — Create `journey/testdata/collector-config.yaml`
 
-- [ ] OTLP/gRPC receiver + file_exporter to `/var/log/otel/{traces,metrics,logs}.json`.
+- [x] OTLP/gRPC receiver + file_exporter to `/var/log/otel/{traces,metrics,logs}.json`.
 
 ### Step 13.2 — Create `journey/testdata/docker-compose.yaml`
 
-- [ ] Single collector service, mount config + output dir, expose 4317/4318. Reuse the pinned image tag from U3/U4 for consistency.
+- [x] Single collector service, mount config + output dir, expose 4317/4318. Reuse the pinned image tag from U3/U4 for consistency.
 
 ### Step 13.3 — Create `journey/integration/helpers.go`
 
-- [ ] `StartCollector(t)` / `ReadCollectorTraces` / `BuildEngine(t, schema, overlay)` — wires up real exporter Pipeline + real synth.Synthesizer + Engine.
+- [x] `StartCollector(t)` / `ReadCollectorTraces` / `BuildEngine(t, schema, overlay)` — wires up real exporter Pipeline + real synth.Synthesizer + Engine.
 
 ### Step 13.4 — Create `journey/integration/integration_test.go`
 
-- [ ] `//go:build integration` at top.
-- [ ] `TestIntegration_Sequential_Correlated` — simple A→B→C journey, verify all 3 spans share trace_id.
-- [ ] `TestIntegration_CascadePropagation` — A→B→C journey with FaultCrash on B (Probability=1.0), no OnFailure on edge A→B → verify:
+- [x] `//go:build integration` at top.
+- [x] `TestIntegration_Sequential_Correlated` — simple A→B→C journey, verify all 3 spans share trace_id.
+- [x] `TestIntegration_CascadePropagation` — A→B→C journey with FaultCrash on B (Probability=1.0), no OnFailure on edge A→B → verify:
   - 3 spans emitted with same trace_id
   - Span B has Status=Error, ErrorType="crashed"
   - Span C has Status=Error, attribute `synth.cascaded=true`
-- [ ] `TestIntegration_Recovery_FallbackUsed` — primary fails (FaultErrorRateOverride=1.0), fallback succeeds → primary span Status=Error, fallback span Status=Ok, parent Outcome reflects FallbackUsed.
+- [x] `TestIntegration_Recovery_FallbackUsed` — primary fails (FaultErrorRateOverride=1.0), fallback succeeds → primary span Status=Error, fallback span Status=Ok, parent Outcome reflects FallbackUsed.
 
 ### Step 13.5 — Create `journey/integration/README.md`
 
-- [ ] Document Docker requirement + invocation.
+- [x] Document Docker requirement + invocation.
 
 ### Phase 13 commit
 
-- [ ] `git add journey/integration/ journey/testdata/ && git commit -m "test(journey): add integration test harness with cascade and recovery verification"`
+- [x] `git add journey/integration/ journey/testdata/ && git commit -m "test(journey): add integration test harness with cascade and recovery verification"`
 
 ---
 
