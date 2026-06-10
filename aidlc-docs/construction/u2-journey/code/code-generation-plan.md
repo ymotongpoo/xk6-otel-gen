@@ -369,24 +369,24 @@
 
 ### Step 10.1 — Add `testutil/generators/journey_inputs.go`
 
-- [ ] Implement `ValidPlan(opts ...PlanOption) *rapid.Generator[*journey.Plan]` per FD §6.3:
+- [x] Implement `ValidPlan(opts ...PlanOption) *rapid.Generator[*journey.Plan]` per FD §6.3:
   - Build Plans via topology generators + Engine.BuildPlan (or directly construct Node trees with valid Service/Operation pointers)
   - depth ≤ 5, breadth ≤ 4
-- [ ] Implement `AnyPlan(opts ...PlanOption) *rapid.Generator[*journey.Plan]` with relaxed invariants.
-- [ ] Implement `ValidNode(opts ...NodeOption) *rapid.Generator[*journey.Node]`.
-- [ ] Implement `AnyNode(opts ...NodeOption) *rapid.Generator[*journey.Node]`.
-- [ ] Implement `ValidEngineOutcome(opts ...OutcomeOption) *rapid.Generator[journey.Outcome]`:
+- [x] Implement `AnyPlan(opts ...PlanOption) *rapid.Generator[*journey.Plan]` with relaxed invariants.
+- [x] Implement `ValidNode(opts ...NodeOption) *rapid.Generator[*journey.Node]`.
+- [x] Implement `AnyNode(opts ...NodeOption) *rapid.Generator[*journey.Node]`.
+- [x] Implement `ValidEngineOutcome(opts ...OutcomeOption) *rapid.Generator[journey.Outcome]`:
   - enforce FD §1.5 invariants (Success ↔ ErrorType=="", Cascaded → Latency ≈ 0, DefaultUsed/SilentlySucceeded → Success=true, ErrorType ∈ AllowedErrorTypes ∪ {""})
-- [ ] Implement `AnyEngineOutcome(opts ...OutcomeOption) *rapid.Generator[journey.Outcome]` with relaxed invariants for shrinking.
-- [ ] Each generator follows existing U7 generator style.
+- [x] Implement `AnyEngineOutcome(opts ...OutcomeOption) *rapid.Generator[journey.Outcome]` with relaxed invariants for shrinking.
+- [x] Each generator follows existing U7 generator style.
 
 ### Step 10.2 — Add `testutil/generators/journey_inputs_test.go`
 
-- [ ] Property tests verifying valid generators produce only invariant-respecting values.
+- [x] Property tests verifying valid generators produce only invariant-respecting values.
 
 ### Phase 10 commit
 
-- [ ] `git add testutil/generators/journey_inputs.go testutil/generators/journey_inputs_test.go && git commit -m "feat(testutil): add journey IO generators for U2 PBT"`
+- [x] `git add testutil/generators/journey_inputs.go testutil/generators/journey_inputs_test.go && git commit -m "feat(testutil): add journey IO generators for U2 PBT"`
 
 ---
 
