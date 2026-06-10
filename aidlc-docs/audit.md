@@ -855,3 +855,43 @@ Critical U2 coordination identified: U5 needs per-VU deterministic seed → requ
 Anti-pattern enumeration with 16 items cross-references NFR-D §10. Notes for the implementing agent explicitly call out U2 patch dependency, sobek API specifics (vs goja), modulestest.NewRuntime usage, Configure 2nd-call detection idiom, Pipeline shutdown delegation, Stats field auto-lowercasing, capacity natural-break-point after Phase 7."
 
 **Context**: U5 Code Generation — Part 1 Planning (Step 3/4 GATE).
+
+
+## U5 k6otelgen — Code Generation Completed (Single Codex Session, 13 commits)
+**Timestamp**: 2026-06-10T15:21:38Z
+**User Input**: Codex completed Phase 0-12 in a single run, exit 0. Final commit d6964aa. 13 new commits. Coverage 82.2%. Benchmarks within target (NewModuleInstance 5.5µs well under 5ms soft target). Integration test skipped because xk6 not installed.
+
+**AI Response**: "U5 Code Generation complete in a single Codex session. 13 commits delivered:
+- 11ebd07 (deps: k6 SDK + sobek)
+- 1485ed7 (U2 patch: NewEngineWithSeed for per-VU deterministic seeding — Phase 1 coordination)
+- 53e3fb4 (errors + ConfigError)
+- cfe4b27 (config decoder)
+- ee88609 (TopologyHandle)
+- 5ede522 (RootModule)
+- 2b47337 (ModuleInstance with JS wrappers)
+- 4e0a015 (docs + Examples)
+- f89c484 (U7 generators)
+- 0cb9f84 (PBT TP-U5-1..3)
+- 2b9eb27 (benchmarks)
+- 3d165a8 (integration harness)
+- d6964aa (final summary)
+
+DoD verified:
+- go build ./...: pass
+- go vet ./k6otelgen/...: pass
+- go test -race -count=1 ./...: pass
+- go test -cover ./k6otelgen/...: 82.2% (above 80% target)
+- BenchmarkNewModuleInstance: 5514 ns/op / 49 allocs (target <5ms — 1000x under budget)
+- BenchmarkLoad: 60102 ns/op / 274 allocs (guidance <50ms — comfortably under)
+- BenchmarkConfigure: 3566 ns/op / 35 allocs (guidance <500µs — also under)
+- golangci-lint run ./k6otelgen/...: pass
+- go test -tags=integration ./k6otelgen/integration/...: passed with skip (xk6 not installed on PATH; test gracefully detects + skips. Also guards for future U6 k6output package.)
+
+Notable deviations (per code-generation-summary.md):
+1. TestConfigure_Merge_Property is intentionally serial because t.Setenv cannot be used in parallel tests — needed to mutate OTLP env vars to test exporter.ConfigFromEnv merge.
+2. Integration test self-skips if xk6 missing and guards for U6's k6output package not yet existing — sensible since U5 lands before U6 in construction order.
+3. ModuleInstance was stubbed minimally in Phase 5 then fully implemented in Phase 6 (small adaptation to make RootModule.NewModuleInstance compile in Phase 5).
+
+U2 patch (Phase 1) succeeded cleanly. journey.NewEngineWithSeed exposes deterministic seeding for U5 per-VU isolation. U5 fully complete; U6 (k6 Output) is next."
+
+**Context**: U5 Code Generation — Part 2 complete; awaiting Continue to Next Stage approval before moving to U6 (k6 Output Module).
