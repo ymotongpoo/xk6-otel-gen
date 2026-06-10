@@ -744,3 +744,22 @@ U3 fully complete; U2 (Journey Engine) is next."
 (2) tech-stack-decisions.md — 6 production deps (stdlib context/sync/time/math.rand/v2 + topology + synth), 3 test deps (rapid + testify + testutil/generators), Docker integration deps, mock synth strategy (helpers_test.go local struct with thread-safe call log), version strategy with math/rand/v2 adoption rationale, 7 rejected alternatives (errgroup, worker pool, rand v1, SDK concrete types, generics Engine, channel-return Outcome, persisted Plan YAML), CI/lint integration, cross-unit dependency summary, migration notes for math/rand/v2 + Synthesizer interface changes + topology FaultOverlay changes, 6 open questions for NFR Design (mutex contention, stateful PBT, error.type extensibility, weighted/sticky replicas, latency jitter)."
 
 **Context**: U2 NFR-R — artifacts generated, awaiting approval (Step 5/6 GATE).
+
+
+## U2 journey — NFR Design Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T06:30:00Z
+**User Input**: "回答しました" (all 12 [Answer]: tags filled with A in u2-journey-nfr-d-plan.md)
+**AI Response**: "All 12 recommended options selected; verified U1 FaultOverlay actual API and Edge.LatencyDist reality before generating artifacts.
+
+Key reality check via U1 source inspection:
+- U1 FaultOverlay exposes 3 methods (NodeFaults, OperationFaults, EdgeFaults) returning []FaultSpec — NOT the 4 explicit methods Q5=A had sketched
+- Edge has Latency LatencyDist{Distribution, P50, P95} field — NOT Operation.Latency as Q6=A had sketched
+
+Documented both as adapter pattern in NFR-D: journey/fault.go provides foldFaults() that scans the 3 U1 methods and applies Q8=A precedence; journey/fault.go also provides sampleEdgeLatency() that samples from Edge.LatencyDist by Distribution kind. User intent ('explicit/typed lookup', 'natural Operation-or-Edge latency source') is preserved via these adapters.
+
+Generated 2 NFR-D artifacts under aidlc-docs/construction/u2-journey/nfr-design/:
+(1) nfr-design-patterns.md — 14 sections covering Performance (Engine struct layout, per-Engine sync.Mutex rand baseline with bench-based re-evaluation path, direct recursion executeNode, eager BuildPlan in NewEngine, local-var Outcome construction), Concurrency (sync.WaitGroup parallel goroutines, Engine thread-safety guarantees), Error (two-tier panic recovery — Execute top-level + parallel child goroutines, formatted Error/Unwrap for PlanError/ExecuteError), Fault Adapter (foldFaults bridges U1 3-method API to internal foldedFault with crash > disconnect > error_rate > latency_inflate precedence), baseLatency (sampleEdgeLatency from Edge.LatencyDist with lognormal/uniform/fixed dispatch and 10ms default for entry nodes without inbound edges), Cascade span representation (BeginSpan + finishFn with zero duration; synth.cascaded=true attribute requires coordinating with U3 to add Outcome.Cascaded bool field), ctx cancellation via select on time.After, no stateful PBT, helpers_test.go aggregation, Q12 file split confirmed. Cross-references NFR-R Open Questions §11 (all 5 resolved) and Anti-pattern enumeration §13 (12 items).
+
+(2) logical-components.md — 8 LCs (LC-0..LC-7) each with 責務 / 公開 API / 実装スケッチ / 依存; component dependency diagram; external package list (topology + synth + stdlib only, NO OTel SDK / errgroup / math.rand v1); test component mapping to LCs (9 test files + integration/ subdir); explicit U3 coordination requirement for synth.Outcome.Cascaded field addition (minor SemVer bump) with Code Generation Plan handoff note."
+
+**Context**: U2 NFR-D — artifacts generated, awaiting approval (Step 5/6 GATE). Note: U3 coordination for synth.Outcome.Cascaded field addition is flagged as a CG Plan phase requirement.
