@@ -311,36 +311,36 @@
 
 ### Step 8.1 — Create `journey/recovery.go`
 
-- [ ] Implement `(*engineImpl).applyRecovery(ctx, node, primary Outcome) Outcome` per NFR-D §4.4:
+- [x] Implement `(*engineImpl).applyRecovery(ctx, node, primary Outcome) Outcome` per NFR-D §4.4:
   - For each `policy.Fallback`, call `executeFallback`, append to FallbackAttempts, return on success with FallbackUsed
   - On exhaustion, switch on OnExhausted (Propagate / ReturnDefault / SucceedSilently)
-- [ ] Implement `(*engineImpl).executeFallback(ctx, fromNode, fbEdge) Outcome`:
+- [x] Implement `(*engineImpl).executeFallback(ctx, fromNode, fbEdge) Outcome`:
   - Construct synthetic fallback Node from fbEdge
   - Call `executeNode(ctx, fbNode, nil)` (fallback execution is independent, no parent cascade)
 
 ### Step 8.2 — Update `journey/executor.go`
 
-- [ ] In `executeNode`, after children traversal and primary-failure determination, if primary failed and node.Edge != nil and node.Edge.OnFailure != nil → call `applyRecovery` and use returned Outcome.
-- [ ] Implement `(*engineImpl).executeCascade(ctx, node, parent) Outcome`:
+- [x] In `executeNode`, after children traversal and primary-failure determination, if primary failed and node.Edge != nil and node.Edge.OnFailure != nil → call `applyRecovery` and use returned Outcome.
+- [x] Implement `(*engineImpl).executeCascade(ctx, node, parent) Outcome`:
   - Build SpanInput, call BeginSpan + finishFn with `outcome.Cascaded=true` (requires Phase 7)
   - Skip Sleep
   - Skip children
   - Return Outcome with Success=false, Cascaded=true, Latency near zero, ErrorType=parent.ErrorType
-- [ ] Replace placeholder cascade handling in Phase 6 with call to `executeCascade`.
+- [x] Replace placeholder cascade handling in Phase 6 with call to `executeCascade`.
 
 ### Step 8.3 — Add `journey/recovery_test.go`
 
-- [ ] `TestApplyRecovery_FirstFallbackSucceeds` — primary fails, fallback[0] succeeds → Outcome.Success=true, FallbackUsed=fallback[0], FallbackAttempts=[].
-- [ ] `TestApplyRecovery_AllFallbacksFail_Propagate` — all fail + OnExhausted=Propagate → Outcome.Success=false, FallbackAttempts=all.
-- [ ] `TestApplyRecovery_AllFallbacksFail_ReturnDefault` — Outcome.Success=true, DefaultUsed=true.
-- [ ] `TestApplyRecovery_AllFallbacksFail_SucceedSilently` — Outcome.Success=true, SilentlySucceeded=true.
-- [ ] `TestExecute_CascadeChildSpan_EmittedWithAttribute` — parent crashes, child cascade span emitted with synth.cascaded=true attr (verify via mockSynth that records BeginSpan + finishFn args, including outcome.Cascaded).
-- [ ] `TestExecute_CascadeChildSpan_NearZeroDuration` — cascade child span Latency ≈ 0.
-- [ ] All tests call `t.Parallel()`.
+- [x] `TestApplyRecovery_FirstFallbackSucceeds` — primary fails, fallback[0] succeeds → Outcome.Success=true, FallbackUsed=fallback[0], FallbackAttempts=[].
+- [x] `TestApplyRecovery_AllFallbacksFail_Propagate` — all fail + OnExhausted=Propagate → Outcome.Success=false, FallbackAttempts=all.
+- [x] `TestApplyRecovery_AllFallbacksFail_ReturnDefault` — Outcome.Success=true, DefaultUsed=true.
+- [x] `TestApplyRecovery_AllFallbacksFail_SucceedSilently` — Outcome.Success=true, SilentlySucceeded=true.
+- [x] `TestExecute_CascadeChildSpan_EmittedWithAttribute` — parent crashes, child cascade span emitted with synth.cascaded=true attr (verify via mockSynth that records BeginSpan + finishFn args, including outcome.Cascaded).
+- [x] `TestExecute_CascadeChildSpan_NearZeroDuration` — cascade child span Latency ≈ 0.
+- [x] All tests call `t.Parallel()`.
 
 ### Phase 8 commit
 
-- [ ] `git add journey/recovery.go journey/executor.go journey/recovery_test.go journey/executor_test.go && git commit -m "feat(journey): add recovery flow with OnExhausted modes and cascade span emission"`
+- [x] `git add journey/recovery.go journey/executor.go journey/recovery_test.go journey/executor_test.go && git commit -m "feat(journey): add recovery flow with OnExhausted modes and cascade span emission"`
 
 ---
 

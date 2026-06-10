@@ -70,7 +70,7 @@ func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcom
 		return e.executeSequentialVirtual(ctx, node, parent)
 	}
 	if parent != nil && !parent.Success {
-		return Outcome{Success: false, Cascaded: true, ErrorType: parent.ErrorType, StatusCode: parent.StatusCode}
+		return e.executeCascade(ctx, node, parent)
 	}
 
 	ff := e.foldFaults(node)
@@ -93,8 +93,7 @@ func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcom
 			ErrorType:  "crashed",
 			Latency:    time.Since(start),
 		}
-		e.finishAndEmit(spanCtx, node, instanceIdx, finishFn, outcome)
-		return outcome
+		return e.completePrimaryFailure(spanCtx, node, instanceIdx, finishFn, outcome, true)
 	}
 
 	if canceled, end := waitWithCancel(ctx, effectiveLatency); canceled {
@@ -104,8 +103,7 @@ func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcom
 			ErrorType:  "context_canceled",
 			Latency:    end.Sub(start),
 		}
-		e.finishAndEmit(spanCtx, node, instanceIdx, finishFn, outcome)
-		return outcome
+		return e.completePrimaryFailure(spanCtx, node, instanceIdx, finishFn, outcome, false)
 	}
 
 	if ff.disconnected {
@@ -115,8 +113,7 @@ func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcom
 			ErrorType:  "connection_refused",
 			Latency:    time.Since(start),
 		}
-		e.finishAndEmit(spanCtx, node, instanceIdx, finishFn, outcome)
-		return outcome
+		return e.completePrimaryFailure(spanCtx, node, instanceIdx, finishFn, outcome, true)
 	}
 
 	forceFailure := ff.errorRate > 0 && e.randFloat64() < ff.errorRate
@@ -139,8 +136,61 @@ func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcom
 		if outcome.ErrorType == "" {
 			outcome.ErrorType = "http.500"
 		}
+		e.finishAndEmit(spanCtx, node, instanceIdx, finishFn, outcome)
+		if node.Edge != nil && node.Edge.OnFailure != nil {
+			return e.applyRecovery(spanCtx, node, outcome)
+		}
+		return outcome
 	}
 
+	e.finishAndEmit(spanCtx, node, instanceIdx, finishFn, outcome)
+	return outcome
+}
+
+func (e *engineImpl) completePrimaryFailure(
+	ctx context.Context,
+	node *Node,
+	instanceIdx int,
+	finishFn synth.FinishSpanFunc,
+	primary Outcome,
+	recoverable bool,
+) Outcome {
+	e.finishAndEmit(ctx, node, instanceIdx, finishFn, primary)
+	outcome := primary
+	if recoverable && node.Edge != nil && node.Edge.OnFailure != nil {
+		outcome = e.applyRecovery(ctx, node, primary)
+	}
+	e.executeChildren(ctx, node, &outcome)
+	return outcome
+}
+
+func (e *engineImpl) executeChildren(ctx context.Context, node *Node, parent *Outcome) {
+	cascadeMode := parent != nil && !parent.Success
+	for _, child := range node.Children {
+		childOutcome := e.executeNode(ctx, child, parent)
+		if !childOutcome.Success && !cascadeMode {
+			return
+		}
+	}
+}
+
+func (e *engineImpl) executeCascade(ctx context.Context, node *Node, parent *Outcome) Outcome {
+	instanceIdx := e.randIntN(node.Service.Replicas)
+	start := time.Now()
+	spanCtx, finishFn := e.synth.BeginSpan(ctx, synth.SpanInput{
+		Service:     node.Service,
+		Edge:        node.Edge,
+		Operation:   node.Operation,
+		StartTime:   start,
+		InstanceIdx: instanceIdx,
+	})
+	outcome := Outcome{
+		Success:    false,
+		StatusCode: parent.StatusCode,
+		ErrorType:  parent.ErrorType,
+		Cascaded:   true,
+		Latency:    time.Since(start),
+	}
 	e.finishAndEmit(spanCtx, node, instanceIdx, finishFn, outcome)
 	return outcome
 }
@@ -234,6 +284,7 @@ func toSynthOutcome(outcome Outcome, end time.Time) synth.Outcome {
 		StatusCode: outcome.StatusCode,
 		ErrorType:  outcome.ErrorType,
 		EndTime:    end,
+		Cascaded:   outcome.Cascaded,
 	}
 }
 
