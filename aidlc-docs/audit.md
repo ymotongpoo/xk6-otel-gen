@@ -770,3 +770,32 @@ Generated 2 NFR-D artifacts under aidlc-docs/construction/u2-journey/nfr-design/
 **User Input**: "Continue to Next Stage" (approving U2 NFR-D with U1-FaultOverlay reality + U3 coordination requirement)
 **AI Response**: "U2 NFR-D committed as f23fe8a. Created u2-journey code-generation-plan.md with 15 phases (Phase 0-14): env+skeleton, errors+AllowedErrorTypes, Engine+NewEngine+ListJourneys (buildPlan stubbed), Plan+Node+BuildPlan DFS, Replica selector with math/rand/v2 PCG, Fault adapter (foldFaults bridging U1's 3-method API + sampleEdgeLatency from Edge.LatencyDist), Executor skeleton (happy path without recovery), **Phase 7 U3 coordination — extend synth.Outcome with Cascaded bool field + synth.attributes.go allowlist update + synth tests + U3 FD/NFR-D doc updates**, Recovery+Executor complete with cascade span emission, Documentation with 3 Examples, U7 generator additions (3 pairs), PBT TP-U2-1..5 (Phase 3 PBT un-skip + 3 new), Benchmark, Integration harness with cascade + recovery verification tests, and final DoD wrap. Anti-pattern enumeration with 14 items including U1 actual API constraints and U3 coordination requirements. Notes for the implementing agent explicitly call out U1 FaultOverlay 3-method reality, Edge.LatencyDist source, U3 Outcome extension SemVer minor bump, and natural capacity-split point after Phase 8 if Codex hits limits."
 **Context**: U2 Code Generation — Part 1 Planning (Step 3/4 GATE).
+
+
+## U2 journey — Code Generation Completed (Single Codex Session, 16 commits)
+**Timestamp**: 2026-06-10T13:56:54Z
+**User Input**: Codex completed Phase 0-14 in a single run, exit 0. Final commit 991164a. 16 new commits. Coverage 80.9%. All 3 benchmarks well under budget. Worktree clean.
+**AI Response**: "U2 Code Generation complete in a single Codex session — biggest unit so far (3045 production+test lines + 257 lines U7 generator additions) delivered without capacity interruption. 16 commits delivered:
+- d391953 (scaffold), bed227b (errors), 15406db (Engine), 2f4720a (Plan/BuildPlan), 61ed2aa (replica), d7dc3b5 (fault adapter), 88744e1 (Executor happy path), **c1637e8 (synth.Outcome.Cascaded coordination, Phase 7)**, ec298b1 (recovery + cascade emit), 8f0e984 (docs+Examples), e421417 (U7 generators), 0a1d9fd (PBT TP-U2-1..5), 9078767 (benchmarks), b7865fe (integration harness), afa070e (lint cleanup), 991164a (final summary).
+
+DoD all-green:
+- go build ./...: pass
+- go vet ./journey/...: pass
+- go test -race -count=1 ./...: pass
+- go test -cover ./journey/...: 80.9% (above 80% target)
+- BenchmarkBuildPlan_Typical: 15.46 ns/op (target <1,000,000) — 64,683x under budget; zero allocations
+- BenchmarkExecute_PureOverhead: 2065 ns/step (target <50,000) — 24x under budget
+- BenchmarkListJourneys: 66.24 ns/op
+- go test -tags=integration ./journey/integration/...: pass (7.029s with Docker)
+- golangci-lint run ./journey/...: pass
+
+Notable Codex-introduced deviations (documented in code-generation-summary.md):
+1. journey.AllowedErrorTypes is an exported read-only-by-convention slice (Go cannot express const slice).
+2. U1 SeverityParams actual shape is {Value, Add, Multiplier} — NOT the {Rate, Delay, ErrorType} that NFR-D §4 had sketched. Codex adapted: Value → error-rate-override probability, Add+Multiplier → latency_inflation duration, default error.type inferred from node protocol/service kind. Pragmatic and faithful to U1.
+3. Multi-step journeys represented via virtual sequential root (Service==nil, Children!=nil); single-step journeys keep the concrete operation as root. Sensible Plan tree shape.
+4. Phase 7 U3 coordination succeeded as planned (c1637e8): synth.Outcome.Cascaded field added, finishFn emits synth.cascaded=true attribute, U3 docs updated.
+5. Integration tests wait for Collector file_exporter content (append-oriented file output) before assertion — robust against timing.
+
+U2 fully complete; U5 (k6 JS Module) is next."
+
+**Context**: U2 Code Generation — Part 2 complete; awaiting Continue to Next Stage approval before moving to U5 (k6 JS Module).
