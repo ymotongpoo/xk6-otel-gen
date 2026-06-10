@@ -990,3 +990,44 @@ Cross-references all NFR-R Open Questions §7 (queue size default 100, range [10
 22-item anti-pattern enumeration cross-references NFR-D §9. Notes for the implementing agent call out U4 patch dependency, k6 SDK API specifics (output.Output / output.Params / metrics.Sample / Sample.Tags shape), OTel Gauge availability, k6 metric name verification against actual go.k6.io/k6/metrics, exporter.ResetShared test helper usage, build version ldflags injection."
 
 **Context**: U6 Code Generation — Part 1 Planning (Step 3/4 GATE).
+
+
+## U6 k6output — Code Generation Completed (Single Codex Session, 15 commits)
+**Timestamp**: 2026-06-10T23:19:50Z
+**User Input**: Codex completed Phase 0-12 + 2 extra commits in a single run, exit 0. Final commit 635e47e. 15 new commits. Coverage 86.6%. Strict per-sample benchmarks well under budget.
+
+**AI Response**: "U6 Code Generation complete in a single Codex session — final unit before U8. 15 commits delivered:
+- 752f2ef (scaffold)
+- 9500a99 (U4 patch: Pipeline.MetricExporter — Phase 1 coordination)
+- 0f5b51e (errors), 773d734 (params parser), 49de153 (sample converter)
+- d1d05b0 (Output lifecycle)
+- f29261f (docs+Example)
+- 58147c8 (PBT TP-U6-1..3), b9f73f5 (benchmarks)
+- 4826886 (U7 generators)
+- efb39f0 (integration harness)
+- b67323c (U5 integration un-guard — Phase 11)
+- 0e5a0ca (extra coverage boost), d9a13a2 (extra staticcheck fix for journey generators)
+- 635e47e (final summary)
+
+DoD all-green:
+- go build ./...: pass
+- go vet ./k6output/...: pass
+- go test -race -count=1 ./...: pass
+- go test -cover ./k6output/...: 86.6% (well above 80% target)
+- BenchmarkAddMetricSamples: 84.41 ns/op, 0 allocs (target <1000 ns) — 12x under budget, zero-alloc hot path
+- BenchmarkFlushLoop: 953.4 ns/op, 9 allocs (target <5000 ns) — 5x under budget
+- BenchmarkTagSetCache_Hit: 479 ns/op (informational, cache effective)
+- BenchmarkInstrumentLookup: 29.6 ns/op, 0 allocs (sync.Map.Load efficient)
+- golangci-lint run (full repo): pass after d9a13a2 staticcheck fix
+- go test -tags=integration: pass (xk6 + Docker)
+- go test -tags=integration ./k6otelgen/integration/...: pass (U6 un-guarded successfully)
+
+Notable Codex-introduced deviations:
+1. buildVersion as unexported constant (not ldflags-mutated var) to comply with no-package-level-mutable-state rule. Slightly less flexible but cleaner.
+2. Two extra commits added post-Phase 11: one to raise k6output coverage above 80% (0e5a0ca), one to fix a pre-existing staticcheck nil-flow finding in testutil/generators/journey_inputs_test.go (d9a13a2). Both are quality improvements not directly required by U6 plan but valuable for clean CI.
+
+U4 patch (Phase 1, 9500a99) and U5 un-guard (Phase 11, b67323c) both landed cleanly with the U6 main implementation.
+
+U6 fully complete; U8 (Samples & Distribution) is the final unit — focuses on examples/ + cmd/ + build configuration for distribution."
+
+**Context**: U6 Code Generation — Part 2 complete; awaiting Continue to Next Stage approval before moving to U8 (final unit).
