@@ -8,6 +8,25 @@
 
 version: 2
 updates:
+  # Go modules — project runtime and test dependencies
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+      include: "scope"
+    groups:
+      otel:
+        patterns:
+          - "go.opentelemetry.io/*"
+          - "go.opentelemetry.io/proto/*"
+      k6:
+        patterns:
+          - "go.k6.io/*"
+          - "github.com/grafana/sobek"
+
   # GitHub Actions — SHA-pinned actions across all workflows
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -49,6 +68,24 @@ updates:
     directory: "/scripts/aidlc-evaluator/docker/sandbox"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # Docker — minimal example observability images
+  - package-ecosystem: "docker"
+    directory: "/examples/minimal/k8s"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # Docker — astroshop example observability images
+  - package-ecosystem: "docker"
+    directory: "/examples/astroshop/k8s"
+    schedule:
+      interval: "monthly"
     commit-message:
       prefix: "chore(deps)"
       include: "scope"

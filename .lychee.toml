@@ -1,0 +1,15 @@
+max_retries = 3
+timeout = 10
+include_fragments = true
+
+exclude = [
+  "^https?://localhost(:[0-9]+)?(/|$)",
+  "^https?://127\\.0\\.0\\.1(:[0-9]+)?(/|$)",
+  "^https?://example\\.com(/|$)",
+  "^https?://example\\.org(/|$)",
+]
+
+exclude_path = [
+  "(^|/)node_modules(/|$)",
+  "(^|/)\\.git(/|$)",
+]
