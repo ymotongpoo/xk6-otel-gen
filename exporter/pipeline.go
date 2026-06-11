@@ -74,6 +74,7 @@ func newWithExporterBuilders(cfg Config, buildTrace traceBuilder, buildMetric me
 func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipelineStats, traceExp sdktrace.SpanExporter, metricExp sdkmetric.Exporter, logExp sdklog.Exporter) *Pipeline {
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithResource(res),
+		sdktrace.WithSampler(samplerForConfig(cfg)),
 		sdktrace.WithBatcher(traceExp,
 			sdktrace.WithMaxQueueSize(cfg.MaxQueueSize),
 			sdktrace.WithMaxExportBatchSize(cfg.BatchSize),
@@ -101,6 +102,17 @@ func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipe
 		res:       res,
 		stats:     stats,
 		metricExp: metricExp,
+	}
+}
+
+func samplerForConfig(cfg Config) sdktrace.Sampler {
+	switch cfg.Sampler {
+	case "always_off":
+		return sdktrace.NeverSample()
+	case "traceidratio":
+		return sdktrace.TraceIDRatioBased(cfg.SamplerArg)
+	default:
+		return sdktrace.AlwaysSample()
 	}
 }
 

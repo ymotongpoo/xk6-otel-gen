@@ -82,11 +82,45 @@ func optsToConfig(opts map[string]any) (exporter.Config, error) {
 				return cfg, &ConfigError{Kind: "type_mismatch", Path: key, Inner: err}
 			}
 			cfg.ResourceOverrides = overrides
+		case "sampler":
+			s, ok := value.(string)
+			if !ok {
+				return cfg, typeMismatch(key, value, "string")
+			}
+			switch s {
+			case "always_on", "always_off", "traceidratio":
+				cfg.Sampler = s
+			default:
+				return cfg, &ConfigError{Kind: "invalid_sampler", Path: s}
+			}
+		case "samplerArg":
+			arg, err := toFloat64(value)
+			if err != nil {
+				return cfg, &ConfigError{Kind: "type_mismatch", Path: key, Inner: err}
+			}
+			cfg.SamplerArg = arg
+			cfg.SamplerArgSet = true
 		default:
 			// Unknown keys are ignored for forward-compatible JS opts.
 		}
 	}
+	if cfg.SamplerArgSet && (cfg.SamplerArg < 0 || cfg.SamplerArg > 1) {
+		return cfg, &ConfigError{Kind: "invalid_sampler_arg", Path: strconv.FormatFloat(cfg.SamplerArg, 'f', -1, 64)}
+	}
 	return cfg, nil
+}
+
+func toFloat64(v any) (float64, error) {
+	switch x := v.(type) {
+	case int:
+		return float64(x), nil
+	case int64:
+		return float64(x), nil
+	case float64:
+		return x, nil
+	default:
+		return 0, fmt.Errorf("expected number, got %T", v)
+	}
 }
 
 func toDuration(v any) (time.Duration, error) {

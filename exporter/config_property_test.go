@@ -48,6 +48,12 @@ func TestMergeWith_OverrideWins_Property(t *testing.T) {
 		if override.ResourceOverrides != nil && !reflect.DeepEqual(merged.ResourceOverrides, override.ResourceOverrides) {
 			t.Fatalf("ResourceOverrides = %#v, want override %#v", merged.ResourceOverrides, override.ResourceOverrides)
 		}
+		if override.Sampler != "" && merged.Sampler != override.Sampler {
+			t.Fatalf("Sampler = %q, want override %q", merged.Sampler, override.Sampler)
+		}
+		if override.SamplerArgSet && (merged.SamplerArg != override.SamplerArg || !merged.SamplerArgSet) {
+			t.Fatalf("SamplerArg = %v/%v, want override %v", merged.SamplerArg, merged.SamplerArgSet, override.SamplerArg)
+		}
 	})
 }
 

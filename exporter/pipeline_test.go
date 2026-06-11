@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"go.opentelemetry.io/otel/log"
+	"go.opentelemetry.io/otel/metric"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	sdkresource "go.opentelemetry.io/otel/sdk/resource"
@@ -32,6 +34,44 @@ func TestNew_Success(t *testing.T) {
 		t.Fatalf("providers must be non-nil: trace=%v metric=%v log=%v", p.TracerProvider(), p.MeterProvider(), p.LoggerProvider())
 	}
 	_ = p.Shutdown(context.Background())
+}
+
+func TestPipeline_SamplerTraceIDRatioZero_DropsTracesOnly(t *testing.T) {
+	t.Parallel()
+
+	traceExp := &fakeSpanExporter{}
+	metricExp := &fakeMetricExporter{}
+	logExp := &fakeLogExporter{}
+	cfg := validPipelineConfig()
+	cfg.Sampler = "traceidratio"
+	cfg.SamplerArg = 0
+	cfg.SamplerArgSet = true
+	p := newPipelineFromExporters(cfg, sdkresource.Empty(), &pipelineStats{}, traceExp, metricExp, logExp)
+
+	ctx := context.Background()
+	_, span := p.TracerProvider().Tracer("test").Start(ctx, "dropped")
+	span.End()
+	counter, err := p.MeterProvider().Meter("test").Int64Counter("test.counter", metric.WithUnit("{count}"))
+	if err != nil {
+		t.Fatalf("Int64Counter() error = %v", err)
+	}
+	counter.Add(ctx, 1)
+	record := log.Record{}
+	record.SetBody(log.StringValue("still logged"))
+	p.LoggerProvider().Logger("test").Emit(ctx, record)
+
+	if err := p.Shutdown(ctx); err != nil {
+		t.Fatalf("Shutdown() error = %v", err)
+	}
+	if traceExp.exports != 0 {
+		t.Fatalf("trace exports = %d, want 0", traceExp.exports)
+	}
+	if metricExp.exports == 0 {
+		t.Fatal("metric exports = 0, want metrics to flow")
+	}
+	if logExp.exports == 0 {
+		t.Fatal("log exports = 0, want logs to flow")
+	}
 }
 
 func TestPipeline_MetricExporter_NotNil(t *testing.T) {

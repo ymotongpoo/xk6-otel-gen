@@ -199,8 +199,13 @@ otelgen.configure({
   batchSize: 512,
   batchTimeout: "1s",
   maxQueueSize: 2048,
+  sampler: "traceidratio",
+  samplerArg: 0.1,
 });
 ```
+
+Sampling applies to traces only. Metrics and logs are still emitted; logs keep
+the active trace context even when the trace sampler drops spans.
 
 Common output configuration:
 

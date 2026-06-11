@@ -42,14 +42,17 @@ func TestConfig_Validate_OK(t *testing.T) {
 	t.Parallel()
 
 	cfg := Config{
-		Protocol:     ProtocolHTTP,
-		Endpoint:     "https://otel.example.com:4318",
-		Headers:      map[string]string{"Authorization": "Bearer token", "X_Tenant": "tenant-a"},
-		Compression:  "gzip",
-		Timeout:      time.Second,
-		BatchSize:    128,
-		BatchTimeout: 500 * time.Millisecond,
-		MaxQueueSize: 256,
+		Protocol:      ProtocolHTTP,
+		Endpoint:      "https://otel.example.com:4318",
+		Headers:       map[string]string{"Authorization": "Bearer token", "X_Tenant": "tenant-a"},
+		Compression:   "gzip",
+		Timeout:       time.Second,
+		BatchSize:     128,
+		BatchTimeout:  500 * time.Millisecond,
+		MaxQueueSize:  256,
+		Sampler:       "traceidratio",
+		SamplerArg:    0.5,
+		SamplerArgSet: true,
 		ResourceOverrides: map[string]string{
 			string(semconv.ServiceNameKey): "checkout",
 		},
@@ -84,6 +87,9 @@ func TestConfig_Validate_Errors(t *testing.T) {
 		{name: "max queue", cfg: withConfig(valid, func(c *Config) { c.MaxQueueSize = 0 }), field: "MaxQueueSize"},
 		{name: "max queue below batch", cfg: withConfig(valid, func(c *Config) { c.MaxQueueSize = 64 }), field: "MaxQueueSize"},
 		{name: "compression", cfg: withConfig(valid, func(c *Config) { c.Compression = "zstd" }), field: "Compression"},
+		{name: "sampler", cfg: withConfig(valid, func(c *Config) { c.Sampler = "invalid" }), field: "Sampler"},
+		{name: "sampler arg low", cfg: withConfig(valid, func(c *Config) { c.Sampler = "traceidratio"; c.SamplerArg = -0.1; c.SamplerArgSet = true }), field: "SamplerArg"},
+		{name: "sampler arg high", cfg: withConfig(valid, func(c *Config) { c.Sampler = "traceidratio"; c.SamplerArg = 1.1; c.SamplerArgSet = true }), field: "SamplerArg"},
 		{name: "header key empty", cfg: withConfig(valid, func(c *Config) { c.Headers = map[string]string{"": "v"} }), field: "Headers"},
 		{name: "header key invalid", cfg: withConfig(valid, func(c *Config) { c.Headers = map[string]string{"bad key": "v"} }), field: "Headers"},
 		{name: "header value empty", cfg: withConfig(valid, func(c *Config) { c.Headers = map[string]string{"X-Test": ""} }), field: "Headers"},
@@ -120,6 +126,9 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 		BatchSize:         128,
 		BatchTimeout:      time.Second,
 		MaxQueueSize:      256,
+		Sampler:           "always_on",
+		SamplerArg:        1,
+		SamplerArgSet:     true,
 		ResourceOverrides: map[string]string{string(semconv.ServiceNameKey): "base"},
 	}
 	override := Config{
@@ -132,6 +141,9 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 		BatchSize:         256,
 		BatchTimeout:      3 * time.Second,
 		MaxQueueSize:      512,
+		Sampler:           "traceidratio",
+		SamplerArg:        0.25,
+		SamplerArgSet:     true,
 		ResourceOverrides: map[string]string{string(semconv.ServiceNameKey): "override"},
 	}
 
@@ -147,6 +159,9 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 	}
 	if merged.Timeout != 2*time.Second || merged.BatchSize != 256 || merged.BatchTimeout != 3*time.Second || merged.MaxQueueSize != 512 {
 		t.Fatalf("MergeWith() = %#v, override batch fields did not win", merged)
+	}
+	if merged.Sampler != "traceidratio" || merged.SamplerArg != 0.25 || !merged.SamplerArgSet {
+		t.Fatalf("MergeWith() = %#v, override sampler fields did not win", merged)
 	}
 
 	emptyMaps := base.MergeWith(Config{
@@ -176,6 +191,9 @@ func TestConfig_fillDefaults_Examples(t *testing.T) {
 	if cfg.Timeout != defaultTimeout || cfg.BatchSize != defaultBatchSize || cfg.BatchTimeout != defaultBatchTimeout || cfg.MaxQueueSize != defaultMaxQueueSize {
 		t.Fatalf("fillDefaults() = %#v, want built-in defaults", cfg)
 	}
+	if cfg.Sampler != "always_on" || cfg.SamplerArg != 1 || !cfg.SamplerArgSet {
+		t.Fatalf("fillDefaults() = %#v, want default sampler", cfg)
+	}
 
 	custom := Config{Endpoint: "custom:4317", Timeout: time.Second, BatchSize: 10, BatchTimeout: time.Second, MaxQueueSize: 20}.fillDefaults()
 	if custom.Endpoint != "custom:4317" || custom.Timeout != time.Second || custom.BatchSize != 10 || custom.BatchTimeout != time.Second || custom.MaxQueueSize != 20 {
@@ -193,6 +211,8 @@ func TestConfigFromEnv_Generic(t *testing.T) {
 		"OTEL_EXPORTER_OTLP_COMPRESSION": "gzip",
 		"OTEL_EXPORTER_OTLP_TIMEOUT":     "1500",
 		"OTEL_EXPORTER_OTLP_INSECURE":    "true",
+		"OTEL_TRACES_SAMPLER":            "traceidratio",
+		"OTEL_TRACES_SAMPLER_ARG":        "0.25",
 	})
 
 	cfg := ConfigFromEnv()
@@ -204,6 +224,9 @@ func TestConfigFromEnv_Generic(t *testing.T) {
 	}
 	if cfg.Compression != "gzip" || cfg.Timeout != 1500*time.Millisecond || !cfg.Insecure {
 		t.Fatalf("ConfigFromEnv() = %#v, want compression/timeout/insecure from env", cfg)
+	}
+	if cfg.Sampler != "traceidratio" || cfg.SamplerArg != 0.25 || !cfg.SamplerArgSet {
+		t.Fatalf("ConfigFromEnv() = %#v, want sampler from env", cfg)
 	}
 	wantHeaders := map[string]string{"Authorization": "Bearer token", "X-Tenant": "tenant-a"}
 	if !reflect.DeepEqual(cfg.Headers, wantHeaders) {
@@ -234,6 +257,8 @@ func TestConfigFromEnv_InvalidValuesRemainInvalid(t *testing.T) {
 		"OTEL_EXPORTER_OTLP_PROTOCOL": "not-a-protocol",
 		"OTEL_EXPORTER_OTLP_TIMEOUT":  "not-a-timeout",
 		"OTEL_EXPORTER_OTLP_HEADERS":  "bad-header",
+		"OTEL_TRACES_SAMPLER":         "not-a-sampler",
+		"OTEL_TRACES_SAMPLER_ARG":     "not-a-ratio",
 	})
 
 	cfg := ConfigFromEnv()
@@ -245,6 +270,9 @@ func TestConfigFromEnv_InvalidValuesRemainInvalid(t *testing.T) {
 	}
 	if cfg.Headers["bad-header"] != "" {
 		t.Fatalf("Headers = %#v, want invalid header with empty value", cfg.Headers)
+	}
+	if cfg.Sampler == "not-a-sampler" || cfg.SamplerArg != -1 || !cfg.SamplerArgSet {
+		t.Fatalf("sampler invalid values = %#v, want invalid sampler sentinel and invalid arg", cfg)
 	}
 }
 
@@ -291,6 +319,8 @@ func withOTLPEnv(t *testing.T, values map[string]string) {
 		"OTEL_EXPORTER_OTLP_COMPRESSION",
 		"OTEL_EXPORTER_OTLP_TIMEOUT",
 		"OTEL_EXPORTER_OTLP_INSECURE",
+		"OTEL_TRACES_SAMPLER",
+		"OTEL_TRACES_SAMPLER_ARG",
 	}
 	signalPrefixes := []string{
 		"OTEL_EXPORTER_OTLP_TRACES_",

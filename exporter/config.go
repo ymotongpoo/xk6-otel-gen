@@ -4,6 +4,7 @@ package exporter
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -34,12 +35,15 @@ const (
 const headerKeyPattern = `^[A-Za-z0-9_-]+$`
 
 var defaultConfig = Config{
-	Protocol:     ProtocolGRPC,
-	Endpoint:     defaultEndpoint,
-	Timeout:      defaultTimeout,
-	BatchSize:    defaultBatchSize,
-	BatchTimeout: defaultBatchTimeout,
-	MaxQueueSize: defaultMaxQueueSize,
+	Protocol:      ProtocolGRPC,
+	Endpoint:      defaultEndpoint,
+	Timeout:       defaultTimeout,
+	BatchSize:     defaultBatchSize,
+	BatchTimeout:  defaultBatchTimeout,
+	MaxQueueSize:  defaultMaxQueueSize,
+	Sampler:       "always_on",
+	SamplerArg:    1,
+	SamplerArgSet: true,
 }
 
 // String returns the OTLP protocol name.
@@ -66,6 +70,9 @@ type Config struct {
 	BatchTimeout      time.Duration
 	MaxQueueSize      int
 	ResourceOverrides map[string]string
+	Sampler           string
+	SamplerArg        float64
+	SamplerArgSet     bool
 }
 
 func (c Config) fillDefaults() Config {
@@ -83,6 +90,13 @@ func (c Config) fillDefaults() Config {
 	}
 	if c.MaxQueueSize == 0 {
 		c.MaxQueueSize = defaultConfig.MaxQueueSize
+	}
+	if c.Sampler == "" {
+		c.Sampler = defaultConfig.Sampler
+	}
+	if !c.SamplerArgSet {
+		c.SamplerArg = defaultConfig.SamplerArg
+		c.SamplerArgSet = true
 	}
 	return c
 }
@@ -114,6 +128,12 @@ func (c Config) Validate() error {
 	}
 	if c.Compression != "" && c.Compression != "gzip" {
 		errs = append(errs, &ConfigError{Field: "Compression", Value: c.Compression, Message: `must be "" or "gzip"`})
+	}
+	if !validSampler(c.Sampler) {
+		errs = append(errs, &ConfigError{Field: "Sampler", Value: c.Sampler, Message: `must be "always_on", "always_off", or "traceidratio"`})
+	}
+	if c.Sampler == "traceidratio" && (c.SamplerArg < 0 || c.SamplerArg > 1) {
+		errs = append(errs, &ConfigError{Field: "SamplerArg", Value: c.SamplerArg, Message: "must be in [0,1]"})
 	}
 	validateStringMap(&errs, "Headers", c.Headers, true)
 	validateStringMap(&errs, "ResourceOverrides", c.ResourceOverrides, false)
@@ -152,6 +172,13 @@ func (c Config) MergeWith(override Config) Config {
 	if override.ResourceOverrides != nil {
 		c.ResourceOverrides = override.ResourceOverrides
 	}
+	if override.Sampler != "" {
+		c.Sampler = override.Sampler
+	}
+	if override.SamplerArgSet {
+		c.SamplerArg = override.SamplerArg
+		c.SamplerArgSet = true
+	}
 	return c
 }
 
@@ -175,6 +202,18 @@ func ConfigFromEnv() Config {
 	}
 	if value, ok := lookupSignalEnv("INSECURE"); ok {
 		c.Insecure = parseBool(value)
+	}
+	if value, ok := os.LookupEnv("OTEL_TRACES_SAMPLER"); ok {
+		c.Sampler = parseSampler(value)
+	}
+	if value, ok := os.LookupEnv("OTEL_TRACES_SAMPLER_ARG"); ok {
+		arg, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+		if err != nil {
+			c.SamplerArg = -1
+		} else {
+			c.SamplerArg = arg
+		}
+		c.SamplerArgSet = true
 	}
 	return c
 }
@@ -206,6 +245,28 @@ func validateStringMap(errs *[]error, field string, values map[string]string, he
 func validHeaderKey(key string) bool {
 	ok, err := regexp.MatchString(headerKeyPattern, key)
 	return err == nil && ok
+}
+
+func validSampler(value string) bool {
+	switch value {
+	case "", "always_on", "always_off", "traceidratio":
+		return true
+	default:
+		return false
+	}
+}
+
+func parseSampler(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "always_on":
+		return "always_on"
+	case "always_off":
+		return "always_off"
+	case "traceidratio":
+		return "traceidratio"
+	default:
+		return fmt.Sprintf("invalid:%s", value)
+	}
 }
 
 func lookupSignalEnv(suffix string) (string, bool) {

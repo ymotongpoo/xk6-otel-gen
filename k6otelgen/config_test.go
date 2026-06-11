@@ -25,6 +25,8 @@ func TestOptsToConfig_AllFields_HappyPath(t *testing.T) {
 		"batchTimeout":      float64(1250),
 		"maxQueueSize":      256,
 		"resourceOverrides": map[string]any{"service.namespace": "checkout", "replica": float64(2)},
+		"sampler":           "traceidratio",
+		"samplerArg":        0.25,
 	})
 	if err != nil {
 		t.Fatalf("optsToConfig() error = %v", err)
@@ -41,6 +43,9 @@ func TestOptsToConfig_AllFields_HappyPath(t *testing.T) {
 		BatchTimeout:      1250 * time.Millisecond,
 		MaxQueueSize:      256,
 		ResourceOverrides: map[string]string{"service.namespace": "checkout", "replica": "2"},
+		Sampler:           "traceidratio",
+		SamplerArg:        0.25,
+		SamplerArgSet:     true,
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("optsToConfig() = %#v, want %#v", got, want)
@@ -65,6 +70,8 @@ func TestOptsToConfig_TypeMismatch(t *testing.T) {
 		{name: "batchTimeout", field: "batchTimeout", value: []string{"1s"}},
 		{name: "maxQueueSize", field: "maxQueueSize", value: "1024"},
 		{name: "resourceOverrides", field: "resourceOverrides", value: map[string]any{"empty": []int{1}}},
+		{name: "sampler", field: "sampler", value: true},
+		{name: "samplerArg", field: "samplerArg", value: "0.5"},
 	}
 
 	for _, tt := range tests {
@@ -81,6 +88,32 @@ func TestOptsToConfig_TypeMismatch(t *testing.T) {
 				t.Fatalf("ConfigError = %#v, want kind type_mismatch path %q", cfgErr, tt.field)
 			}
 		})
+	}
+}
+
+func TestOptsToConfig_InvalidSampler(t *testing.T) {
+	t.Parallel()
+
+	_, err := optsToConfig(map[string]any{"sampler": "parentbased_always_on"})
+	var cfgErr *ConfigError
+	if !errors.As(err, &cfgErr) {
+		t.Fatalf("optsToConfig() error = %T, want *ConfigError", err)
+	}
+	if cfgErr.Kind != "invalid_sampler" {
+		t.Fatalf("ConfigError = %#v, want invalid_sampler", cfgErr)
+	}
+}
+
+func TestOptsToConfig_InvalidSamplerArg(t *testing.T) {
+	t.Parallel()
+
+	_, err := optsToConfig(map[string]any{"sampler": "traceidratio", "samplerArg": 1.5})
+	var cfgErr *ConfigError
+	if !errors.As(err, &cfgErr) {
+		t.Fatalf("optsToConfig() error = %T, want *ConfigError", err)
+	}
+	if cfgErr.Kind != "invalid_sampler_arg" {
+		t.Fatalf("ConfigError = %#v, want invalid_sampler_arg", cfgErr)
 	}
 }
 

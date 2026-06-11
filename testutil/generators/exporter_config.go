@@ -104,6 +104,9 @@ func ValidConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 			BatchSize:         batchSize,
 			BatchTimeout:      validConfigDuration(t, "batch_timeout", minValidConfigBatchTimeout, maxValidConfigBatchTimeout),
 			MaxQueueSize:      maxQueueSize,
+			Sampler:           validSampler(t, "sampler"),
+			SamplerArg:        rapid.Float64Range(0, 1).Draw(t, "sampler_arg"),
+			SamplerArgSet:     true,
 			ResourceOverrides: validResourceOverrideMap(t, "resource_overrides"),
 		}
 	})
@@ -113,7 +116,7 @@ func ValidConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 func AnyConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 	return rapid.Custom(func(t *rapid.T) exporter.Config {
 		cfg := ValidConfig(opts...).Draw(t, "valid_config")
-		switch rapid.IntRange(0, 9).Draw(t, "config_mutation") {
+		switch rapid.IntRange(0, 11).Draw(t, "config_mutation") {
 		case 0:
 			return cfg
 		case 1:
@@ -134,9 +137,19 @@ func AnyConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 			cfg.BatchTimeout = time.Duration(rapid.IntRange(-10_000, 0).Draw(t, "invalid_batch_timeout_ms")) * time.Millisecond
 		case 9:
 			cfg.MaxQueueSize = rapid.IntRange(1, cfg.BatchSize-1).Draw(t, "invalid_max_queue_size")
+		case 10:
+			cfg.Sampler = "invalid"
+		case 11:
+			cfg.Sampler = "traceidratio"
+			cfg.SamplerArg = rapid.SampledFrom([]float64{-0.1, 1.1}).Draw(t, "invalid_sampler_arg")
+			cfg.SamplerArgSet = true
 		}
 		return cfg
 	})
+}
+
+func validSampler(t *rapid.T, label string) string {
+	return rapid.SampledFrom([]string{"always_on", "always_off", "traceidratio"}).Draw(t, label)
 }
 
 func validExporterEndpoint(t *rapid.T, label string) string {
