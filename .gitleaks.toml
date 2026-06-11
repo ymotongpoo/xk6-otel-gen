@@ -13,4 +13,8 @@ paths = [
     '''\.gitleaks-baseline\.json$''',
     '''uv\.lock$''',
     '''packages/shared/tests/test_credential_scrubber\.py$''',
+    # SaaS endpoint guide: documents OTLP basic-auth credential SHAPES with
+    # placeholder tokens (e.g. base64("1234567:glc_xxxxxx")). gitleaks flags
+    # the placeholder as a generic-api-key; it is not a real secret.
+    '''examples/saas-endpoints\.md$''',
 ]
