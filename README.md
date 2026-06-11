@@ -155,11 +155,16 @@ A topology file has three top-level sections:
 | `journeys` | yes | `checkout`, `browse`, `place-order` |
 | `faults` | no | `latency_inflation` on `operation:shipping.quote_shipping` |
 
+Optional top-level `namespace` sets the default OpenTelemetry `service.namespace`
+resource attribute for all services. Services can override it with
+`services.<name>.namespace`. When omitted, `xk6-otel-gen` is used.
+
 Minimal service declaration:
 
 ```yaml
 services:
   backend:
+    namespace: checkout
     kind: application
     replicas: 3
     language: java

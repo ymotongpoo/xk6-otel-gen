@@ -80,7 +80,9 @@ func TestBuildStaticSet_HTTP_Client(t *testing.T) {
 
 	requireAttr(t, attrs, semconv.HTTPRequestMethodKey, "POST")
 	requireAttr(t, attrs, semconv.URLPathKey, "/payments")
+	requireAttr(t, attrs, semconv.URLSchemeKey, "http")
 	requireAttr(t, attrs, semconv.ServerAddressKey, "target")
+	requireAttr(t, attrs, semconv.ServerPortKey, "443")
 	requireAttr(t, attrs, attribute.Key("peer.service"), "target")
 }
 
@@ -95,6 +97,8 @@ func TestBuildStaticSet_RPC_ServerClient(t *testing.T) {
 	requireAttr(t, server, semconv.RPCServiceKey, "source")
 	requireAttr(t, server, semconv.RPCMethodKey, "Checkout/Get")
 	requireAttr(t, client, semconv.RPCServiceKey, "target")
+	requireAttr(t, client, semconv.ServerAddressKey, "target")
+	requireAttr(t, client, semconv.ServerPortKey, "50051")
 }
 
 func TestBuildStaticSet_DB(t *testing.T) {
@@ -179,15 +183,48 @@ func TestAllowedAttrKeys_IncludesEmittedKeys(t *testing.T) {
 		string(semconv.HTTPRequestMethodKey),
 		string(semconv.HTTPResponseStatusCodeKey),
 		string(semconv.RPCGRPCStatusCodeKey),
+		string(semconv.URLSchemeKey),
+		string(semconv.ServerPortKey),
+		string(semconv.NetworkPeerAddressKey),
 		string(semconv.DBOperationNameKey),
 		string(semconv.MessagingOperationNameKey),
 		string(semconv.ErrorTypeKey),
+		string(semconv.ExceptionTypeKey),
+		string(semconv.ExceptionMessageKey),
 		"peer.service",
 	}
 	for _, key := range keys {
 		if _, ok := allowedAttrKeys[key]; !ok {
 			t.Fatalf("allowedAttrKeys missing %q", key)
 		}
+	}
+}
+
+func TestServerPort_Mapping(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		kind     topology.ServiceKind
+		protocol topology.Protocol
+		want     int
+	}{
+		{name: "http application", kind: topology.KindApplication, protocol: topology.ProtocolHTTP, want: 8080},
+		{name: "grpc application", kind: topology.KindApplication, protocol: topology.ProtocolGRPC, want: 50051},
+		{name: "database", kind: topology.KindDatabase, protocol: topology.ProtocolGRPC, want: 5432},
+		{name: "cache", kind: topology.KindCache, protocol: topology.ProtocolGRPC, want: 6379},
+		{name: "queue", kind: topology.KindQueue, protocol: topology.ProtocolMessaging, want: 9092},
+		{name: "external api", kind: topology.KindExternalAPI, protocol: topology.ProtocolHTTP, want: 443},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := ServerPort(tt.kind, tt.protocol); got != tt.want {
+				t.Fatalf("ServerPort() = %d, want %d", got, tt.want)
+			}
+		})
 	}
 }
 

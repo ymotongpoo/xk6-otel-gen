@@ -9,6 +9,7 @@ frontend -> backend -> database
 ```
 
 The `checkout` journey enters `frontend.get_index`, calls `backend.get_user`, and then calls `database.select_user`. A small `error_rate_override` fault is attached to the frontend-to-backend edge.
+The topology sets the default OpenTelemetry `service.namespace` to `demo`.
 
 ## Prerequisites
 

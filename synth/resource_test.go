@@ -21,6 +21,7 @@ func TestBuildResource_Minimal(t *testing.T) {
 	attrs := resourceAttrs(res.Attributes())
 
 	requireAttr(t, attrs, semconv.ServiceNameKey, "checkout")
+	requireAttr(t, attrs, semconv.ServiceNamespaceKey, topology.DefaultNamespace)
 	requireAttr(t, attrs, semconv.ServiceInstanceIDKey, InstanceID("checkout", 0))
 	requireAttr(t, attrs, semconv.TelemetrySDKNameKey, "opentelemetry")
 	requireAttr(t, attrs, semconv.TelemetrySDKLanguageKey, "go")
@@ -34,6 +35,7 @@ func TestBuildResource_AllFields(t *testing.T) {
 
 	svc := &topology.Service{
 		Name:      "checkout",
+		Namespace: "payments",
 		Replicas:  2,
 		Version:   "1.2.3",
 		Language:  "go",
@@ -43,6 +45,7 @@ func TestBuildResource_AllFields(t *testing.T) {
 	attrs := resourceAttrs(res.Attributes())
 
 	requireAttr(t, attrs, semconv.ServiceNameKey, "checkout")
+	requireAttr(t, attrs, semconv.ServiceNamespaceKey, "payments")
 	requireAttr(t, attrs, semconv.ServiceVersionKey, "1.2.3")
 	requireAttr(t, attrs, semconv.ServiceInstanceIDKey, InstanceID("checkout", 1))
 	requireAttr(t, attrs, semconv.ProcessRuntimeNameKey, "go")

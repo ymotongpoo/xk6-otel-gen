@@ -4,20 +4,26 @@ package topology
 
 import "time"
 
+// DefaultNamespace is the synthetic service.namespace value applied when a
+// topology does not specify a namespace.
+const DefaultNamespace = "xk6-otel-gen"
+
 // ServiceID is a newtype for service name identifiers.
 type ServiceID string
 
 // Schema represents the parsed and resolved root of a topology YAML file.
 // It is immutable after Parse returns; treat all fields as read-only.
 type Schema struct {
-	Services map[ServiceID]*Service `yaml:"services"`
-	Journeys map[string]*Journey    `yaml:"journeys"`
-	Faults   []FaultSpec            `yaml:"faults"`
+	Namespace string                 `yaml:"namespace"`
+	Services  map[ServiceID]*Service `yaml:"services"`
+	Journeys  map[string]*Journey    `yaml:"journeys"`
+	Faults    []FaultSpec            `yaml:"faults"`
 }
 
 // Service describes a microservice or dependency node in a topology.
 type Service struct {
 	Name       ServiceID             `yaml:"name"`
+	Namespace  string                `yaml:"namespace"`
 	Kind       ServiceKind           `yaml:"kind"`
 	Replicas   int                   `yaml:"replicas"`
 	Language   string                `yaml:"language"`

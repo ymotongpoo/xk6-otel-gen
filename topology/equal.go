@@ -9,7 +9,8 @@ func Equal(a, b *Schema) bool {
 	if a == nil || b == nil {
 		return a == b
 	}
-	return equalServices(a.Services, b.Services) &&
+	return effectiveSchemaNamespace(a) == effectiveSchemaNamespace(b) &&
+		equalServices(a.Services, b.Services) &&
 		equalJourneys(a.Journeys, b.Journeys) &&
 		equalFaults(a.Faults, b.Faults)
 }
@@ -31,6 +32,7 @@ func equalService(a, b *Service) bool {
 		return a == b
 	}
 	return a.Name == b.Name &&
+		effectiveServiceNamespace(a) == effectiveServiceNamespace(b) &&
 		a.Kind == b.Kind &&
 		a.Replicas == b.Replicas &&
 		a.Language == b.Language &&
@@ -207,4 +209,11 @@ func edgeIdentity(edge *Edge) string {
 		return "<nil>"
 	}
 	return identifyOp(edge.From) + "->" + identifyOp(edge.To)
+}
+
+func effectiveServiceNamespace(svc *Service) string {
+	if svc == nil || svc.Namespace == "" {
+		return DefaultNamespace
+	}
+	return svc.Namespace
 }

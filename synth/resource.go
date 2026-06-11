@@ -37,6 +37,7 @@ func BuildResource(svc *topology.Service, instanceIdx int) *resource.Resource {
 
 	attrs := []attribute.KeyValue{
 		semconv.ServiceName(string(svc.Name)),
+		semconv.ServiceNamespace(serviceNamespace(svc)),
 		semconv.ServiceInstanceID(InstanceID(string(svc.Name), instanceIdx)),
 		semconv.TelemetrySDKName("opentelemetry"),
 		semconv.TelemetrySDKLanguageGo,
@@ -54,4 +55,11 @@ func BuildResource(svc *topology.Service, instanceIdx int) *resource.Resource {
 	}
 
 	return resource.NewSchemaless(attrs...)
+}
+
+func serviceNamespace(svc *topology.Service) string {
+	if svc == nil || svc.Namespace == "" {
+		return topology.DefaultNamespace
+	}
+	return svc.Namespace
 }

@@ -20,6 +20,7 @@ func ValidService(opts ...ServiceOption) *rapid.Generator[*topology.Service] {
 
 		svc := &topology.Service{
 			Name:       ValidServiceID().Draw(t, "name"),
+			Namespace:  topology.DefaultNamespace,
 			Kind:       kind,
 			Replicas:   ValidReplicaCount().Draw(t, "replicas"),
 			Operations: make(map[string]*topology.Operation),

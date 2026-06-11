@@ -10,12 +10,16 @@ import (
 // MarshalYAML converts a resolved Schema into the topology YAML shape.
 func (s *Schema) MarshalYAML() (any, error) {
 	raw := &rawSchema{
-		Services: make(map[string]*rawService, len(s.Services)),
-		Journeys: make(map[string]*rawJourney, len(s.Journeys)),
-		Faults:   make([]*rawFault, 0, len(s.Faults)),
+		Namespace: s.Namespace,
+		Services:  make(map[string]*rawService, len(s.Services)),
+		Journeys:  make(map[string]*rawJourney, len(s.Journeys)),
+		Faults:    make([]*rawFault, 0, len(s.Faults)),
+	}
+	if raw.Namespace == "" || raw.Namespace == DefaultNamespace {
+		raw.Namespace = ""
 	}
 	for _, id := range sortedServiceIDs(s.Services) {
-		raw.Services[string(id)] = marshalService(s.Services[id])
+		raw.Services[string(id)] = marshalService(s.Services[id], effectiveSchemaNamespace(s))
 	}
 	for _, name := range sortedKeys(s.Journeys) {
 		raw.Journeys[name] = marshalJourney(s.Journeys[name])
@@ -44,7 +48,7 @@ func sortedKeys[V any](m map[string]V) []string {
 	return keys
 }
 
-func marshalService(svc *Service) *rawService {
+func marshalService(svc *Service, schemaNamespace string) *rawService {
 	if svc == nil {
 		return &rawService{}
 	}
@@ -55,10 +59,20 @@ func marshalService(svc *Service) *rawService {
 		Version:    svc.Version,
 		Operations: marshalOperations(svc.Operations),
 	}
+	if svc.Namespace != "" && svc.Namespace != schemaNamespace {
+		rs.Namespace = svc.Namespace
+	}
 	if svc.Replicas != 1 {
 		rs.Replicas = ptrInt(svc.Replicas)
 	}
 	return rs
+}
+
+func effectiveSchemaNamespace(s *Schema) string {
+	if s == nil || s.Namespace == "" {
+		return DefaultNamespace
+	}
+	return s.Namespace
 }
 
 func marshalOperations(ops map[string]*Operation) []*rawOperation {

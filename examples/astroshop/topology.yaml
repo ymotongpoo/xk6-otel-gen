@@ -2,6 +2,7 @@
 # This topology is intentionally approximate: it preserves the service graph
 # shape and common user journeys without reproducing upstream implementation
 # details one-for-one.
+namespace: astroshop
 services:
   # Frontend & API
   frontend:

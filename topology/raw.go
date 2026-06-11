@@ -5,12 +5,14 @@ package topology
 import "time"
 
 type rawSchema struct {
-	Services map[string]*rawService `yaml:"services"`
-	Journeys map[string]*rawJourney `yaml:"journeys"`
-	Faults   []*rawFault            `yaml:"faults,omitempty"`
+	Namespace string                 `yaml:"namespace,omitempty"`
+	Services  map[string]*rawService `yaml:"services"`
+	Journeys  map[string]*rawJourney `yaml:"journeys"`
+	Faults    []*rawFault            `yaml:"faults,omitempty"`
 }
 
 type rawService struct {
+	Namespace  string          `yaml:"namespace,omitempty"`
 	Kind       string          `yaml:"kind"`
 	Replicas   *int            `yaml:"replicas,omitempty"`
 	Language   string          `yaml:"language,omitempty"`

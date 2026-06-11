@@ -1,5 +1,6 @@
 # Minimal xk6-otel-gen topology.
 # This file models a classic frontend -> backend -> database flow.
+namespace: demo
 services:
   # services is a map keyed by service name. Use stable names because journeys
   # and faults reference them.

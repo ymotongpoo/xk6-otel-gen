@@ -3,6 +3,7 @@
 package synth
 
 import (
+	"hash/fnv"
 	"strings"
 	"sync"
 
@@ -119,8 +120,10 @@ func httpStaticAttrs(svc *topology.Service, op string, edge *topology.Edge, dir 
 		kvs = append(kvs, semconv.HTTPRouteKey.String(route))
 	case dirClient:
 		kvs = append(kvs, semconv.URLPathKey.String(route))
+		kvs = append(kvs, semconv.URLScheme("http"))
 		if target := edgeTargetServiceName(edge); target != "" {
 			kvs = append(kvs, semconv.ServerAddressKey.String(target))
+			kvs = append(kvs, semconv.ServerPort(serverPortForEdge(edge)))
 			if svc.Kind == topology.KindExternalAPI || edgeTargetServiceKind(edge) == topology.KindExternalAPI {
 				kvs = append(kvs, attribute.String("peer.service", target))
 			}
@@ -136,18 +139,32 @@ func rpcStaticAttrs(svc *topology.Service, op string, edge *topology.Edge, dir d
 			serviceName = target
 		}
 	}
-	return []attribute.KeyValue{
+	kvs := []attribute.KeyValue{
 		semconv.RPCSystemKey.String("grpc"),
 		semconv.RPCServiceKey.String(serviceName),
 		semconv.RPCMethodKey.String(op),
 	}
+	if dir == dirClient && edgeTargetServiceName(edge) != "" {
+		kvs = append(kvs,
+			semconv.ServerAddressKey.String(edgeTargetServiceName(edge)),
+			semconv.ServerPort(serverPortForEdge(edge)),
+		)
+	}
+	return kvs
 }
 
-func dbStaticAttrs(svc *topology.Service, op string, _ *topology.Edge) []attribute.KeyValue {
-	return []attribute.KeyValue{
+func dbStaticAttrs(svc *topology.Service, op string, edge *topology.Edge) []attribute.KeyValue {
+	kvs := []attribute.KeyValue{
 		semconv.DBSystemKey.String(dbSystem(svc)),
 		semconv.DBOperationNameKey.String(op),
 	}
+	if target := edgeTargetServiceName(edge); target != "" {
+		kvs = append(kvs,
+			semconv.ServerAddressKey.String(target),
+			semconv.ServerPort(serverPortForEdge(edge)),
+		)
+	}
+	return kvs
 }
 
 func messagingStaticAttrs(svc *topology.Service, op string, edge *topology.Edge, dir direction) []attribute.KeyValue {
@@ -159,11 +176,18 @@ func messagingStaticAttrs(svc *topology.Service, op string, edge *topology.Edge,
 	if destination == "" {
 		destination = op
 	}
-	return []attribute.KeyValue{
+	kvs := []attribute.KeyValue{
 		semconv.MessagingSystemKey.String(messagingSystem(svc)),
 		semconv.MessagingOperationNameKey.String(operation),
 		semconv.MessagingDestinationNameKey.String(destination),
 	}
+	if target := edgeTargetServiceName(edge); target != "" {
+		kvs = append(kvs,
+			semconv.ServerAddressKey.String(target),
+			semconv.ServerPort(serverPortForEdge(edge)),
+		)
+	}
+	return kvs
 }
 
 func dynamicOutcomeAttrs(policy attributePolicy, outcome Outcome) []attribute.KeyValue {
@@ -189,6 +213,8 @@ var allowedAttrKeys = map[string]struct{}{
 	string(semconv.HTTPRouteKey):                {},
 	string(semconv.ServerAddressKey):            {},
 	string(semconv.ServerPortKey):               {},
+	string(semconv.NetworkPeerAddressKey):       {},
+	string(semconv.URLSchemeKey):                {},
 	string(semconv.URLPathKey):                  {},
 	string(semconv.RPCSystemKey):                {},
 	string(semconv.RPCServiceKey):               {},
@@ -200,6 +226,8 @@ var allowedAttrKeys = map[string]struct{}{
 	string(semconv.MessagingOperationNameKey):   {},
 	string(semconv.MessagingDestinationNameKey): {},
 	string(semconv.ErrorTypeKey):                {},
+	string(semconv.ExceptionTypeKey):            {},
+	string(semconv.ExceptionMessageKey):         {},
 	"peer.service":                              {},
 	"outcome":                                   {},
 	"synth.cascaded":                            {},
@@ -313,6 +341,73 @@ func edgeTargetServiceKind(edge *topology.Edge) topology.ServiceKind {
 		return topology.KindApplication
 	}
 	return edge.To.Service.Kind
+}
+
+func networkPeerAddressAttr(edge *topology.Edge, instanceIdx int, dir direction) []attribute.KeyValue {
+	if dir != dirClient && dir != dirProducer {
+		return nil
+	}
+	target := edgeTargetServiceName(edge)
+	if target == "" {
+		return nil
+	}
+	return []attribute.KeyValue{semconv.NetworkPeerAddress(PeerAddress(target, instanceIdx))}
+}
+
+// PeerAddress returns the deterministic synthetic network.peer.address value
+// for a target service name and instance index.
+func PeerAddress(serviceName string, instanceIdx int) string {
+	if instanceIdx < 0 {
+		instanceIdx = 0
+	}
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(serviceName))
+	sum := h.Sum32()
+	return strings.Join([]string{
+		"10",
+		intOctet((sum >> 8) & 0xff),
+		intOctet(sum & 0xff),
+		intOctet(uint32(instanceIdx%254) + 1),
+	}, ".")
+}
+
+func intOctet(v uint32) string {
+	const digits = "0123456789"
+	if v >= 100 {
+		return string([]byte{digits[v/100], digits[(v/10)%10], digits[v%10]})
+	}
+	if v >= 10 {
+		return string([]byte{digits[v/10], digits[v%10]})
+	}
+	return string([]byte{digits[v]})
+}
+
+func serverPortForEdge(edge *topology.Edge) int {
+	if edge == nil {
+		return 8080
+	}
+	return ServerPort(edgeTargetServiceKind(edge), edge.Protocol)
+}
+
+// ServerPort returns the deterministic synthetic server.port for a target
+// service kind and edge protocol.
+func ServerPort(kind topology.ServiceKind, protocol topology.Protocol) int {
+	switch kind {
+	case topology.KindDatabase:
+		return 5432
+	case topology.KindCache:
+		return 6379
+	case topology.KindQueue:
+		return 9092
+	case topology.KindExternalAPI:
+		return 443
+	}
+	switch protocol {
+	case topology.ProtocolGRPC:
+		return 50051
+	default:
+		return 8080
+	}
 }
 
 func dbSystem(svc *topology.Service) string {

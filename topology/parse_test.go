@@ -55,6 +55,9 @@ journeys:
 		t.Fatalf("Parse() error = %v", err)
 	}
 	frontend := s.Services["frontend"]
+	if s.Namespace != topology.DefaultNamespace || frontend.Namespace != topology.DefaultNamespace {
+		t.Fatalf("namespace defaults not applied: schema=%q frontend=%q", s.Namespace, frontend.Namespace)
+	}
 	if frontend.Replicas != 1 {
 		t.Fatalf("Replicas = %d, want 1", frontend.Replicas)
 	}
@@ -70,6 +73,40 @@ journeys:
 	}
 	if s.Journeys["home"].Weight != 1 {
 		t.Fatalf("journey weight = %v, want 1", s.Journeys["home"].Weight)
+	}
+}
+
+func TestParse_NamespaceOverride(t *testing.T) {
+	t.Parallel()
+
+	const src = `
+namespace: shop
+services:
+  frontend:
+    kind: application
+    operations: [{ name: GET / }]
+  payment:
+    namespace: pci
+    kind: application
+    operations: [{ name: authorize }]
+journeys:
+  home:
+    steps:
+      - service: frontend
+        operation: GET /
+`
+	s, err := topology.Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("Parse() error = %v", err)
+	}
+	if s.Namespace != "shop" {
+		t.Fatalf("Schema.Namespace = %q, want shop", s.Namespace)
+	}
+	if s.Services["frontend"].Namespace != "shop" {
+		t.Fatalf("frontend namespace = %q, want inherited shop", s.Services["frontend"].Namespace)
+	}
+	if s.Services["payment"].Namespace != "pci" {
+		t.Fatalf("payment namespace = %q, want pci", s.Services["payment"].Namespace)
 	}
 }
 
@@ -177,12 +214,14 @@ func mustParse(t *testing.T, src string) *topology.Schema {
 func validManualSchema() *topology.Schema {
 	frontend := &topology.Service{
 		Name:       "frontend",
+		Namespace:  topology.DefaultNamespace,
 		Kind:       topology.KindApplication,
 		Replicas:   1,
 		Operations: make(map[string]*topology.Operation),
 	}
 	backend := &topology.Service{
 		Name:       "backend",
+		Namespace:  topology.DefaultNamespace,
 		Kind:       topology.KindApplication,
 		Replicas:   1,
 		Operations: make(map[string]*topology.Operation),
@@ -201,6 +240,7 @@ func validManualSchema() *topology.Schema {
 		},
 	}}
 	return &topology.Schema{
+		Namespace: topology.DefaultNamespace,
 		Services: map[topology.ServiceID]*topology.Service{
 			frontend.Name: frontend,
 			backend.Name:  backend,

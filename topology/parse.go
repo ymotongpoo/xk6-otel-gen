@@ -71,20 +71,24 @@ func decodeRaw(r io.Reader, strict bool) (*rawSchema, error) {
 
 func buildSchema(raw *rawSchema) *Schema {
 	schema := &Schema{
-		Services: make(map[ServiceID]*Service),
-		Journeys: make(map[string]*Journey),
+		Namespace: DefaultNamespace,
+		Services:  make(map[ServiceID]*Service),
+		Journeys:  make(map[string]*Journey),
 	}
 	if raw == nil {
 		return schema
 	}
+	schema.Namespace = stringDefault(raw.Namespace, DefaultNamespace)
 
 	schema.Services = make(map[ServiceID]*Service, len(raw.Services))
 	for name, rs := range raw.Services {
 		if rs == nil {
 			rs = &rawService{}
 		}
+		namespace := stringDefault(rs.Namespace, schema.Namespace)
 		svc := &Service{
 			Name:       ServiceID(name),
+			Namespace:  namespace,
 			Kind:       parseServiceKind(rs.Kind),
 			Replicas:   intDefault(rs.Replicas, 1),
 			Language:   rs.Language,

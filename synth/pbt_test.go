@@ -4,6 +4,7 @@ package synth_test
 
 import (
 	"context"
+	"net"
 	"testing"
 	"time"
 
@@ -112,6 +113,25 @@ func TestFinishSpan_ErrorTypeRequired_Property(t *testing.T) {
 	})
 }
 
+func TestPeerAddress_DeterministicDottedQuad_Property(t *testing.T) {
+	t.Parallel()
+
+	rapid.Check(t, func(rt *rapid.T) {
+		name := rapid.String().Draw(rt, "service_name")
+		idx := rapid.IntRange(0, 10_000).Draw(rt, "instance_idx")
+
+		first := synth.PeerAddress(name, idx)
+		second := synth.PeerAddress(name, idx)
+		if first != second {
+			rt.Fatalf("PeerAddress returned %q then %q", first, second)
+		}
+		ip := net.ParseIP(first)
+		if ip == nil || ip.To4() == nil {
+			rt.Fatalf("PeerAddress(%q, %d) = %q, want dotted quad", name, idx, first)
+		}
+	})
+}
+
 func newPBTSynthesizer(t *testing.T) (synth.Synthesizer, *tracetest.InMemoryExporter, *sdkmetric.ManualReader) {
 	t.Helper()
 
@@ -199,6 +219,8 @@ var allowedSpanAttrKeys = map[string]struct{}{
 	string(semconv.HTTPRouteKey):                {},
 	string(semconv.ServerAddressKey):            {},
 	string(semconv.ServerPortKey):               {},
+	string(semconv.NetworkPeerAddressKey):       {},
+	string(semconv.URLSchemeKey):                {},
 	string(semconv.URLPathKey):                  {},
 	string(semconv.RPCSystemKey):                {},
 	string(semconv.RPCServiceKey):               {},
@@ -210,6 +232,8 @@ var allowedSpanAttrKeys = map[string]struct{}{
 	string(semconv.MessagingOperationNameKey):   {},
 	string(semconv.MessagingDestinationNameKey): {},
 	string(semconv.ErrorTypeKey):                {},
+	string(semconv.ExceptionTypeKey):            {},
+	string(semconv.ExceptionMessageKey):         {},
 	"peer.service":                              {},
 	"outcome":                                   {},
 	"synth.service.framework":                   {},

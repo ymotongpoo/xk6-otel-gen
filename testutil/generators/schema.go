@@ -14,8 +14,9 @@ func ValidSchema(opts ...SchemaOption) *rapid.Generator[*topology.Schema] {
 	o := applySchemaOptions(opts)
 	return rapid.Custom(func(t *rapid.T) *topology.Schema {
 		schema := &topology.Schema{
-			Services: make(map[topology.ServiceID]*topology.Service),
-			Journeys: make(map[string]*topology.Journey),
+			Namespace: topology.DefaultNamespace,
+			Services:  make(map[topology.ServiceID]*topology.Service),
+			Journeys:  make(map[string]*topology.Journey),
 		}
 		topoOrder := buildServicesAndOperations(t, schema, o)
 		buildEdges(t, topoOrder, o)
@@ -58,6 +59,7 @@ func buildServicesAndOperations(t *rapid.T, schema *topology.Schema, o schemaOpt
 		}
 		svc := &topology.Service{
 			Name:       name,
+			Namespace:  topology.DefaultNamespace,
 			Kind:       kind,
 			Replicas:   ValidReplicaCount().Draw(t, fmt.Sprintf("service_%d_replicas", svcIndex)),
 			Language:   rapid.SampledFrom([]string{"go", "java", "python", "nodejs", "ruby"}).Draw(t, fmt.Sprintf("service_%d_language", svcIndex)),

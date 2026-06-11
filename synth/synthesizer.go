@@ -81,6 +81,7 @@ func (s *defaultSynthesizer) BeginSpan(ctx context.Context, in SpanInput) (conte
 	staticAttrs := s.staticAttrs(in.Service, in.Operation, in.Edge, policy)
 	spanAttrs := make([]attribute.KeyValue, 0, staticAttrs.Len())
 	spanAttrs = append(spanAttrs, staticAttrs.ToSlice()...)
+	spanAttrs = append(spanAttrs, networkPeerAddressAttr(in.Edge, in.InstanceIdx, policy.Direction)...)
 
 	ctx, span := s.tracer.Start(ctx, spanName(in.Service, in.Operation),
 		trace.WithTimestamp(in.StartTime),
@@ -101,6 +102,12 @@ func (s *defaultSynthesizer) BeginSpan(ctx context.Context, in SpanInput) (conte
 			span.SetStatus(code, "")
 		}
 		span.SetAttributes(finishAttrs(policy, outcome)...)
+		if !outcome.Success {
+			span.AddEvent("exception",
+				trace.WithTimestamp(outcome.EndTime),
+				trace.WithAttributes(exceptionAttrs(outcome, in.Operation)...),
+			)
+		}
 		if outcome.Cascaded {
 			span.SetAttributes(attribute.Bool("synth.cascaded", true))
 		}
@@ -147,6 +154,18 @@ func (s *defaultSynthesizer) EmitLog(ctx context.Context, in LogInput) {
 	record.SetObservedTimestamp(now)
 	record.SetSeverity(severity)
 	record.SetBody(log.StringValue(body))
+	if !logAttrsContain(in.Attributes, string(semconv.ExceptionTypeKey)) {
+		if errType, ok := stringAttr(in.Attributes, string(semconv.ErrorTypeKey)); ok && severity >= log.SeverityError {
+			record.AddAttributes(log.KeyValue{
+				Key:   string(semconv.ExceptionTypeKey),
+				Value: log.StringValue(exceptionTypeFor(errType)),
+			})
+			record.AddAttributes(log.KeyValue{
+				Key:   string(semconv.ExceptionMessageKey),
+				Value: log.StringValue(fmt.Sprintf("simulated failure: %s on %s", errType, body)),
+			})
+		}
+	}
 	for key, value := range in.Attributes {
 		record.AddAttributes(log.KeyValue{Key: key, Value: toLogValue(value)})
 	}
@@ -156,6 +175,48 @@ func (s *defaultSynthesizer) EmitLog(ctx context.Context, in LogInput) {
 	})
 
 	s.logger.Emit(ctx, record)
+}
+
+func exceptionAttrs(outcome Outcome, operation string) []attribute.KeyValue {
+	errType := outcome.ErrorType
+	if errType == "" {
+		errType = "unknown"
+	}
+	exceptionType := exceptionTypeFor(errType)
+	message := fmt.Sprintf("simulated failure: %s on %s", errType, operation)
+	return []attribute.KeyValue{
+		semconv.ExceptionType(exceptionType),
+		semconv.ExceptionMessage(message),
+	}
+}
+
+func exceptionTypeFor(errorType string) string {
+	switch errorType {
+	case "timeout", "grpc.deadline_exceeded", "context_canceled":
+		return "TimeoutError"
+	case "connection_refused", "grpc.unavailable", "db.connection_lost":
+		return "ConnectionError"
+	case "crashed":
+		return "CrashError"
+	case "http.500", "http.502", "http.503", "http.504":
+		return "ServerError"
+	default:
+		return errorType
+	}
+}
+
+func logAttrsContain(attrs map[string]any, key string) bool {
+	_, ok := attrs[key]
+	return ok
+}
+
+func stringAttr(attrs map[string]any, key string) (string, bool) {
+	value, ok := attrs[key]
+	if !ok {
+		return "", false
+	}
+	s, ok := value.(string)
+	return s, ok && s != ""
 }
 
 func mustHistogram(meter metric.Meter, name, unit string) metric.Float64Histogram {

@@ -147,6 +147,7 @@ func TestBeginSpan_Server_Failure_500(t *testing.T) {
 	attrs := resourceAttrs(span.Attributes)
 	requireAttr(t, attrs, semconv.HTTPResponseStatusCodeKey, "500")
 	requireAttr(t, attrs, semconv.ErrorTypeKey, "http.500")
+	requireExceptionEvent(t, span, "ServerError")
 }
 
 func TestFinishFn_CascadedAttribute(t *testing.T) {
@@ -217,6 +218,9 @@ func TestBeginSpan_Client_HTTP(t *testing.T) {
 	}
 	attrs := resourceAttrs(span.Attributes)
 	requireAttr(t, attrs, semconv.ServerAddressKey, "target")
+	requireAttr(t, attrs, semconv.ServerPortKey, "443")
+	requireAttr(t, attrs, semconv.NetworkPeerAddressKey, PeerAddress("target", 0))
+	requireAttr(t, attrs, semconv.URLSchemeKey, "http")
 	requireAttr(t, attrs, semconv.URLPathKey, "/payments")
 }
 
@@ -536,6 +540,46 @@ func TestEmitLog_AttributesPropagated(t *testing.T) {
 	if attrs["route"] != "/checkout" {
 		t.Fatalf("route = %q, want /checkout", attrs["route"])
 	}
+}
+
+func TestEmitLog_ErrorAddsExceptionAttributes(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, recorder := newTestProviders(t)
+	syn := NewDefault(tp, mp, lp)
+	syn.EmitLog(context.Background(), LogInput{
+		Service:  makeSpanService("frontend", topology.KindApplication),
+		Severity: otellog.SeverityError,
+		Body:     "GET /checkout failure",
+		Attributes: map[string]any{
+			string(semconv.ErrorTypeKey): "http.500",
+		},
+	})
+
+	attrs := logAttrs(requireSingleLog(t, recorder))
+	if attrs[string(semconv.ExceptionTypeKey)] != "ServerError" {
+		t.Fatalf("exception.type = %q, want ServerError", attrs[string(semconv.ExceptionTypeKey)])
+	}
+	if attrs[string(semconv.ExceptionMessageKey)] == "" {
+		t.Fatal("exception.message missing")
+	}
+}
+
+func requireExceptionEvent(t *testing.T, span tracetest.SpanStub, wantType string) {
+	t.Helper()
+
+	for _, event := range span.Events {
+		if event.Name != "exception" {
+			continue
+		}
+		attrs := resourceAttrs(event.Attributes)
+		requireAttr(t, attrs, semconv.ExceptionTypeKey, wantType)
+		if _, ok := attrs[semconv.ExceptionMessageKey]; !ok {
+			t.Fatal("exception.message missing")
+		}
+		return
+	}
+	t.Fatalf("span events = %v, want exception event", span.Events)
 }
 
 func TestEmitLog_ServiceNameAuto(t *testing.T) {

@@ -7,6 +7,11 @@
   "required": ["services", "journeys"],
   "additionalProperties": true,
   "properties": {
+    "namespace": {
+      "description": "Default service.namespace applied to all services unless overridden per service.",
+      "type": "string",
+      "default": "xk6-otel-gen"
+    },
     "services": {
       "description": "Map of service identifiers to service declarations.",
       "type": "object",
@@ -42,6 +47,10 @@
           "description": "Semantic service category.",
           "type": "string",
           "enum": ["application", "database", "external_api", "cache", "queue"]
+        },
+        "namespace": {
+          "description": "Optional service.namespace override for this service.",
+          "type": "string"
         },
         "replicas": {
           "description": "Number of service instances to synthesize.",
