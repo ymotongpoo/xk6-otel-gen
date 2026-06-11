@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package topology
 
 // ServiceKind identifies the semantic category of a service.

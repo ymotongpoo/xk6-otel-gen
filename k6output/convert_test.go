@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package k6output
 
 import "testing"

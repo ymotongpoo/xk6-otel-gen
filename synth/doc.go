@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // Package synth synthesizes OpenTelemetry spans, metrics, and log records for
 // simulated services described by the topology package.
 //

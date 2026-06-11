@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // Package topology provides the schema, parser, validator, and serializer for
 // declarative microservice topologies consumed by xk6-otel-gen.
 //

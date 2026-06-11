@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package topology
 
 // ApplyFaults builds an overlay that indexes fault specs by target pointer.

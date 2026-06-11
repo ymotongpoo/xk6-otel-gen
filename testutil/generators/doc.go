@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // Package generators provides domain-specific PBT (property-based testing)
 // generators for the xk6-otel-gen project, built on pgregory.net/rapid.
 //

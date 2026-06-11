@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // Package journey orchestrates topology-defined journeys and delegates signal
 // emission to a synth.Synthesizer.
 //

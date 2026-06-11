@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // Package exporter provides an OTLP exporter pipeline for traces, metrics, and
 // logs.
 //

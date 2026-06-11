@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // Package k6output registers the "otel-gen" k6 output extension.
 //
 // Use it from k6 as an output:

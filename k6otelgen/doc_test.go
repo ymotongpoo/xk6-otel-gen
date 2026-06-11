@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package k6otelgen_test
 
 import "github.com/ymotongpoo/xk6-otel-gen/k6otelgen"
