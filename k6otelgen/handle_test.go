@@ -50,6 +50,30 @@ func TestHandle_RunJourney_CtxPassed(t *testing.T) {
 	}
 }
 
+func TestHandle_RunRandomJourney_ReturnsAndRunsPickedJourney(t *testing.T) {
+	t.Parallel()
+
+	mock := newMockSynth()
+	handle := newTestHandle(t, context.Background(), mock)
+	got := handle.RunRandomJourney()
+	if got != "checkout" {
+		t.Fatalf("RunRandomJourney() = %q, want checkout", got)
+	}
+	if mock.spanCount() == 0 {
+		t.Fatal("RunRandomJourney() emitted no spans")
+	}
+}
+
+func TestHandle_JourneyWeights_ReturnsConfiguredWeights(t *testing.T) {
+	t.Parallel()
+
+	handle := newTestHandle(t, context.Background(), newMockSynth())
+	got := handle.JourneyWeights()
+	if got["checkout"] != 1 {
+		t.Fatalf("JourneyWeights() = %#v, want checkout weight 1", got)
+	}
+}
+
 func TestHandle_Journeys_BeforeLoad_Empty(t *testing.T) {
 	t.Parallel()
 

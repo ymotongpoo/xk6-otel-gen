@@ -130,7 +130,7 @@ export function setup() {
 }
 
 export default function (data) {
-  data.topology.runJourney("checkout");
+  data.topology.runRandomJourney();
 }
 ```
 
@@ -139,6 +139,8 @@ export default function (data) {
 | `otelgen.configure(opts)` | Configure OTLP endpoint, protocol, TLS, headers, batching |
 | `otelgen.load(path)` | Parse and validate one topology YAML file |
 | `handle.runJourney(name)` | Execute a named journey |
+| `handle.runRandomJourney()` | Pick a journey by YAML weight, execute it, and return its name |
+| `handle.journeyWeights()` | Return `{ name: weight }` for custom JS selection |
 | `otelgen.stats()` | Return exporter success/failure counters |
 | `otelgen.journeys()` | List journey names after loading |
 | `handle.journeys()` | List journey names from a handle |

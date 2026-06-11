@@ -184,6 +184,7 @@ func (m *mockSynth) recordedContexts() []context.Context {
 func testModuleSchema() *topology.Schema {
 	service := &topology.Service{
 		Name:       "api",
+		Namespace:  topology.DefaultNamespace,
 		Kind:       topology.KindApplication,
 		Replicas:   1,
 		Operations: map[string]*topology.Operation{},
@@ -194,8 +195,9 @@ func testModuleSchema() *topology.Schema {
 		Services: map[topology.ServiceID]*topology.Service{service.Name: service},
 		Journeys: map[string]*topology.Journey{
 			"checkout": {
-				Name:  "checkout",
-				Steps: []*topology.Step{{Op: operation}},
+				Name:   "checkout",
+				Steps:  []*topology.Step{{Op: operation}},
+				Weight: 1,
 			},
 		},
 	}

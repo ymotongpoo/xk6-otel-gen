@@ -11,7 +11,7 @@ support -> ad, recommendation, image-provider
 dependencies -> redis-cache, postgres, kafka, flagd
 ```
 
-The topology includes 18 services, 5 journeys, and four subtle faults: payment errors, shipping latency, recommendation crashes, and email disconnects.
+The topology includes 18 services, 5 weighted journeys, retry backoff on payment authorization, and four subtle faults: payment errors, shipping latency, recommendation crashes, and email disconnects.
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ xk6 build --with github.com/ymotongpoo/xk6-otel-gen=.
 
 ## Run
 
-Port-forward the Collector and run the two-scenario script:
+Port-forward the Collector and run the two-scenario script. The browse scenario uses `runRandomJourney()` to demonstrate weighted journey selection.
 
 ```bash
 kubectl -n xk6-otel-gen-demo port-forward svc/otel-collector 4317:4317

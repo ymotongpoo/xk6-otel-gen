@@ -73,3 +73,44 @@ func (e *Engine) ListJourneys() []string {
 	copy(keys, e.impl.journeyKeys)
 	return keys
 }
+
+// JourneyWeights returns a copy of the configured journey selection weights.
+func (e *Engine) JourneyWeights() map[string]float64 {
+	out := make(map[string]float64, len(e.impl.journeyKeys))
+	for _, name := range e.impl.journeyKeys {
+		if journey := e.impl.schema.Journeys[name]; journey != nil {
+			out[name] = journey.Weight
+		}
+	}
+	return out
+}
+
+// PickJourney returns one journey name selected according to configured
+// weights using the Engine's deterministic random source.
+func (e *Engine) PickJourney() string {
+	if e == nil || e.impl == nil || len(e.impl.journeyKeys) == 0 {
+		return ""
+	}
+	var total float64
+	for _, name := range e.impl.journeyKeys {
+		if journey := e.impl.schema.Journeys[name]; journey != nil && journey.Weight > 0 {
+			total += journey.Weight
+		}
+	}
+	if total <= 0 {
+		return ""
+	}
+	roll := e.impl.randFloat64() * total
+	var cumulative float64
+	for _, name := range e.impl.journeyKeys {
+		journey := e.impl.schema.Journeys[name]
+		if journey == nil || journey.Weight <= 0 {
+			continue
+		}
+		cumulative += journey.Weight
+		if roll < cumulative {
+			return name
+		}
+	}
+	return e.impl.journeyKeys[len(e.impl.journeyKeys)-1]
+}

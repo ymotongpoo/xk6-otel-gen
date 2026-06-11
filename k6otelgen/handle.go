@@ -31,10 +31,32 @@ func (h *TopologyHandle) RunJourney(name string) {
 	}
 }
 
+// RunRandomJourney picks a configured journey by weight, executes it, and
+// returns the selected journey name.
+func (h *TopologyHandle) RunRandomJourney() string {
+	if h.engine == nil || h.instance == nil {
+		throwJSException(h.runtime, &ConfigError{Kind: "not_loaded"})
+	}
+	name := h.engine.PickJourney()
+	if name == "" {
+		throwJSException(h.runtime, &ConfigError{Kind: "not_loaded"})
+	}
+	h.RunJourney(name)
+	return name
+}
+
 // Journeys returns the sorted journey names available through this handle.
 func (h *TopologyHandle) Journeys() []string {
 	if h.engine == nil {
 		return []string{}
 	}
 	return h.engine.ListJourneys()
+}
+
+// JourneyWeights returns the configured journey selection weights.
+func (h *TopologyHandle) JourneyWeights() map[string]float64 {
+	if h.engine == nil {
+		return map[string]float64{}
+	}
+	return h.engine.JourneyWeights()
 }

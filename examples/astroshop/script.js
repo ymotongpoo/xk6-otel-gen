@@ -29,7 +29,7 @@ export function setup() {
 }
 
 export function browse(data) {
-  data.topology.runJourney("browse");
+  data.topology.runRandomJourney();
 }
 
 export function checkout(data) {
