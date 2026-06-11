@@ -56,19 +56,19 @@
 
 ### Step 0.1 — Verify project state
 
-- [ ] Confirm `go build ./...` succeeds at current main HEAD.
-- [ ] Confirm `topology.ExportJSONSchema()` is available in `topology/` package.
+- [x] Confirm `go build ./...` succeeds at current main HEAD.
+- [x] Confirm `topology.ExportJSONSchema()` is available in `topology/` package.
 
 ### Step 0.2 — Create U8 directory skeleton
 
-- [ ] Create `cmd/xk6-otel-gen-schema/` directory.
-- [ ] Create `examples/minimal/` and `examples/astroshop/` (with `k8s/` subdirs each).
-- [ ] Create `test/examples/` directory.
-- [ ] Create `.claude/skills/sync-astroshop/` directory.
+- [x] Create `cmd/xk6-otel-gen-schema/` directory.
+- [x] Create `examples/minimal/` and `examples/astroshop/` (with `k8s/` subdirs each).
+- [x] Create `test/examples/` directory.
+- [x] Create `.claude/skills/sync-astroshop/` directory.
 
 ### Phase 0 commit
 
-- [ ] `git add cmd/xk6-otel-gen-schema/ examples/ test/examples/ .claude/skills/ && git commit -m "build(samples): scaffold U8 directories"` (only creates empty dirs via `.gitkeep` or via the next phase files)
+- [x] `git add cmd/xk6-otel-gen-schema/ examples/ test/examples/ .claude/skills/ && git commit -m "build(samples): scaffold U8 directories"` (only creates empty dirs via `.gitkeep` or via the next phase files)
 
 ---
 
@@ -77,34 +77,34 @@
 
 ### Step 1.1 — Create `cmd/xk6-otel-gen-schema/main.go`
 
-- [ ] Implement `main()` as thin wrapper calling `os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))` per NFR-D §1.1.
-- [ ] Implement `run(args []string, stdout, stderr io.Writer) int` with:
+- [x] Implement `main()` as thin wrapper calling `os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))` per NFR-D §1.1.
+- [x] Implement `run(args []string, stdout, stderr io.Writer) int` with:
   - `flag.NewFlagSet` with `-output` flag
   - `flag.ContinueOnError` returns exit code 2 on parse failure
   - call `topology.ExportJSONSchema()`, return 1 on error
   - write to stdout or `-output` file, return 1 on write failure
   - return 0 on success
-- [ ] Add SPDX header at top of file (`// SPDX-License-Identifier: Apache-2.0`).
-- [ ] Add package GoDoc comment describing the CLI.
+- [x] Add SPDX header at top of file (`// SPDX-License-Identifier: Apache-2.0`).
+- [x] Add package GoDoc comment describing the CLI.
 
 ### Step 1.2 — Create `cmd/xk6-otel-gen-schema/main_test.go`
 
-- [ ] `TestRun_StdoutDefault` — no flags → stdout contains `$schema` marker.
-- [ ] `TestRun_OutputToFile` — `-output <tmpfile>` → file exists with schema content.
-- [ ] `TestRun_FlagParseError` — `-unknown` → exit 2.
-- [ ] `TestRun_FileCreateFailure` — invalid path (e.g., `/dev/null/x/schema.json`) → exit 1.
-- [ ] `TestRun_HelpFlag` — `-h` or `-help` should be handled gracefully by `flag.ContinueOnError`.
-- [ ] All tests call `t.Parallel()`.
-- [ ] Use `testing.TempDir()` for file outputs.
-- [ ] Add SPDX header.
+- [x] `TestRun_StdoutDefault` — no flags → stdout contains `$schema` marker.
+- [x] `TestRun_OutputToFile` — `-output <tmpfile>` → file exists with schema content.
+- [x] `TestRun_FlagParseError` — `-unknown` → exit 2.
+- [x] `TestRun_FileCreateFailure` — invalid path (e.g., `/dev/null/x/schema.json`) → exit 1.
+- [x] `TestRun_HelpFlag` — `-h` or `-help` should be handled gracefully by `flag.ContinueOnError`.
+- [x] All tests call `t.Parallel()`.
+- [x] Use `testing.TempDir()` for file outputs.
+- [x] Add SPDX header.
 
 ### Step 1.3 — Verify coverage
 
-- [ ] Run `go test -cover ./cmd/...` and confirm ≥ 70%.
+- [x] Run `go test -cover ./cmd/...` and confirm ≥ 70%.
 
 ### Phase 1 commit
 
-- [ ] `git add cmd/xk6-otel-gen-schema/main.go cmd/xk6-otel-gen-schema/main_test.go && git commit -m "feat(cmd): add xk6-otel-gen-schema CLI for JSON Schema export"`
+- [x] `git add cmd/xk6-otel-gen-schema/main.go cmd/xk6-otel-gen-schema/main_test.go && git commit -m "feat(cmd): add xk6-otel-gen-schema CLI for JSON Schema export"`
 
 ---
 
@@ -113,19 +113,19 @@
 
 ### Step 2.1 — Create `test/examples/examples_test.go`
 
-- [ ] `TestExamples_TopologyValidates`:
+- [x] `TestExamples_TopologyValidates`:
   - Loop over `os.ReadDir("../../examples")`
   - For each directory entry, run sub-test
   - Read `<dir>/topology.yaml`, call `topology.Parse` + `Schema.Validate`
   - Assert no errors
-- [ ] Add SPDX header.
-- [ ] Test marked `t.Parallel()` at top + each sub-test also parallel.
+- [x] Add SPDX header.
+- [x] Test marked `t.Parallel()` at top + each sub-test also parallel.
 
 > **NOTE**: This test will skip example directories that don't yet exist (Phase 3+ will add them). At Phase 2 completion, the test is in place but may pass with 0 examples; Phase 3+ make it exercise actual content.
 
 ### Phase 2 commit
 
-- [ ] `git add test/examples/examples_test.go && git commit -m "test(examples): add topology validation test for example yamls"`
+- [x] `git add test/examples/examples_test.go && git commit -m "test(examples): add topology validation test for example yamls"`
 
 ---
 
@@ -134,15 +134,15 @@
 
 ### Step 3.1 — Create `examples/minimal/topology.yaml`
 
-- [ ] 3-tier topology (frontend / backend / database) per FD §2.
-- [ ] 1 journey: `checkout`.
-- [ ] 1 fault: `error_rate_override` on `frontend_to_backend` edge with rate=0.05.
-- [ ] Inline comments describing each field for first-time readers.
-- [ ] Must pass `topology.Parse + Validate` (verify via Phase 2 test).
+- [x] 3-tier topology (frontend / backend / database) per FD §2.
+- [x] 1 journey: `checkout`.
+- [x] 1 fault: `error_rate_override` on `frontend_to_backend` edge with rate=0.05.
+- [x] Inline comments describing each field for first-time readers.
+- [x] Must pass `topology.Parse + Validate` (verify via Phase 2 test).
 
 ### Step 3.2 — Create `examples/minimal/script.js`
 
-- [ ] 3-phase k6 script per FD §2.3:
+- [x] 3-phase k6 script per FD §2.3:
   - `import otelgen from "k6/x/otel-gen"`
   - `export const options = { vus: 10, duration: '30s' }`
   - `setup()` calls `otelgen.configure` + `otelgen.load`
@@ -151,42 +151,42 @@
 
 ### Step 3.3 — Create `examples/minimal/otel-collector-config.yaml`
 
-- [ ] OTLP receiver (grpc + http)
-- [ ] batch processor
-- [ ] 3 exporters: otlp/tempo, prometheus, otlphttp/loki
-- [ ] 3 pipelines (traces / metrics / logs) routing to the right exporter
+- [x] OTLP receiver (grpc + http)
+- [x] batch processor
+- [x] 3 exporters: otlp/tempo, prometheus, otlphttp/loki
+- [x] 3 pipelines (traces / metrics / logs) routing to the right exporter
 
 ### Step 3.4 — Create `examples/minimal/k8s/` manifests
 
-- [ ] `kustomization.yaml` per NFR-D §3.2 with resources + configMapGenerator
-- [ ] `namespace.yaml` — `xk6-otel-gen-demo` namespace
-- [ ] `collector.yaml` — Collector Deployment + Service
-- [ ] `tempo.yaml` — Tempo Deployment + Service + inline ConfigMap with minimal Tempo config
-- [ ] `loki.yaml` — Loki Deployment + Service + inline ConfigMap with minimal Loki config
-- [ ] `prometheus.yaml` — Prometheus Deployment + Service + ConfigMap with scrape config (target `otel-collector:8889`)
-- [ ] `grafana.yaml` — Grafana Deployment + Service with volumeMounts for datasources + dashboards
-- [ ] `datasources.yaml` — Grafana provisioning for Tempo (default? per FD), Prometheus, Loki
-- [ ] `dashboard-overview.json` — 3-panel dashboard (Tempo / Prometheus / Loki) per NFR-D §4.3
-- [ ] All images pinned to specific tags per NFR-R §1.7 / NFR-D §4 (Tempo 2.6.0, Loki 3.2.0, Prometheus v2.55.0, Grafana 11.3.0, Collector contrib 0.105.0 — verify latest at implementation time)
-- [ ] resources.requests: 256Mi/100m baseline, Tempo/Loki 512Mi/100m
+- [x] `kustomization.yaml` per NFR-D §3.2 with resources + configMapGenerator
+- [x] `namespace.yaml` — `xk6-otel-gen-demo` namespace
+- [x] `collector.yaml` — Collector Deployment + Service
+- [x] `tempo.yaml` — Tempo Deployment + Service + inline ConfigMap with minimal Tempo config
+- [x] `loki.yaml` — Loki Deployment + Service + inline ConfigMap with minimal Loki config
+- [x] `prometheus.yaml` — Prometheus Deployment + Service + ConfigMap with scrape config (target `otel-collector:8889`)
+- [x] `grafana.yaml` — Grafana Deployment + Service with volumeMounts for datasources + dashboards
+- [x] `datasources.yaml` — Grafana provisioning for Tempo (default? per FD), Prometheus, Loki
+- [x] `dashboard-overview.json` — 3-panel dashboard (Tempo / Prometheus / Loki) per NFR-D §4.3
+- [x] All images pinned to specific tags per NFR-R §1.7 / NFR-D §4 (Tempo 2.6.0, Loki 3.2.0, Prometheus v2.55.0, Grafana 11.3.0, Collector contrib 0.105.0 — verify latest at implementation time)
+- [x] resources.requests: 256Mi/100m baseline, Tempo/Loki 512Mi/100m
 
 ### Step 3.5 — Create `examples/minimal/README.md`
 
-- [ ] 7 sections per business-rules.md §4.2: Description / Prerequisites / Setup / Run / View results / Cleanup / Customize.
-- [ ] Code blocks with concrete commands.
+- [x] 7 sections per business-rules.md §4.2: Description / Prerequisites / Setup / Run / View results / Cleanup / Customize.
+- [x] Code blocks with concrete commands.
 
 ### Step 3.6 — Create `examples/minimal/k8s/README.md`
 
-- [ ] kind cluster setup + kubectl apply + port-forward + cleanup commands.
+- [x] kind cluster setup + kubectl apply + port-forward + cleanup commands.
 
 ### Step 3.7 — Verify
 
-- [ ] `go test ./test/examples/...` passes (minimal/topology.yaml validates).
-- [ ] `kubectl apply --dry-run=client -k examples/minimal/k8s/` clean (server dry-run requires cluster).
+- [x] `go test ./test/examples/...` passes (minimal/topology.yaml validates).
+- [x] `kubectl apply --dry-run=client -k examples/minimal/k8s/` clean (server dry-run requires cluster).
 
 ### Phase 3 commit
 
-- [ ] `git add examples/minimal/ && git commit -m "feat(examples): add minimal 3-tier example with LGTM-lite k8s stack"`
+- [x] `git add examples/minimal/ && git commit -m "feat(examples): add minimal 3-tier example with LGTM-lite k8s stack"`
 
 ---
 
@@ -195,8 +195,8 @@
 
 ### Step 4.1 — Verify kustomize build
 
-- [ ] `kustomize build examples/minimal/k8s/ > /tmp/minimal.yaml` succeeds without error
-- [ ] `kubectl apply --dry-run=client -f /tmp/minimal.yaml` succeeds
+- [x] `kustomize build examples/minimal/k8s/ > /tmp/minimal.yaml` succeeds without error
+- [x] `kubectl apply --dry-run=client -f /tmp/minimal.yaml` succeeds
 
 (No commit — verification only. If failures, fix Phase 3 manifests.)
 
@@ -207,45 +207,45 @@
 
 ### Step 5.1 — Create `examples/astroshop/topology.yaml`
 
-- [ ] 18 services per FD §3.1 (14 application + 4 dependency: redis-cache / postgres / kafka / flagd).
-- [ ] Section comments per NFR-D §9.1 (4 groups: Frontend & API / Core commerce / Support / Infrastructure deps).
-- [ ] Inline 1-line description per service.
-- [ ] 5 journeys per FD §3.2: browse / search / add-to-cart / checkout / place-order.
-- [ ] Fault demonstrations per FD §3.3: payment error_rate spike, shipping latency_inflation, recommendation crash, email disconnect.
-- [ ] Header comment: "Modeled after the OpenTelemetry Demo (astronomy shop) v<X.Y.Z>" — substitute current OTel Demo release tag at implementation time.
-- [ ] Must pass `topology.Parse + Validate`.
+- [x] 18 services per FD §3.1 (14 application + 4 dependency: redis-cache / postgres / kafka / flagd).
+- [x] Section comments per NFR-D §9.1 (4 groups: Frontend & API / Core commerce / Support / Infrastructure deps).
+- [x] Inline 1-line description per service.
+- [x] 5 journeys per FD §3.2: browse / search / add-to-cart / checkout / place-order.
+- [x] Fault demonstrations per FD §3.3: payment error_rate spike, shipping latency_inflation, recommendation crash, email disconnect.
+- [x] Header comment: "Modeled after the OpenTelemetry Demo (astronomy shop) v<X.Y.Z>" — substitute current OTel Demo release tag at implementation time.
+- [x] Must pass `topology.Parse + Validate`.
 
 ### Step 5.2 — Create `examples/astroshop/script.js`
 
-- [ ] k6 scenarios per FD §3.4: `browse` (vus=20, 60s) + `checkout` (vus=5, 60s) with separate `exec` functions.
+- [x] k6 scenarios per FD §3.4: `browse` (vus=20, 60s) + `checkout` (vus=5, 60s) with separate `exec` functions.
 
 ### Step 5.3 — Create `examples/astroshop/otel-collector-config.yaml`
 
-- [ ] Same as minimal (3 pipelines, same exporters).
+- [x] Same as minimal (3 pipelines, same exporters).
 
 ### Step 5.4 — Create `examples/astroshop/k8s/`
 
-- [ ] Same layout as minimal/k8s/.
-- [ ] resources.requests can be slightly larger for astroshop scale (e.g., Tempo 1Gi instead of 512Mi).
-- [ ] dashboard-overview.json may include a 4th panel showing 5-journey breakdown.
+- [x] Same layout as minimal/k8s/.
+- [x] resources.requests can be slightly larger for astroshop scale (e.g., Tempo 1Gi instead of 512Mi).
+- [x] dashboard-overview.json may include a 4th panel showing 5-journey breakdown.
 
 ### Step 5.5 — Create `examples/astroshop/README.md`
 
-- [ ] Same 7 sections as minimal/README.md.
-- [ ] **Mention OTel Demo upstream snapshot version** in Description section (for sync skill reference).
+- [x] Same 7 sections as minimal/README.md.
+- [x] **Mention OTel Demo upstream snapshot version** in Description section (for sync skill reference).
 
 ### Step 5.6 — Create `examples/astroshop/k8s/README.md`
 
-- [ ] kind cluster setup + apply + port-forward + cleanup.
+- [x] kind cluster setup + apply + port-forward + cleanup.
 
 ### Step 5.7 — Verify
 
-- [ ] `go test ./test/examples/...` passes for both minimal and astroshop.
-- [ ] `kustomize build examples/astroshop/k8s/` succeeds.
+- [x] `go test ./test/examples/...` passes for both minimal and astroshop.
+- [x] `kustomize build examples/astroshop/k8s/` succeeds.
 
 ### Phase 5 commit
 
-- [ ] `git add examples/astroshop/ && git commit -m "feat(examples): add astroshop 18-service example modeled after OTel Demo"`
+- [x] `git add examples/astroshop/ && git commit -m "feat(examples): add astroshop 18-service example modeled after OTel Demo"`
 
 ---
 
@@ -254,12 +254,12 @@
 
 ### Step 6.1 — Create `LICENSE`
 
-- [ ] Apache-2.0 fulltext from SPDX official source (https://www.apache.org/licenses/LICENSE-2.0.txt).
+- [x] Apache-2.0 fulltext from SPDX official source (https://www.apache.org/licenses/LICENSE-2.0.txt).
 
 ### Step 6.2 — Create `README.md` (project root)
 
-- [ ] Single-file with TOC + 12 sections per NFR-D §10.1.
-- [ ] Sections per business-rules.md §4.1:
+- [x] Single-file with TOC + 12 sections per NFR-D §10.1.
+- [x] Sections per business-rules.md §4.1:
   1. Project description
   2. Badges (Go version, License)
   3. Quick Start (5-step xk6 build + kind + apply + k6 run)
@@ -273,12 +273,12 @@
   11. Contributing — brief guideline (TODO: link to CONTRIBUTING.md if exists later)
   12. License — Apache-2.0
   13. Compatibility — minimum version table (Go 1.25+, kubectl 1.27+, kind 0.20+, Docker latest)
-- [ ] TOC at top with markdown anchors to each section.
-- [ ] Each section has at least one concrete code example or table.
+- [x] TOC at top with markdown anchors to each section.
+- [x] Each section has at least one concrete code example or table.
 
 ### Phase 6 commit
 
-- [ ] `git add README.md LICENSE && git commit -m "docs(project): add full project README and Apache-2.0 LICENSE"`
+- [x] `git add README.md LICENSE && git commit -m "docs(project): add full project README and Apache-2.0 LICENSE"`
 
 ---
 
@@ -287,20 +287,20 @@
 
 ### Step 7.1 — Create SKILL.md
 
-- [ ] Frontmatter with `name: sync-astroshop` and detailed `description`.
-- [ ] Body markdown per NFR-D §7.1:
+- [x] Frontmatter with `name: sync-astroshop` and detailed `description`.
+- [x] Body markdown per NFR-D §7.1:
   - When to use
   - Out of scope (daily/monthly auto sync, code dep updates)
   - Steps (4 numbered steps: Survey upstream / Diff astroshop / Propose changes / Apply checklist)
   - Anti-patterns (no 1:1 reproduction, no blocking on minor churn)
   - Output (Markdown summary for PR description)
-- [ ] Reference upstream repo: `open-telemetry/opentelemetry-demo`
-- [ ] Reference local file: `examples/astroshop/topology.yaml`
-- [ ] Description mentions checklist items.
+- [x] Reference upstream repo: `open-telemetry/opentelemetry-demo`
+- [x] Reference local file: `examples/astroshop/topology.yaml`
+- [x] Description mentions checklist items.
 
 ### Phase 7 commit
 
-- [ ] `git add .claude/skills/sync-astroshop/SKILL.md && git commit -m "docs(skill): add sync-astroshop AI maintenance skill"`
+- [x] `git add .claude/skills/sync-astroshop/SKILL.md && git commit -m "docs(skill): add sync-astroshop AI maintenance skill"`
 
 ---
 
@@ -309,7 +309,7 @@
 
 ### Step 8.1 — Create `.github/dependabot.yml`
 
-- [ ] Per NFR-D §5.1:
+- [x] Per NFR-D §5.1:
   - gomod weekly grouped (`otel`, `k6` patterns)
   - docker monthly for `examples/minimal/k8s/`
   - docker monthly for `examples/astroshop/k8s/`
@@ -317,28 +317,28 @@
 
 ### Step 8.2 — Create `.lychee.toml`
 
-- [ ] exclude `localhost`, `127.0.0.1`, `example.com`, `example.org`
-- [ ] max-retries = 3, timeout = 10
-- [ ] include-fragments = true
-- [ ] exclude_path = `node_modules`, `.git`
+- [x] exclude `localhost`, `127.0.0.1`, `example.com`, `example.org`
+- [x] max-retries = 3, timeout = 10
+- [x] include-fragments = true
+- [x] exclude_path = `node_modules`, `.git`
 
 ### Step 8.3 — Create `.goheader.txt`
 
-- [ ] Single line: `SPDX-License-Identifier: Apache-2.0`
+- [x] Single line: `SPDX-License-Identifier: Apache-2.0`
 
 ### Step 8.4 — Update `.golangci.yml`
 
-- [ ] If `.golangci.yml` exists at project root, add `goheader` linter to enabled list + `linters-settings.goheader.template-path: .goheader.txt`
-- [ ] If `.golangci.yml` doesn't exist, create with project-standard config + goheader
+- [x] If `.golangci.yml` exists at project root, add `goheader` linter to enabled list + `linters-settings.goheader.template-path: .goheader.txt`
+- [x] If `.golangci.yml` doesn't exist, create with project-standard config + goheader
 
 ### Step 8.5 — Verify lint passes
 
-- [ ] `golangci-lint run ./cmd/...` passes (all .go files have SPDX header)
-- [ ] If existing files (U1-U7) lack SPDX header, backfill or update goheader template to be lenient
+- [x] `golangci-lint run ./cmd/...` passes (all .go files have SPDX header)
+- [x] If existing files (U1-U7) lack SPDX header, backfill or update goheader template to be lenient
 
 ### Phase 8 commit
 
-- [ ] `git add .github/dependabot.yml .lychee.toml .goheader.txt .golangci.yml && git commit -m "build(ci): add dependabot, lychee, goheader configs"`
+- [x] `git add .github/dependabot.yml .lychee.toml .goheader.txt .golangci.yml && git commit -m "build(ci): add dependabot, lychee, goheader configs"`
 
 ---
 
@@ -349,13 +349,13 @@
 
 ### Step 9.1 — Audit and backfill
 
-- [ ] Run `grep -L "SPDX-License-Identifier" $(find . -name '*.go' -not -path './vendor/*')` to list files lacking SPDX header.
-- [ ] For each missing file, prepend `// SPDX-License-Identifier: Apache-2.0\n\n` before the `package` declaration.
-- [ ] Verify `golangci-lint run` clean for the entire project.
+- [x] Run `grep -L "SPDX-License-Identifier" $(find . -name '*.go' -not -path './vendor/*')` to list files lacking SPDX header.
+- [x] For each missing file, prepend `// SPDX-License-Identifier: Apache-2.0\n\n` before the `package` declaration.
+- [x] Verify `golangci-lint run` clean for the entire project.
 
 ### Phase 9 commit (only if files modified)
 
-- [ ] `git add <modified .go files> && git commit -m "chore(license): backfill SPDX headers across all packages"`
+- [x] `git add <modified .go files> && git commit -m "chore(license): backfill SPDX headers across all packages"`
 
 ---
 
@@ -364,36 +364,36 @@
 
 ### Step 10.1 — Run full suite
 
-- [ ] `go build ./...` succeeds.
-- [ ] `go vet ./cmd/... ./test/examples/...` clean.
-- [ ] `go test -race -count=1 ./...` passes (including cmd and examples tests).
-- [ ] `go test -cover ./cmd/...` shows ≥ 70%.
-- [ ] `golangci-lint run` (full repo) passes including goheader enforce.
-- [ ] `kustomize build examples/minimal/k8s/` succeeds.
-- [ ] `kustomize build examples/astroshop/k8s/` succeeds.
-- [ ] `xk6 build --with .` succeeds (if xk6 available locally).
-- [ ] If `lychee` is available: `lychee --config .lychee.toml README.md 'examples/**/README.md'` passes.
+- [x] `go build ./...` succeeds.
+- [x] `go vet ./cmd/... ./test/examples/...` clean.
+- [x] `go test -race -count=1 ./...` passes (including cmd and examples tests).
+- [x] `go test -cover ./cmd/...` shows ≥ 70%.
+- [x] `golangci-lint run` (full repo) passes including goheader enforce.
+- [x] `kustomize build examples/minimal/k8s/` succeeds.
+- [x] `kustomize build examples/astroshop/k8s/` succeeds.
+- [x] `xk6 build --with .` succeeds (if xk6 available locally).
+- [x] If `lychee` is available: `lychee --config .lychee.toml README.md 'examples/**/README.md'` passes.
 
 ### Step 10.2 — Create `aidlc-docs/construction/u8-samples/code/code-generation-summary.md`
 
-- [ ] File list with line counts.
-- [ ] Verification results.
-- [ ] Deviations from plan.
-- [ ] Recent commits.
+- [x] File list with line counts.
+- [x] Verification results.
+- [x] Deviations from plan.
+- [x] Recent commits.
 
 ### Step 10.3 — Mark all plan checkboxes [x]
 
-- [ ] Walk back through this plan; verify all `[ ]` are `[x]`.
+- [x] Walk back through this plan; verify all `[ ]` are `[x]`.
 
 ### Step 10.4 — Update `aidlc-docs/aidlc-state.md`
 
-- [ ] Mark **U8 complete**.
-- [ ] **Mark all CONSTRUCTION phase units complete**.
-- [ ] Next stage: **Build and Test** (per AIDLC workflow).
+- [x] Mark **U8 complete**.
+- [x] **Mark all CONSTRUCTION phase units complete**.
+- [x] Next stage: **Build and Test** (per AIDLC workflow).
 
 ### Phase 10 commit
 
-- [ ] `git add aidlc-docs/ && git commit -m "chore(u8-samples): finalize code-generation-summary and complete CONSTRUCTION phase"`
+- [x] `git add aidlc-docs/ && git commit -m "chore(u8-samples): finalize code-generation-summary and complete CONSTRUCTION phase"`
 
 ---
 

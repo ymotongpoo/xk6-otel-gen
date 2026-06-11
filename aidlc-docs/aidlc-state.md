@@ -50,12 +50,12 @@
 - [ ] Units Generation — EXECUTE
 
 ### 🟢 CONSTRUCTION PHASE (per unit)
-- [ ] Functional Design — EXECUTE
-- [ ] NFR Requirements — EXECUTE
-- [ ] NFR Design — EXECUTE
-- [ ] Infrastructure Design — SKIPPED (binary distribution, no IaC)
-- [ ] Code Generation — EXECUTE
-- [ ] Build and Test — EXECUTE
+- [x] Functional Design
+- [x] NFR Requirements
+- [x] NFR Design
+- [x] Infrastructure Design — SKIPPED (binary distribution, no IaC)
+- [x] Code Generation
+- [ ] Build and Test — NEXT
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations — PLACEHOLDER
@@ -63,9 +63,9 @@
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
 - **Current Unit**: U8 (Samples & Distribution)
-- **Completed Units**: U7, U1, U4, U3, U2, U5, U6
-- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → [✓ U3 complete] → [✓ U2 complete] → [✓ U5 complete] → [✓ U6 complete] → U8
-- **Status**: U6 code generation completed through Phase 12 with k6output coverage 86.6%, `go test -race -count=1 ./...` clean, benchmarks within NFR-U6 targets, full lint clean, and build-tagged integration harness present. Next construction focus is U8.
+- **Completed Units**: U7, U1, U4, U3, U2, U5, U6, U8
+- **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → [✓ U3 complete] → [✓ U2 complete] → [✓ U5 complete] → [✓ U6 complete] → [✓ U8 complete]
+- **Status**: U8 code generation completed with schema CLI coverage 86.4%, `go test -race -count=1 ./...` clean, full lint clean, examples validation clean, and minimal/astroshop kustomize builds clean. All CONSTRUCTION phase units are complete. Next stage is Build and Test.
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)
