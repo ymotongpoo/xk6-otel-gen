@@ -1128,3 +1128,42 @@ This completes ALL Construction stage Functional Design + NFR Requirements + NFR
 After U8 Code Generation: AIDLC workflow transitions to Build and Test stage (CI workflows, release automation, SECURITY.md, CONTRIBUTING.md — explicitly out of U8 scope)."
 
 **Context**: U8 Code Generation — Part 1 Planning (Step 3/4 GATE). Final Code Generation Plan of the project.
+
+
+## U8 Samples & Distribution — Code Generation Completed (Single Codex Session, 10 commits)
+**Timestamp**: 2026-06-11T01:29:47Z
+**User Input**: Codex completed Phase 0-10 in a single run, exit 0. Final commit 7cd3877. 10 new commits. cmd coverage 86.4%. **All Construction units complete.**
+
+**AI Response**: "U8 Code Generation complete in a single Codex session. 10 commits delivered:
+- a377008 (scaffold)
+- 84da832 (cmd schema CLI + tests, 86.4% coverage)
+- f180f87 (examples test framework)
+- 3b66e3c (minimal example with LGTM-lite k8s stack)
+- 75b5de7 (astroshop 18-service example)
+- 3e66589 (project README + Apache-2.0 LICENSE)
+- c92c68e (sync-astroshop AI skill)
+- d258602 (CI configs: dependabot + lychee + goheader)
+- 585a90b (SPDX header backfill across all packages)
+- 7cd3877 (final summary, Construction complete)
+
+The new sync-astroshop skill is now Claude-Code-recognized (visible in available skills list at session resume), confirming the .claude/skills/<name>/SKILL.md convention worked end-to-end.
+
+DoD all-green:
+- go build ./...: pass
+- go vet ./cmd/... ./test/examples/...: pass
+- go test -race -count=1 ./...: pass (full repo)
+- go test -cover ./cmd/...: 86.4% (above 70% target)
+- golangci-lint run (full repo): pass after SPDX backfill
+- go test ./test/examples/...: pass for both minimal and astroshop
+- kustomize build examples/minimal/k8s/: pass + kubectl dry-run pass
+- kustomize build examples/astroshop/k8s/: pass + kubectl dry-run pass
+- xk6 build / lychee: skipped (tools not installed locally; CI will run them)
+
+Notable Codex-introduced deviations:
+1. topology.ExportJSONSchema is a method on (*Schema), not a package function. cmd adapted to call it via the Schema receiver.
+2. kustomize built into kubectl rejects '../' file references in configMapGenerator; Codex worked around by also including a k8s/otel-collector-config.yaml local copy alongside the canonical root otel-collector-config.yaml.
+3. Image tags refreshed to actual latest stable at implementation time: Collector contrib 0.154.0, Tempo 3.0.0, Loki 3.7.2, Prometheus v3.12.0, Grafana 13.0.2, OTel Demo snapshot 2.2.0.
+
+**CONSTRUCTION PHASE COMPLETE.** All 8 units (U1-U8) have completed Functional Design + NFR Requirements + NFR Design + Code Generation. Next: Build and Test stage per AIDLC workflow (CI workflows, release automation, SECURITY.md, CONTRIBUTING.md)."
+
+**Context**: U8 Code Generation — Part 2 complete. ENTIRE CONSTRUCTION PHASE COMPLETE. Awaiting Continue to Next Stage approval before moving to Build and Test stage.
