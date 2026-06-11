@@ -52,6 +52,36 @@ func TestPickJourney_ReturnsDefinedJourney_Property(t *testing.T) {
 	})
 }
 
+func TestPickJourney_ReturnsOnlyPositiveWeight_Property(t *testing.T) {
+	t.Parallel()
+
+	rapid.Check(t, func(t *rapid.T) {
+		positiveCount := rapid.IntRange(1, 5).Draw(t, "positive_count")
+		zeroCount := rapid.IntRange(0, 5).Draw(t, "zero_count")
+		weights := make(map[string]float64, positiveCount+zeroCount)
+		positive := map[string]struct{}{}
+		for i := 0; i < positiveCount; i++ {
+			name := "positive-" + rapid.StringMatching(`^[a-z]{3,8}$`).Draw(t, "positive_name_"+string(rune('a'+i)))
+			weight := rapid.Float64Range(0.1, 100).Draw(t, "positive_weight_"+name)
+			weights[name] = weight
+			positive[name] = struct{}{}
+		}
+		for i := 0; i < zeroCount; i++ {
+			name := "zero-" + rapid.StringMatching(`^[a-z]{3,8}$`).Draw(t, "zero_name_"+string(rune('a'+i)))
+			weights[name] = 0
+		}
+
+		schema := weightedPickSchema(weights)
+		engine := journey.NewEngineWithSeed(schema, schema.ApplyFaults(), &pbtSynth{}, 11)
+		for i := 0; i < 100; i++ {
+			picked := engine.PickJourney()
+			if _, ok := positive[picked]; !ok {
+				t.Fatalf("PickJourney() = %q, want one of positive-weight journeys %v", picked, positive)
+			}
+		}
+	})
+}
+
 func TestPickJourney_SingleJourney_Property(t *testing.T) {
 	t.Parallel()
 

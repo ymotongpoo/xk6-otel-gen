@@ -112,5 +112,11 @@ func (e *Engine) PickJourney() string {
 			return name
 		}
 	}
-	return e.impl.journeyKeys[len(e.impl.journeyKeys)-1]
+	for idx := len(e.impl.journeyKeys) - 1; idx >= 0; idx-- {
+		name := e.impl.journeyKeys[idx]
+		if journey := e.impl.schema.Journeys[name]; journey != nil && journey.Weight > 0 {
+			return name
+		}
+	}
+	return ""
 }
