@@ -39,6 +39,10 @@ func (e *engineImpl) foldFaults(node *Node) foldedFault {
 	}
 
 	if node.Edge != nil {
+		if node.Edge.ErrorRate > 0 {
+			ff.errorRate = clampProbability(node.Edge.ErrorRate)
+			ff.errorType = defaultFaultErrorType(node)
+		}
 		for _, spec := range e.overlay.EdgeFaults(node.Edge) {
 			switch spec.Kind {
 			case topology.FaultDisconnect:

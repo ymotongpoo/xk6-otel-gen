@@ -174,6 +174,18 @@ services:
       - name: get_user
 ```
 
+Edges support retry timing with `retries`, `retry_backoff`, and
+`retry_base_delay`:
+
+```yaml
+calls:
+  - to: { service: payment, operation: authorize_card }
+    protocol: grpc
+    retries: 2
+    retry_backoff: exponential
+    retry_base_delay: 100ms
+```
+
 Export the JSON Schema for editor integration:
 
 ```bash

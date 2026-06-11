@@ -132,6 +132,11 @@
           "type": "string",
           "enum": ["exponential", "linear", "constant"]
         },
+        "retry_base_delay": {
+          "description": "Base retry delay used by retry_backoff.",
+          "$ref": "#/$defs/Duration",
+          "default": "100ms"
+        },
         "on_failure": { "$ref": "#/$defs/RecoveryPolicy" }
       },
       "examples": [

@@ -124,27 +124,29 @@ func buildEdges(t *rapid.T, topoOrder []*topology.Operation, o schemaOptions) {
 func buildEdge(t *rapid.T, label string, from, to *topology.Operation, fallbackCandidates []*topology.Operation) *topology.Edge {
 	latency := ValidLatencyPair().Draw(t, label+"_latency")
 	edge := &topology.Edge{
-		From:         from,
-		To:           to,
-		Protocol:     ValidProtocol().Draw(t, label+"_protocol"),
-		Latency:      topology.LatencyDist{Distribution: "lognormal", P50: latency.P50, P95: latency.P95},
-		ErrorRate:    ValidProbability().Draw(t, label+"_error_rate"),
-		Timeout:      ValidTimeout().Draw(t, label+"_timeout"),
-		Retries:      rapid.IntRange(0, 10).Draw(t, label+"_retries"),
-		RetryBackoff: validBackoffPolicy(t, label+"_retry_backoff"),
+		From:           from,
+		To:             to,
+		Protocol:       ValidProtocol().Draw(t, label+"_protocol"),
+		Latency:        topology.LatencyDist{Distribution: "lognormal", P50: latency.P50, P95: latency.P95},
+		ErrorRate:      ValidProbability().Draw(t, label+"_error_rate"),
+		Timeout:        ValidTimeout().Draw(t, label+"_timeout"),
+		Retries:        rapid.IntRange(0, 10).Draw(t, label+"_retries"),
+		RetryBackoff:   validBackoffPolicy(t, label+"_retry_backoff"),
+		RetryBaseDelay: ValidTimeout().Draw(t, label+"_retry_base_delay"),
 	}
 	if len(fallbackCandidates) > 0 && rapid.Float64Range(0, 1).Draw(t, label+"_recovery_roll") < 0.3 {
 		fallbackTo := rapid.SampledFrom(fallbackCandidates).Draw(t, label+"_fallback_to")
 		fallbackLatency := ValidLatencyPair().Draw(t, label+"_fallback_latency")
 		fallback := &topology.Edge{
-			From:         from,
-			To:           fallbackTo,
-			Protocol:     ValidProtocol().Draw(t, label+"_fallback_protocol"),
-			Latency:      topology.LatencyDist{Distribution: "lognormal", P50: fallbackLatency.P50, P95: fallbackLatency.P95},
-			ErrorRate:    ValidProbability().Draw(t, label+"_fallback_error_rate"),
-			Timeout:      ValidTimeout().Draw(t, label+"_fallback_timeout"),
-			Retries:      rapid.IntRange(0, 3).Draw(t, label+"_fallback_retries"),
-			RetryBackoff: validBackoffPolicy(t, label+"_fallback_backoff"),
+			From:           from,
+			To:             fallbackTo,
+			Protocol:       ValidProtocol().Draw(t, label+"_fallback_protocol"),
+			Latency:        topology.LatencyDist{Distribution: "lognormal", P50: fallbackLatency.P50, P95: fallbackLatency.P95},
+			ErrorRate:      ValidProbability().Draw(t, label+"_fallback_error_rate"),
+			Timeout:        ValidTimeout().Draw(t, label+"_fallback_timeout"),
+			Retries:        rapid.IntRange(0, 3).Draw(t, label+"_fallback_retries"),
+			RetryBackoff:   validBackoffPolicy(t, label+"_fallback_backoff"),
+			RetryBaseDelay: ValidTimeout().Draw(t, label+"_fallback_retry_base_delay"),
 		}
 		edge.OnFailure = &topology.RecoveryPolicy{
 			Fallback:    []*topology.Edge{fallback},

@@ -119,8 +119,9 @@ services:
           - to: { service: payment, operation: authorize_card }
             protocol: grpc
             latency: { distribution: lognormal, p50: 90ms, p95: 420ms }
-            retries: 1
+            retries: 2
             retry_backoff: exponential
+            retry_base_delay: 100ms
           - to: { service: fraud-detection, operation: score_order }
             protocol: grpc
             latency: { distribution: lognormal, p50: 70ms, p95: 260ms }

@@ -121,14 +121,15 @@ func ValidEdge(from, to *topology.Operation, opts ...EdgeOption) *rapid.Generato
 		}
 
 		edge := &topology.Edge{
-			From:         from,
-			To:           to,
-			Protocol:     protocol,
-			Latency:      topology.LatencyDist{Distribution: validLatencyDistribution(t, "distribution"), P50: p50, P95: p95},
-			ErrorRate:    errorRate,
-			Timeout:      ValidTimeoutDuration().Draw(t, "timeout"),
-			Retries:      rapid.IntRange(0, 10).Draw(t, "retries"),
-			RetryBackoff: validBackoffPolicy(t, "retry_backoff"),
+			From:           from,
+			To:             to,
+			Protocol:       protocol,
+			Latency:        topology.LatencyDist{Distribution: validLatencyDistribution(t, "distribution"), P50: p50, P95: p95},
+			ErrorRate:      errorRate,
+			Timeout:        ValidTimeoutDuration().Draw(t, "timeout"),
+			Retries:        rapid.IntRange(0, 10).Draw(t, "retries"),
+			RetryBackoff:   validBackoffPolicy(t, "retry_backoff"),
+			RetryBaseDelay: ValidTimeoutDuration().Draw(t, "retry_base_delay"),
 		}
 		if o.onFailure != nil {
 			edge.OnFailure = o.onFailure

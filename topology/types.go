@@ -8,6 +8,10 @@ import "time"
 // topology does not specify a namespace.
 const DefaultNamespace = "xk6-otel-gen"
 
+// DefaultRetryBaseDelay is the synthetic retry delay base used when an edge
+// does not specify retry_base_delay.
+const DefaultRetryBaseDelay = 100 * time.Millisecond
+
 // ServiceID is a newtype for service name identifiers.
 type ServiceID string
 
@@ -47,15 +51,16 @@ type CallNode struct {
 
 // Edge is a directed call from one operation to another.
 type Edge struct {
-	From         *Operation      `yaml:"from"`
-	To           *Operation      `yaml:"to"`
-	Protocol     Protocol        `yaml:"protocol"`
-	Latency      LatencyDist     `yaml:"latency"`
-	ErrorRate    float64         `yaml:"error_rate"`
-	Timeout      time.Duration   `yaml:"timeout"`
-	Retries      int             `yaml:"retries"`
-	RetryBackoff BackoffPolicy   `yaml:"retry_backoff"`
-	OnFailure    *RecoveryPolicy `yaml:"on_failure"`
+	From           *Operation      `yaml:"from"`
+	To             *Operation      `yaml:"to"`
+	Protocol       Protocol        `yaml:"protocol"`
+	Latency        LatencyDist     `yaml:"latency"`
+	ErrorRate      float64         `yaml:"error_rate"`
+	Timeout        time.Duration   `yaml:"timeout"`
+	Retries        int             `yaml:"retries"`
+	RetryBackoff   BackoffPolicy   `yaml:"retry_backoff"`
+	RetryBaseDelay time.Duration   `yaml:"retry_base_delay"`
+	OnFailure      *RecoveryPolicy `yaml:"on_failure"`
 }
 
 // LatencyDist holds latency distribution parameters.

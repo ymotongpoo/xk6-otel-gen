@@ -2,7 +2,10 @@
 
 package topology
 
-import "reflect"
+import (
+	"reflect"
+	"time"
+)
 
 // Equal reports whether two schemas are identifier-equivalent.
 func Equal(a, b *Schema) bool {
@@ -91,6 +94,7 @@ func equalEdge(a, b *Edge) bool {
 		a.Timeout == b.Timeout &&
 		a.Retries == b.Retries &&
 		a.RetryBackoff == b.RetryBackoff &&
+		effectiveRetryBaseDelay(a) == effectiveRetryBaseDelay(b) &&
 		equalRecoveryPolicy(a.OnFailure, b.OnFailure)
 }
 
@@ -216,4 +220,11 @@ func effectiveServiceNamespace(svc *Service) string {
 		return DefaultNamespace
 	}
 	return svc.Namespace
+}
+
+func effectiveRetryBaseDelay(edge *Edge) time.Duration {
+	if edge == nil || edge.RetryBaseDelay == 0 {
+		return DefaultRetryBaseDelay
+	}
+	return edge.RetryBaseDelay
 }

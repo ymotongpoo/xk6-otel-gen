@@ -222,14 +222,15 @@ func resolveCallNode(schema *Schema, _ *Service, owningOp *Operation, rc *rawCal
 	}
 
 	edge := &Edge{
-		From:         owningOp,
-		To:           targetOp,
-		Protocol:     parseProtocol(rc.Protocol),
-		Latency:      resolveLatency(rc.Latency),
-		ErrorRate:    float64Default(rc.ErrorRate, 0.0),
-		Timeout:      durationDefault(rc.Timeout, 0),
-		Retries:      intDefault(rc.Retries, 0),
-		RetryBackoff: parseBackoff(rc.RetryBackoff),
+		From:           owningOp,
+		To:             targetOp,
+		Protocol:       parseProtocol(rc.Protocol),
+		Latency:        resolveLatency(rc.Latency),
+		ErrorRate:      float64Default(rc.ErrorRate, 0.0),
+		Timeout:        durationDefault(rc.Timeout, 0),
+		Retries:        intDefault(rc.Retries, 0),
+		RetryBackoff:   parseBackoff(rc.RetryBackoff),
+		RetryBaseDelay: durationDefault(rc.RetryBaseDelay, DefaultRetryBaseDelay),
 	}
 	if rc.OnFailure != nil {
 		rp, err := resolveRecoveryPolicy(schema, owningOp, rc.OnFailure, path+".on_failure")

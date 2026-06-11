@@ -21,7 +21,7 @@ import (
 type Outcome struct {
 	// Success reports whether the step completed without a primary failure.
 	Success bool
-	// Latency is the elapsed wall-clock duration spent on this step.
+	// Latency is the simulated duration spent on this step.
 	Latency time.Duration
 	// StatusCode is the HTTP/gRPC status code associated with the outcome.
 	StatusCode int
@@ -62,24 +62,71 @@ func (e *Engine) Execute(ctx context.Context, plan *Plan) (err error) {
 }
 
 func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcome) Outcome {
+	return e.executeNodeAt(ctx, node, parent, time.Now())
+}
+
+func (e *engineImpl) executeNodeAt(ctx context.Context, node *Node, parent *Outcome, start time.Time) Outcome {
 	if node == nil {
 		return Outcome{Success: false, ErrorType: "crashed", StatusCode: 500}
 	}
 	if len(node.Parallel) > 0 {
-		return e.executeParallelGroup(ctx, node, parent)
+		return e.executeParallelGroupAt(ctx, node, parent, start)
 	}
 	if node.Service == nil {
-		return e.executeSequentialVirtual(ctx, node, parent)
+		return e.executeSequentialVirtualAt(ctx, node, parent, start)
 	}
 	if parent != nil && !parent.Success {
-		return e.executeCascade(ctx, node, parent)
+		return e.executeCascadeAt(ctx, node, parent, start)
+	}
+	return e.executeAttemptSequence(ctx, node, start)
+}
+
+func (e *engineImpl) executeAttemptSequence(ctx context.Context, node *Node, start time.Time) Outcome {
+	attempts := 1
+	if node.Edge != nil && node.Edge.Retries > 0 {
+		attempts += node.Edge.Retries
 	}
 
+	currentStart := start
+	var total time.Duration
+	var final Outcome
+	for attempt := 0; attempt < attempts; attempt++ {
+		if attempt > 0 {
+			delay := retryBackoffDelay(node.Edge, attempt)
+			total += delay
+			currentStart = start.Add(total)
+		}
+
+		outcome := e.executeSingleAttempt(ctx, node, currentStart)
+		total += outcome.Latency
+		if outcome.Success {
+			outcome.Latency = total
+			return outcome
+		}
+		final = outcome
+		if outcome.ErrorType == "context_canceled" {
+			break
+		}
+	}
+
+	final.Latency = capLatencyToTimeout(node.Edge, total)
+	if node.Edge != nil && node.Edge.Timeout > 0 && total > node.Edge.Timeout {
+		applyTimeoutFailure(node.Edge, &final)
+	}
+	if node.Edge != nil && node.Edge.OnFailure != nil {
+		final = e.applyRecoveryAt(ctx, node, final, start)
+	}
+	if shouldCascadeChildren(final) {
+		e.executeChildrenAt(ctx, node, &final, start.Add(final.Latency))
+	}
+	return final
+}
+
+func (e *engineImpl) executeSingleAttempt(ctx context.Context, node *Node, start time.Time) Outcome {
 	ff := e.foldFaults(node)
 	instanceIdx := e.randIntN(node.Service.Replicas)
 	baseLatency := e.sampleEdgeLatency(node.Edge)
 	effectiveLatency := baseLatency + ff.latencyInflate
-	start := time.Now()
 	spanCtx, finishFn := e.synth.BeginSpan(ctx, synth.SpanInput{
 		Service:     node.Service,
 		Edge:        node.Edge,
@@ -93,19 +140,31 @@ func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcom
 			Success:    false,
 			StatusCode: 500,
 			ErrorType:  "crashed",
-			Latency:    time.Since(start),
+			Latency:    0,
 		}
-		return e.completePrimaryFailure(spanCtx, node, instanceIdx, finishFn, outcome, true)
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start)
+		return outcome
 	}
 
-	if canceled, end := waitWithCancel(ctx, effectiveLatency); canceled {
+	if ctx.Err() != nil {
 		outcome := Outcome{
 			Success:    false,
 			StatusCode: 0,
 			ErrorType:  "context_canceled",
-			Latency:    end.Sub(start),
+			Latency:    0,
 		}
-		return e.completePrimaryFailure(spanCtx, node, instanceIdx, finishFn, outcome, false)
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start)
+		return outcome
+	}
+
+	if node.Edge != nil && node.Edge.Timeout > 0 && effectiveLatency > node.Edge.Timeout {
+		outcome := Outcome{
+			Success: false,
+			Latency: node.Edge.Timeout,
+		}
+		applyTimeoutFailure(node.Edge, &outcome)
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency))
+		return outcome
 	}
 
 	if ff.disconnected {
@@ -113,15 +172,18 @@ func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcom
 			Success:    false,
 			StatusCode: 503,
 			ErrorType:  "connection_refused",
-			Latency:    time.Since(start),
+			Latency:    effectiveLatency,
 		}
-		return e.completePrimaryFailure(spanCtx, node, instanceIdx, finishFn, outcome, true)
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency))
+		return outcome
 	}
 
 	forceFailure := ff.errorRate > 0 && e.randFloat64() < ff.errorRate
 	childParent := &Outcome{Success: true, StatusCode: 200}
+	totalLatency := effectiveLatency
 	for _, child := range node.Children {
-		childOutcome := e.executeNode(spanCtx, child, childParent)
+		childOutcome := e.executeNodeAt(spanCtx, child, childParent, start.Add(totalLatency))
+		totalLatency += childOutcome.Latency
 		if !childOutcome.Success {
 			break
 		}
@@ -130,54 +192,35 @@ func (e *engineImpl) executeNode(ctx context.Context, node *Node, parent *Outcom
 	outcome := Outcome{
 		Success:    !forceFailure,
 		StatusCode: pickStatusCode(forceFailure, ff.errorType),
-		Latency:    time.Since(start),
+		Latency:    totalLatency,
 	}
 	if forceFailure {
 		outcome.ErrorType = ff.errorType
 		if outcome.ErrorType == "" {
 			outcome.ErrorType = "http.500"
 		}
-		e.finishAndEmit(spanCtx, node, instanceIdx, finishFn, outcome)
-		if node.Edge != nil && node.Edge.OnFailure != nil {
-			return e.applyRecovery(spanCtx, node, outcome)
-		}
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency))
 		return outcome
 	}
 
-	e.finishAndEmit(spanCtx, node, instanceIdx, finishFn, outcome)
+	e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency))
 	return outcome
 }
 
-func (e *engineImpl) completePrimaryFailure(
-	ctx context.Context,
-	node *Node,
-	instanceIdx int,
-	finishFn synth.FinishSpanFunc,
-	primary Outcome,
-	recoverable bool,
-) Outcome {
-	e.finishAndEmit(ctx, node, instanceIdx, finishFn, primary)
-	outcome := primary
-	if recoverable && node.Edge != nil && node.Edge.OnFailure != nil {
-		outcome = e.applyRecovery(ctx, node, primary)
-	}
-	e.executeChildren(ctx, node, &outcome)
-	return outcome
-}
-
-func (e *engineImpl) executeChildren(ctx context.Context, node *Node, parent *Outcome) {
+func (e *engineImpl) executeChildrenAt(ctx context.Context, node *Node, parent *Outcome, start time.Time) {
 	cascadeMode := parent != nil && !parent.Success
+	currentStart := start
 	for _, child := range node.Children {
-		childOutcome := e.executeNode(ctx, child, parent)
+		childOutcome := e.executeNodeAt(ctx, child, parent, currentStart)
+		currentStart = currentStart.Add(childOutcome.Latency)
 		if !childOutcome.Success && !cascadeMode {
 			return
 		}
 	}
 }
 
-func (e *engineImpl) executeCascade(ctx context.Context, node *Node, parent *Outcome) Outcome {
+func (e *engineImpl) executeCascadeAt(ctx context.Context, node *Node, parent *Outcome, start time.Time) Outcome {
 	instanceIdx := e.randIntN(node.Service.Replicas)
-	start := time.Now()
 	spanCtx, finishFn := e.synth.BeginSpan(ctx, synth.SpanInput{
 		Service:     node.Service,
 		Edge:        node.Edge,
@@ -190,18 +233,18 @@ func (e *engineImpl) executeCascade(ctx context.Context, node *Node, parent *Out
 		StatusCode: parent.StatusCode,
 		ErrorType:  parent.ErrorType,
 		Cascaded:   true,
-		Latency:    time.Since(start),
+		Latency:    0,
 	}
-	e.finishAndEmit(spanCtx, node, instanceIdx, finishFn, outcome)
+	e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start)
 	return outcome
 }
 
-func (e *engineImpl) executeSequentialVirtual(ctx context.Context, node *Node, parent *Outcome) Outcome {
+func (e *engineImpl) executeSequentialVirtualAt(ctx context.Context, node *Node, parent *Outcome, start time.Time) Outcome {
 	outcome := Outcome{Success: true, StatusCode: 200}
 	currentParent := parent
 	var total time.Duration
 	for _, child := range node.Children {
-		childOutcome := e.executeNode(ctx, child, currentParent)
+		childOutcome := e.executeNodeAt(ctx, child, currentParent, start.Add(total))
 		total += childOutcome.Latency
 		outcome = childOutcome
 		if !childOutcome.Success {
@@ -212,7 +255,7 @@ func (e *engineImpl) executeSequentialVirtual(ctx context.Context, node *Node, p
 	return outcome
 }
 
-func (e *engineImpl) executeParallelGroup(ctx context.Context, group *Node, parent *Outcome) Outcome {
+func (e *engineImpl) executeParallelGroupAt(ctx context.Context, group *Node, parent *Outcome, start time.Time) Outcome {
 	outcomes := make([]Outcome, len(group.Parallel))
 	var wg sync.WaitGroup
 	for i, child := range group.Parallel {
@@ -225,17 +268,16 @@ func (e *engineImpl) executeParallelGroup(ctx context.Context, group *Node, pare
 					outcomes[i] = Outcome{Success: false, ErrorType: "crashed", StatusCode: 500}
 				}
 			}()
-			outcomes[i] = e.executeNode(ctx, child, parent)
+			outcomes[i] = e.executeNodeAt(ctx, child, parent, start)
 		}()
 	}
 	wg.Wait()
 	return aggregateParallelOutcomes(outcomes)
 }
 
-func (e *engineImpl) finishAndEmit(ctx context.Context, node *Node, instanceIdx int, finishFn synth.FinishSpanFunc, outcome Outcome) {
-	now := time.Now()
-	finishFn(toSynthOutcome(outcome, now))
-	synthOutcome := toSynthOutcome(outcome, now)
+func (e *engineImpl) finishAndEmitAt(ctx context.Context, node *Node, instanceIdx int, finishFn synth.FinishSpanFunc, outcome Outcome, end time.Time) {
+	finishFn(toSynthOutcome(outcome, end))
+	synthOutcome := toSynthOutcome(outcome, end)
 	e.synth.RecordMetric(ctx, synth.MetricInput{
 		Service:     node.Service,
 		Edge:        node.Edge,
@@ -289,26 +331,6 @@ func toSynthOutcome(outcome Outcome, end time.Time) synth.Outcome {
 	}
 }
 
-func waitWithCancel(ctx context.Context, latency time.Duration) (bool, time.Time) {
-	if latency <= 0 {
-		select {
-		case <-ctx.Done():
-			return true, time.Now()
-		default:
-			return false, time.Now()
-		}
-	}
-
-	timer := time.NewTimer(latency)
-	defer timer.Stop()
-	select {
-	case <-ctx.Done():
-		return true, time.Now()
-	case <-timer.C:
-		return false, time.Now()
-	}
-}
-
 func aggregateParallelOutcomes(outcomes []Outcome) Outcome {
 	agg := Outcome{Success: true, StatusCode: 200}
 	for _, outcome := range outcomes {
@@ -323,6 +345,60 @@ func aggregateParallelOutcomes(outcomes []Outcome) Outcome {
 		}
 	}
 	return agg
+}
+
+func retryBackoffDelay(edge *topology.Edge, retryAttempt int) time.Duration {
+	if edge == nil || retryAttempt <= 0 {
+		return 0
+	}
+	base := edge.RetryBaseDelay
+	if base == 0 {
+		base = topology.DefaultRetryBaseDelay
+	}
+	switch edge.RetryBackoff {
+	case topology.BackoffConstant:
+		return base
+	case topology.BackoffLinear:
+		return time.Duration(retryAttempt) * base
+	case topology.BackoffExponential:
+		fallthrough
+	default:
+		return time.Duration(1<<(retryAttempt-1)) * base
+	}
+}
+
+func capLatencyToTimeout(edge *topology.Edge, latency time.Duration) time.Duration {
+	if edge != nil && edge.Timeout > 0 && latency > edge.Timeout {
+		return edge.Timeout
+	}
+	return latency
+}
+
+func applyTimeoutFailure(edge *topology.Edge, outcome *Outcome) {
+	if outcome == nil {
+		return
+	}
+	outcome.Success = false
+	switch {
+	case edge != nil && edge.Protocol == topology.ProtocolGRPC:
+		outcome.StatusCode = 4
+		outcome.ErrorType = "grpc.deadline_exceeded"
+	default:
+		outcome.StatusCode = 504
+		outcome.ErrorType = "timeout"
+	}
+}
+
+func shouldCascadeChildren(outcome Outcome) bool {
+	if outcome.Success {
+		return false
+	}
+	switch outcome.ErrorType {
+	case "crashed", "connection_refused", "context_canceled", "timeout", "grpc.deadline_exceeded":
+		return true
+	default:
+		return false
+	}
 }
 
 func logSeverity(outcome Outcome) log.Severity {

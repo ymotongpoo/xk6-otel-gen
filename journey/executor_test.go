@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 )
@@ -70,29 +69,14 @@ func TestExecute_Parallel_HappyPath(t *testing.T) {
 	}
 }
 
-func TestExecute_CtxCancel_StopsWithin10ms(t *testing.T) {
+func TestExecute_CtxCancel_AlreadyCanceled(t *testing.T) {
 	t.Parallel()
 
 	engine, plan, mock := newExecutablePlan(t, newSingleStepSchema())
 	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan error, 1)
-	go func() {
-		done <- engine.Execute(ctx, plan)
-	}()
-
-	time.Sleep(time.Millisecond)
-	start := time.Now()
 	cancel()
-	select {
-	case err := <-done:
-		if err != nil {
-			t.Fatalf("Execute() error = %v", err)
-		}
-	case <-time.After(50 * time.Millisecond):
-		t.Fatal("Execute() did not return after cancellation")
-	}
-	if elapsed := time.Since(start); elapsed > 10*time.Millisecond {
-		t.Fatalf("Execute() returned after %s, want <= 10ms after cancel", elapsed)
+	if err := engine.Execute(ctx, plan); err != nil {
+		t.Fatalf("Execute() error = %v", err)
 	}
 	spans := mock.snapshotSpans()
 	if len(spans) != 1 {

@@ -133,6 +133,9 @@ func marshalEdge(e *Edge) *rawCallNode {
 	if e.Retries != 0 {
 		rc.Retries = ptrInt(e.Retries)
 	}
+	if e.RetryBaseDelay != 0 && e.RetryBaseDelay != DefaultRetryBaseDelay {
+		rc.RetryBaseDelay = ptrDuration(e.RetryBaseDelay)
+	}
 	if e.RetryBackoff == BackoffExponential {
 		rc.RetryBackoff = ""
 	}

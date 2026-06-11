@@ -68,6 +68,9 @@ journeys:
 	if edge.RetryBackoff != topology.BackoffExponential {
 		t.Fatalf("RetryBackoff = %v, want exponential", edge.RetryBackoff)
 	}
+	if edge.RetryBaseDelay != topology.DefaultRetryBaseDelay {
+		t.Fatalf("RetryBaseDelay = %v, want %v", edge.RetryBaseDelay, topology.DefaultRetryBaseDelay)
+	}
 	if edge.Latency.Distribution != "constant" || edge.Latency.P50 != 10*time.Millisecond || edge.Latency.P95 != 10*time.Millisecond {
 		t.Fatalf("latency defaults not applied: %+v", edge.Latency)
 	}
@@ -237,6 +240,7 @@ func validManualSchema() *topology.Schema {
 			Protocol:     topology.ProtocolHTTP,
 			Latency:      topology.LatencyDist{Distribution: "constant", P50: 10 * time.Millisecond, P95: 20 * time.Millisecond},
 			RetryBackoff: topology.BackoffExponential,
+			RetryBaseDelay: topology.DefaultRetryBaseDelay,
 		},
 	}}
 	return &topology.Schema{

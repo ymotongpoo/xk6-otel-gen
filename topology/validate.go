@@ -454,6 +454,9 @@ func validateEdgeDomain(edge *Edge, path string) []error {
 	if edge.Retries < 0 {
 		errs = append(errs, newValidationErrorf(path+".retries", "D-4", "must be >= 0, got %d", edge.Retries))
 	}
+	if edge.RetryBaseDelay < 0 {
+		errs = append(errs, newValidationErrorf(path+".retry_base_delay", "D-4", "must be >= 0, got %s", edge.RetryBaseDelay))
+	}
 	if edge.Latency.P50 < 0 {
 		errs = append(errs, newValidationErrorf(path+".latency.p50", "D-6", "must be >= 0, got %s", edge.Latency.P50))
 	}

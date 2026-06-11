@@ -27,15 +27,16 @@ type rawOperation struct {
 }
 
 type rawCallNode struct {
-	To           *rawCallTarget     `yaml:"to,omitempty"`
-	Parallel     []*rawCallNode     `yaml:"parallel,omitempty"`
-	Protocol     string             `yaml:"protocol,omitempty"`
-	Latency      *rawLatencyDist    `yaml:"latency,omitempty"`
-	ErrorRate    *float64           `yaml:"error_rate,omitempty"`
-	Timeout      *time.Duration     `yaml:"timeout,omitempty"`
-	Retries      *int               `yaml:"retries,omitempty"`
-	RetryBackoff string             `yaml:"retry_backoff,omitempty"`
-	OnFailure    *rawRecoveryPolicy `yaml:"on_failure,omitempty"`
+	To             *rawCallTarget     `yaml:"to,omitempty"`
+	Parallel       []*rawCallNode     `yaml:"parallel,omitempty"`
+	Protocol       string             `yaml:"protocol,omitempty"`
+	Latency        *rawLatencyDist    `yaml:"latency,omitempty"`
+	ErrorRate      *float64           `yaml:"error_rate,omitempty"`
+	Timeout        *time.Duration     `yaml:"timeout,omitempty"`
+	Retries        *int               `yaml:"retries,omitempty"`
+	RetryBackoff   string             `yaml:"retry_backoff,omitempty"`
+	RetryBaseDelay *time.Duration     `yaml:"retry_base_delay,omitempty"`
+	OnFailure      *rawRecoveryPolicy `yaml:"on_failure,omitempty"`
 }
 
 type rawCallTarget struct {
