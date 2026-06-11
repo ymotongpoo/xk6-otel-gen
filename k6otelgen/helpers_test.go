@@ -15,6 +15,7 @@ import (
 	"go.k6.io/k6/js/modules"
 	"go.k6.io/k6/js/modulestest"
 	"go.k6.io/k6/lib"
+	"go.k6.io/k6/metrics"
 
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
@@ -91,6 +92,8 @@ type fakeVU struct {
 	ctx     context.Context
 	runtime *sobek.Runtime
 	state   *lib.State
+	initEnv *common.InitEnvironment
+	samples chan metrics.SampleContainer
 }
 
 func newFakeVU(t *testing.T, id uint64) modules.VU {
@@ -100,10 +103,19 @@ func newFakeVU(t *testing.T, id uint64) modules.VU {
 
 func newFakeVUWithContext(t *testing.T, id uint64, ctx context.Context) modules.VU {
 	t.Helper()
+	registry := metrics.NewRegistry()
+	samples := make(chan metrics.SampleContainer, 100)
 	return &fakeVU{
 		ctx:     ctx,
 		runtime: sobek.New(),
-		state:   &lib.State{VUID: id},
+		state: &lib.State{
+			VUID:           id,
+			Samples:        samples,
+			Tags:           lib.NewVUStateTags(registry.RootTagSet()),
+			BuiltinMetrics: metrics.RegisterBuiltinMetrics(registry),
+		},
+		initEnv: &common.InitEnvironment{TestPreInitState: &lib.TestPreInitState{Registry: registry}},
+		samples: samples,
 	}
 }
 
@@ -116,7 +128,7 @@ func (v *fakeVU) Events() common.Events {
 }
 
 func (v *fakeVU) InitEnv() *common.InitEnvironment {
-	return nil
+	return v.initEnv
 }
 
 func (v *fakeVU) State() *lib.State {

@@ -29,6 +29,7 @@ func (h *TopologyHandle) RunJourney(name string) {
 	if err := h.engine.Execute(h.instance.vuContext(), plan); err != nil {
 		throwJSException(h.runtime, err)
 	}
+	h.instance.emitExporterStats()
 }
 
 // RunRandomJourney picks a configured journey by weight, executes it, and

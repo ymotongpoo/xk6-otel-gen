@@ -59,7 +59,8 @@ type Output struct {
 	flushDone chan struct{}
 	drops     atomic.Uint64
 
-	logger func(format string, args ...any)
+	logger     func(format string, args ...any)
+	infoLogger func(format string, args ...any)
 }
 
 func init() {
@@ -76,16 +77,19 @@ func New(params output.Params) (output.Output, error) {
 		parsed.ScriptPath = params.ScriptPath.Path
 	}
 
-	logger := log.Printf
+	warnLogger := log.Printf
+	infoLogger := log.Printf
 	if params.Logger != nil {
-		logger = params.Logger.Warnf
+		warnLogger = params.Logger.Warnf
+		infoLogger = params.Logger.Infof
 	}
 
 	return &Output{
 		params:         parsed,
 		runnerResource: buildRunnerResource(params),
 		setCache:       &tagSetCache{},
-		logger:         logger,
+		logger:         warnLogger,
+		infoLogger:     infoLogger,
 	}, nil
 }
 
@@ -181,6 +185,7 @@ func (o *Output) Stop() error {
 				o.warn("k6output: Shutdown: %v", err)
 			}
 		}
+		o.info("k6output: final stats: queue_drops=%d", o.drops.Load())
 	})
 	return nil
 }
@@ -477,6 +482,14 @@ func stringsHasTotalSuffix(name string) bool {
 func (o *Output) warn(format string, args ...any) {
 	if o != nil && o.logger != nil {
 		o.logger(format, args...)
+		return
+	}
+	log.Printf(format, args...)
+}
+
+func (o *Output) info(format string, args ...any) {
+	if o != nil && o.infoLogger != nil {
+		o.infoLogger(format, args...)
 		return
 	}
 	log.Printf(format, args...)

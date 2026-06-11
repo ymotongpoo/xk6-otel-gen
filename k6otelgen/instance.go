@@ -19,12 +19,14 @@ import (
 
 // ModuleInstance is constructed once per k6 VU and holds per-VU state.
 type ModuleInstance struct {
-	root    *RootModule
-	vu      modules.VU
-	engine  *journey.Engine
-	synth   synth.Synthesizer
-	handle  *TopologyHandle
-	initErr error
+	root          *RootModule
+	vu            modules.VU
+	engine        *journey.Engine
+	synth         synth.Synthesizer
+	handle        *TopologyHandle
+	nativeMetrics *nativeMetrics
+	lastStats     exporter.Stats
+	initErr       error
 }
 
 // Stats is the JS-friendly snapshot returned by stats.

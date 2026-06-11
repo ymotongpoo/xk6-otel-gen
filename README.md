@@ -226,6 +226,15 @@ otelgen.configure({
 Sampling applies to traces only. Metrics and logs are still emitted; logs keep
 the active trace context even when the trace sampler drops spans.
 
+### Built-in Metrics
+
+The JS module publishes exporter counters as native k6 metrics after journey
+runs: `otel_gen_traces_exported`, `otel_gen_traces_failed`,
+`otel_gen_metrics_exported`, `otel_gen_metrics_failed`,
+`otel_gen_logs_exported`, `otel_gen_logs_failed`, and
+`otel_gen_queue_drops`. Queue drops are scoped to the JS-module pipeline metric;
+the `otel-gen` k6 output logs its final queue drop count on `Stop()`.
+
 Common output configuration:
 
 ```bash

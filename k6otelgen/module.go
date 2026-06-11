@@ -40,7 +40,7 @@ func New() *RootModule {
 
 // NewModuleInstance constructs the per-VU module instance for k6.
 func (r *RootModule) NewModuleInstance(vu modules.VU) modules.Instance {
-	instance := &ModuleInstance{root: r, vu: vu}
+	instance := &ModuleInstance{root: r, vu: vu, nativeMetrics: newNativeMetrics(vu)}
 	if r.schema == nil {
 		return instance
 	}
