@@ -318,6 +318,7 @@ Common output configuration:
 The same `configure(...)` / `--out otel-gen=...` mechanism works against managed OpenTelemetry endpoints. See [examples/saas-endpoints.md](examples/saas-endpoints.md) for full per-vendor instructions.
 
 **Grafana Cloud (OTLP gateway, HTTP/protobuf)**:
+
 ```javascript
 otelgen.configure({
   endpoint: "https://otlp-gateway-prod-us-central-0.grafana.net/otlp",

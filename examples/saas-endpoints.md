@@ -26,7 +26,7 @@ authentication. xk6-otel-gen can send to it directly.
 
 ### 1.1 Get the endpoint and credentials
 
-1. Sign in to Grafana Cloud (https://grafana.com/) and open your stack.
+1. Sign in to Grafana Cloud (<https://grafana.com/>) and open your stack.
 2. From the **Stack details** page, copy the **OTLP endpoint** URL. It
    looks like `https://otlp-gateway-prod-us-central-0.grafana.net/otlp`.
    The region segment (`prod-us-central-0`, `prod-eu-west-2`, …) depends
@@ -40,7 +40,7 @@ authentication. xk6-otel-gen can send to it directly.
 
 OTLP basic auth uses a single header value:
 
-```
+```text
 Authorization: Basic base64(<instance_id>:<api_token>)
 ```
 
