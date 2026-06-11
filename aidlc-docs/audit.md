@@ -1223,3 +1223,14 @@ AI-DLCを使って、負荷テストツールであるk6向けの拡張を作り
 **Context**: Post-AIDLC-completion verification review; remediation to be implemented by Codex/Cursor per user tooling preferences.
 
 ---
+
+## Post-Remediation Re-Verification (Round 2 Review)
+**Timestamp**: 2026-06-11T03:30:00Z
+**User Input**: "再度もともとの要求（下の引用文参照）を満たす実装がされているかを確認してください。もし問題点が見つかった場合には、CodexやCursorに指示をして修正実装させるので、それに必要なプロンプトドキュメントを作成してください。なおCodexに指示を出すプロンプトに、一作業区切りごとにコミットすることを明記してください。
+
+---
+AI-DLCを使って、負荷テストツールであるk6向けの拡張を作りたいです。この拡張を作る目的は、実際にマイクロサービスを作らずに、何かしらの方法でコンポーネントの関係（YAML、Mermaid図など）を提示すると、それに応じた擬似的なテレメトリーシグナル（メトリクス、ログ、分散トレース）をOpenTelemetry形式で生成して、OTLPのエンドポイントに対して送信することです。"
+**AI Response**: "Performed round-2 verification at HEAD e71320a: (1) adversarial regression check of the 6 round-1 fixes — all correctly implemented, no regressions (2 theoretical edge cases noted); (2) full requirements re-sweep for items outside round-1 scope. Remaining gaps found: NFR-5.1 JS module does not log through k6 logging (only k6output does); FR-4.2 TLS limited to insecure bool (no OTEL_EXPORTER_OTLP_CERTIFICATE / client cert support); NFR-1.1 no end-to-end 1k RPS benchmark; FR-8.3 invalid OTEL_TRACES_SAMPLER deferred-error UX; FR-5.1 PickJourney fallback lacks weight guard; NFR-6.1 README YAML reference incomplete (1 of 4 fault kinds documented). Also found design deviation: app-to-app hops emit SERVER spans only (journey/plan.go builds nodes from Edge.To; synth inferDirection yields dirServer), diverging from U3 FD client/server-pair intent — user decided to KEEP current model. User also decided: no probabilistic per-call firing (future extension); k6 compat CI matrix stays deferred; include 1k RPS e2e benchmark task. Created round-2 remediation prompt at aidlc-docs/construction/remediation/requirements-gap-remediation-round2-prompt.md with 7 tasks, each requiring its own Conventional Commit (commit-per-task discipline stated as the first hard constraint, per user request)."
+**Context**: Round-2 post-remediation verification; remediation to be implemented by Codex/Cursor with mandatory commit-per-task.
+
+---
