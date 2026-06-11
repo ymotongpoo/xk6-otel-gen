@@ -53,6 +53,10 @@ Total counted lines: 2199.
 - The integration harness skips until local `xk6` is available. It also guards for the future U6 `k6output/` package before exercising `--out otel-gen=...`, because U5 is implemented before U6 in the construction order.
 - `ModuleInstance` was introduced minimally during Phase 5 to keep `RootModule.NewModuleInstance` compileable, then moved into the full Phase 6 implementation.
 
+## Remediation 2026-06-11 (Round 2)
+
+- NFR-5.1: `ModuleInstance` now routes successful load/configure info logs and exporter failure-delta warnings through the k6 `logrus.FieldLogger`, with nil-safe VU logger fallback.
+
 ## Recent Commits
 
 - `3d165a8` test(k6otelgen): add integration test harness with xk6 build and Docker Collector

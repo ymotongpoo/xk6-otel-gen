@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/js/modules"
 
 	"github.com/ymotongpoo/xk6-otel-gen/exporter"
@@ -40,7 +41,12 @@ func New() *RootModule {
 
 // NewModuleInstance constructs the per-VU module instance for k6.
 func (r *RootModule) NewModuleInstance(vu modules.VU) modules.Instance {
-	instance := &ModuleInstance{root: r, vu: vu, nativeMetrics: newNativeMetrics(vu)}
+	instance := &ModuleInstance{
+		root:          r,
+		vu:            vu,
+		logger:        loggerForVU(vu),
+		nativeMetrics: newNativeMetrics(vu),
+	}
 	if r.schema == nil {
 		return instance
 	}
@@ -56,4 +62,17 @@ func seedForVU(vu modules.VU) uint64 {
 		seed ^= vu.State().VUID
 	}
 	return seed
+}
+
+func loggerForVU(vu modules.VU) logrus.FieldLogger {
+	if vu == nil {
+		return nil
+	}
+	if initEnv := vu.InitEnv(); initEnv != nil && initEnv.TestPreInitState != nil && initEnv.Logger != nil {
+		return initEnv.Logger
+	}
+	if state := vu.State(); state != nil && state.Logger != nil {
+		return state.Logger
+	}
+	return nil
 }

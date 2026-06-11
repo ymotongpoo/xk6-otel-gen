@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/grafana/sobek"
+	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/js/modules"
 
 	"github.com/ymotongpoo/xk6-otel-gen/exporter"
@@ -24,6 +25,7 @@ type ModuleInstance struct {
 	engine        *journey.Engine
 	synth         synth.Synthesizer
 	handle        *TopologyHandle
+	logger        logrus.FieldLogger
 	nativeMetrics *nativeMetrics
 	lastStats     exporter.Stats
 	initErr       error
@@ -87,6 +89,11 @@ func (i *ModuleInstance) Load(path string) (*TopologyHandle, error) {
 			return nil, err
 		}
 	}
+	i.logInfo("xk6-otel-gen: topology loaded", logrus.Fields{
+		"path":     i.root.loadedPath,
+		"services": len(i.root.schema.Services),
+		"journeys": len(i.root.schema.Journeys),
+	})
 	return i.handle, nil
 }
 
@@ -112,6 +119,12 @@ func (i *ModuleInstance) Configure(opts map[string]any) error {
 		i.root.config = exporter.Config{}.MergeWith(envCfg).MergeWith(jsCfg)
 		i.root.configured = true
 	})
+	if i.root.configureErr == nil {
+		i.logInfo("xk6-otel-gen: exporter configured", logrus.Fields{
+			"endpoint": configuredEndpoint(i.root.config),
+			"protocol": i.root.config.Protocol.String(),
+		})
+	}
 	return i.root.configureErr
 }
 
@@ -215,6 +228,27 @@ func (i *ModuleInstance) vuContext() context.Context {
 		return context.Background()
 	}
 	return i.vu.Context()
+}
+
+func (i *ModuleInstance) logInfo(message string, fields logrus.Fields) {
+	if i == nil || i.logger == nil {
+		return
+	}
+	i.logger.WithFields(fields).Info(message)
+}
+
+func (i *ModuleInstance) logWarn(message string, fields logrus.Fields) {
+	if i == nil || i.logger == nil {
+		return
+	}
+	i.logger.WithFields(fields).Warn(message)
+}
+
+func configuredEndpoint(cfg exporter.Config) string {
+	if cfg.Endpoint != "" {
+		return cfg.Endpoint
+	}
+	return "localhost:4317"
 }
 
 func runtimeForVU(vu modules.VU) *sobek.Runtime {

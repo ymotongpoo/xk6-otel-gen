@@ -8,6 +8,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/sirupsen/logrus"
+	logrustest "github.com/sirupsen/logrus/hooks/test"
+
 	"github.com/ymotongpoo/xk6-otel-gen/exporter"
 )
 
@@ -31,6 +34,28 @@ func TestLoad_HappyPath(t *testing.T) {
 
 	rt := newTestRuntime(t)
 	_ = loadTestSchema(t, rt, minimalTopologyYAML)
+}
+
+func TestLoad_LogsTopologySummary(t *testing.T) {
+	t.Parallel()
+
+	logger, hook := logrustest.NewNullLogger()
+	vu := newFakeVUWithLogger(t, 1, logger)
+	instance := &ModuleInstance{
+		root:          newTestRootModule(t),
+		vu:            vu,
+		logger:        logger,
+		nativeMetrics: newNativeMetrics(vu),
+	}
+	path := writeTempYAML(t, minimalTopologyYAML)
+	if _, err := instance.Load(path); err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	entry := findLogEntry(t, hook.AllEntries(), "xk6-otel-gen: topology loaded")
+	if entry.Data["path"] != path || entry.Data["services"] != 1 || entry.Data["journeys"] != 1 {
+		t.Fatalf("log fields = %#v, want path/services/journeys summary", entry.Data)
+	}
 }
 
 func TestLoad_PathMismatch_ReturnsError(t *testing.T) {
@@ -87,6 +112,33 @@ func TestConfigure_HappyPath(t *testing.T) {
 	}
 }
 
+func TestConfigure_LogsEndpointAndProtocolOnly(t *testing.T) {
+	t.Parallel()
+
+	logger, hook := logrustest.NewNullLogger()
+	root := newTestRootModule(t)
+	instance := &ModuleInstance{root: root, vu: newFakeVUWithLogger(t, 1, logger), logger: logger}
+	err := instance.Configure(map[string]any{
+		"endpoint": "otel.example.com:4317",
+		"protocol": "http",
+		"headers":  map[string]any{"Authorization": "Bearer secret"},
+	})
+	if err != nil {
+		t.Fatalf("Configure() error = %v", err)
+	}
+
+	entry := findLogEntry(t, hook.AllEntries(), "xk6-otel-gen: exporter configured")
+	if entry.Data["endpoint"] != "otel.example.com:4317" || entry.Data["protocol"] != "http" {
+		t.Fatalf("log fields = %#v, want endpoint/protocol", entry.Data)
+	}
+	if _, ok := entry.Data["headers"]; ok {
+		t.Fatalf("log fields include headers: %#v", entry.Data)
+	}
+	if _, ok := entry.Data["Authorization"]; ok {
+		t.Fatalf("log fields include header key: %#v", entry.Data)
+	}
+}
+
 func TestConfigure_AlreadyConfigured_Error(t *testing.T) {
 	t.Parallel()
 
@@ -112,6 +164,10 @@ func TestConfigure_Merge_JSOverridesEnv(t *testing.T) {
 	opts := map[string]any{
 		"endpoint":     "js.example.com:4318",
 		"protocol":     "http",
+		"insecure":     false,
+		"caCert":       "js-ca.pem",
+		"clientCert":   "js-client.pem",
+		"clientKey":    "js-client-key.pem",
 		"timeout":      "3s",
 		"headers":      map[string]any{"Js": "2"},
 		"batchSize":    64,
@@ -127,6 +183,9 @@ func TestConfigure_Merge_JSOverridesEnv(t *testing.T) {
 	expected := exporter.Config{}.MergeWith(exporter.ConfigFromEnv()).MergeWith(jsCfg)
 	if !reflect.DeepEqual(root.config, expected) {
 		t.Fatalf("root.config = %#v, want %#v", root.config, expected)
+	}
+	if root.config.Insecure {
+		t.Fatalf("root.config.Insecure = true, want JS insecure=false to override env")
 	}
 }
 
@@ -174,12 +233,15 @@ func writeTempYAMLNamed(t *testing.T, name, yaml string) string {
 func setOTLPEnv(t *testing.T) {
 	t.Helper()
 	values := map[string]string{
-		"ENDPOINT":    "env.example.com:4317",
-		"PROTOCOL":    "http",
-		"TIMEOUT":     "2000",
-		"HEADERS":     "Env=1",
-		"INSECURE":    "true",
-		"COMPRESSION": "",
+		"ENDPOINT":           "env.example.com:4317",
+		"PROTOCOL":           "http",
+		"TIMEOUT":            "2000",
+		"HEADERS":            "Env=1",
+		"INSECURE":           "true",
+		"CERTIFICATE":        "env-ca.pem",
+		"CLIENT_CERTIFICATE": "env-client.pem",
+		"CLIENT_KEY":         "env-client-key.pem",
+		"COMPRESSION":        "",
 	}
 	for suffix, value := range values {
 		t.Setenv("OTEL_EXPORTER_OTLP_"+suffix, value)
@@ -187,4 +249,15 @@ func setOTLPEnv(t *testing.T) {
 		t.Setenv("OTEL_EXPORTER_OTLP_METRICS_"+suffix, value)
 		t.Setenv("OTEL_EXPORTER_OTLP_LOGS_"+suffix, value)
 	}
+}
+
+func findLogEntry(t *testing.T, entries []*logrus.Entry, message string) *logrus.Entry {
+	t.Helper()
+	for _, entry := range entries {
+		if entry.Message == message {
+			return entry
+		}
+	}
+	t.Fatalf("missing log message %q in %d entries", message, len(entries))
+	return nil
 }

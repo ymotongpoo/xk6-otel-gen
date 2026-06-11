@@ -5,6 +5,7 @@ package k6otelgen
 import (
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/js/modules"
 	"go.k6.io/k6/metrics"
 
@@ -71,11 +72,9 @@ func (i *ModuleInstance) emitExporterStats() {
 }
 
 func (i *ModuleInstance) emitExporterStatsSnapshot(current exporter.Stats) {
-	if i == nil || i.nativeMetrics == nil || i.vu == nil || i.vu.State() == nil || i.vu.State().Samples == nil {
-		i.lastStats = current
+	if i == nil {
 		return
 	}
-
 	previous := i.lastStats
 	i.lastStats = current
 	deltas := map[string]int64{
@@ -85,6 +84,11 @@ func (i *ModuleInstance) emitExporterStatsSnapshot(current exporter.Stats) {
 		metricMetricsFailed:   current.MetricsFailed - previous.MetricsFailed,
 		metricLogsExported:    current.LogsExported - previous.LogsExported,
 		metricLogsFailed:      current.LogsFailed - previous.LogsFailed,
+	}
+	i.warnOnExporterFailures(deltas)
+
+	if i.nativeMetrics == nil || i.vu == nil || i.vu.State() == nil || i.vu.State().Samples == nil {
+		return
 	}
 
 	tags := i.nativeMetrics.rootTags
@@ -114,4 +118,20 @@ func (i *ModuleInstance) emitExporterStatsSnapshot(current exporter.Stats) {
 		return
 	}
 	metrics.PushIfNotDone(i.vu.Context(), i.vu.State().Samples, samples)
+}
+
+func (i *ModuleInstance) warnOnExporterFailures(deltas map[string]int64) {
+	tracesFailed := deltas[metricTracesFailed]
+	metricsFailed := deltas[metricMetricsFailed]
+	logsFailed := deltas[metricLogsFailed]
+	total := tracesFailed + metricsFailed + logsFailed
+	if total <= 0 {
+		return
+	}
+	i.logWarn("xk6-otel-gen: exporter failures observed", logrus.Fields{
+		"traces_failed":  tracesFailed,
+		"metrics_failed": metricsFailed,
+		"logs_failed":    logsFailed,
+		"total_failed":   total,
+	})
 }

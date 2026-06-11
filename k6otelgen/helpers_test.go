@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/grafana/sobek"
+	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
 	"go.k6.io/k6/js/modulestest"
@@ -103,6 +104,16 @@ func newFakeVU(t *testing.T, id uint64) modules.VU {
 
 func newFakeVUWithContext(t *testing.T, id uint64, ctx context.Context) modules.VU {
 	t.Helper()
+	return newFakeVUWithContextAndLogger(t, id, ctx, nil)
+}
+
+func newFakeVUWithLogger(t *testing.T, id uint64, logger logrus.FieldLogger) modules.VU {
+	t.Helper()
+	return newFakeVUWithContextAndLogger(t, id, context.Background(), logger)
+}
+
+func newFakeVUWithContextAndLogger(t *testing.T, id uint64, ctx context.Context, logger logrus.FieldLogger) modules.VU {
+	t.Helper()
 	registry := metrics.NewRegistry()
 	samples := make(chan metrics.SampleContainer, 100)
 	return &fakeVU{
@@ -113,8 +124,9 @@ func newFakeVUWithContext(t *testing.T, id uint64, ctx context.Context) modules.
 			Samples:        samples,
 			Tags:           lib.NewVUStateTags(registry.RootTagSet()),
 			BuiltinMetrics: metrics.RegisterBuiltinMetrics(registry),
+			Logger:         logger,
 		},
-		initEnv: &common.InitEnvironment{TestPreInitState: &lib.TestPreInitState{Registry: registry}},
+		initEnv: &common.InitEnvironment{TestPreInitState: &lib.TestPreInitState{Registry: registry, Logger: logger}},
 		samples: samples,
 	}
 }
