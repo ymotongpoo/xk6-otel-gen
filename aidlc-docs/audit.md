@@ -1105,3 +1105,26 @@ Generated 2 NFR-R artifacts:
 This completes ALL Construction stage Functional Design + NFR Requirements + NFR Design for all 7 units (U1-U7 except U8 still pending its Code Generation). Next: U8 Code Generation Plan."
 
 **Context**: U8 NFR-D — artifacts generated, awaiting approval. **All units' NFR-D phase now complete**.
+
+
+## U8 Samples & Distribution — NFR Design Approved & Committed; Final Code Generation Plan Created
+**Timestamp**: 2026-06-11T01:00:00Z
+**User Input**: "Continue to Next Stage" (approving U8 NFR-D)
+**AI Response**: "U8 NFR-D committed as ff87496. Created u8-samples code-generation-plan.md with 11 phases (Phase 0-10):
+- Phase 0: env setup + scaffold directories
+- Phase 1: cmd/xk6-otel-gen-schema/main.go with thin main + run() + main_test.go (70% coverage target)
+- Phase 2: test/examples/examples_test.go (sub-test per example dir)
+- Phase 3: examples/minimal/ — topology.yaml + script.js + otel-collector-config.yaml + k8s/ stack (LGTM-lite: collector + tempo + loki + prometheus + grafana + datasources + dashboard-overview.json) + README + k8s/README
+- Phase 4: kustomize build validation (no commit, verification only)
+- Phase 5: examples/astroshop/ — 18 services with section comments, 5 journeys, fault demos, same k8s layout
+- Phase 6: project root README.md (12 sections + TOC) + LICENSE (Apache-2.0 fulltext)
+- Phase 7: .claude/skills/sync-astroshop/SKILL.md
+- Phase 8: CI configs (.github/dependabot.yml + .lychee.toml + .goheader.txt + .golangci.yml goheader linter)
+- Phase 9: SPDX header backfill across U1-U7 .go files if golangci-lint reveals gaps
+- Phase 10: final wrap + DoD + summary + mark CONSTRUCTION phase complete
+
+14-item anti-pattern enumeration cross-references NFR-D §13. No U1-U7 coordination patches required (only SPDX backfill chore in Phase 9). Notes for agent: kustomize build for offline validation, image tag freshness check, anonymous Grafana auth intentional for demo, OTel Demo upstream snapshot version pinned in astroshop header comment.
+
+After U8 Code Generation: AIDLC workflow transitions to Build and Test stage (CI workflows, release automation, SECURITY.md, CONTRIBUTING.md — explicitly out of U8 scope)."
+
+**Context**: U8 Code Generation — Part 1 Planning (Step 3/4 GATE). Final Code Generation Plan of the project.
