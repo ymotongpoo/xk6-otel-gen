@@ -311,10 +311,10 @@ func schemaFingerprint(schema *topology.Schema) string {
 			builder.WriteByte('/')
 			builder.WriteString(name)
 			builder.WriteByte('[')
-			builder.WriteString(fmt.Sprint(countCallEdges(op.Calls)))
+			fmt.Fprint(&builder, countCallEdges(op.Calls))
 			builder.WriteByte(']')
 		}
 	}
-	builder.WriteString(fmt.Sprintf("|journeys=%d|faults=%d", len(schema.Journeys), len(schema.Faults)))
+	fmt.Fprintf(&builder, "|journeys=%d|faults=%d", len(schema.Journeys), len(schema.Faults))
 	return builder.String()
 }
