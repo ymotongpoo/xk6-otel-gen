@@ -67,6 +67,21 @@ func TestParseOutArgs_AllKeys_HappyPath(t *testing.T) {
 				t.Fatal("Insecure = false, want true")
 			}
 		}},
+		{name: "caCert", arg: "caCert=ca.pem", check: func(t *testing.T, p Params) {
+			if p.Certificate != "ca.pem" {
+				t.Fatalf("Certificate = %q, want ca.pem", p.Certificate)
+			}
+		}},
+		{name: "clientCert", arg: "clientCert=client.pem", check: func(t *testing.T, p Params) {
+			if p.ClientCert != "client.pem" {
+				t.Fatalf("ClientCert = %q, want client.pem", p.ClientCert)
+			}
+		}},
+		{name: "clientKey", arg: "clientKey=client-key.pem", check: func(t *testing.T, p Params) {
+			if p.ClientKey != "client-key.pem" {
+				t.Fatalf("ClientKey = %q, want client-key.pem", p.ClientKey)
+			}
+		}},
 		{name: "headers", arg: "headers=api-key:abc;x-tenant:foo", check: func(t *testing.T, p Params) {
 			want := map[string]string{"api-key": "abc", "x-tenant": "foo"}
 			if !reflect.DeepEqual(p.Headers, want) {
@@ -256,7 +271,7 @@ func TestExporterConfig_OnlyProvidedFieldsAndCopiesHeaders(t *testing.T) {
 func TestBuildPipelineConfig_AllProvidedFields(t *testing.T) {
 	t.Parallel()
 
-	params, err := parseOutArgs("endpoint=localhost:4318,protocol=http,insecure=false,headers=api-key:abc,compression=,timeout=2s,batchSize=64,batchTimeout=200ms,maxQueueSize=128,queueSize=20")
+	params, err := parseOutArgs("endpoint=localhost:4318,protocol=http,insecure=false,caCert=ca.pem,clientCert=client.pem,clientKey=client-key.pem,headers=api-key:abc,compression=,timeout=2s,batchSize=64,batchTimeout=200ms,maxQueueSize=128,queueSize=20")
 	if err != nil {
 		t.Fatalf("parseOutArgs() error = %v, want nil", err)
 	}
@@ -264,6 +279,10 @@ func TestBuildPipelineConfig_AllProvidedFields(t *testing.T) {
 	if cfg.Endpoint != "localhost:4318" ||
 		cfg.Protocol != exporter.ProtocolHTTP ||
 		cfg.Insecure ||
+		!cfg.InsecureSet ||
+		cfg.Certificate != "ca.pem" ||
+		cfg.ClientCertificate != "client.pem" ||
+		cfg.ClientKey != "client-key.pem" ||
 		cfg.Compression != "" ||
 		cfg.Timeout != 2*time.Second ||
 		cfg.BatchSize != 64 ||

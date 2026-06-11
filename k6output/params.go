@@ -25,6 +25,9 @@ type Params struct {
 	Endpoint     string
 	Protocol     exporter.Protocol
 	Insecure     bool
+	Certificate  string
+	ClientCert   string
+	ClientKey    string
 	Headers      map[string]string
 	Compression  string
 	Timeout      time.Duration
@@ -96,6 +99,12 @@ func applyKV(p *Params, key, val string) error {
 			return &ConfigError{Kind: ConfigErrorKindTypeMismatch, Field: key, Value: val, Inner: err}
 		}
 		p.Insecure = b
+	case "caCert":
+		p.Certificate = val
+	case "clientCert":
+		p.ClientCert = val
+	case "clientKey":
+		p.ClientKey = val
 	case "headers":
 		headers, err := parseHeaders(val)
 		if err != nil {
@@ -213,6 +222,16 @@ func (p Params) exporterConfig() exporter.Config {
 	}
 	if p.wasProvided("insecure") {
 		cfg.Insecure = p.Insecure
+		cfg.InsecureSet = true
+	}
+	if p.wasProvided("caCert") {
+		cfg.Certificate = p.Certificate
+	}
+	if p.wasProvided("clientCert") {
+		cfg.ClientCertificate = p.ClientCert
+	}
+	if p.wasProvided("clientKey") {
+		cfg.ClientKey = p.ClientKey
 	}
 	if p.wasProvided("headers") {
 		cfg.Headers = copyStringMap(p.Headers)

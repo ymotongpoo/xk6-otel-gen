@@ -222,6 +222,16 @@ func buildPipelineConfig(params Params) exporter.Config {
 	}
 	if params.wasProvided("insecure") {
 		cfg.Insecure = out.Insecure
+		cfg.InsecureSet = true
+	}
+	if params.wasProvided("caCert") {
+		cfg.Certificate = out.Certificate
+	}
+	if params.wasProvided("clientCert") {
+		cfg.ClientCertificate = out.ClientCertificate
+	}
+	if params.wasProvided("clientKey") {
+		cfg.ClientKey = out.ClientKey
 	}
 	if params.wasProvided("headers") {
 		cfg.Headers = out.Headers

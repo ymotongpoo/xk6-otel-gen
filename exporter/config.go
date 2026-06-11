@@ -64,6 +64,10 @@ type Config struct {
 	Endpoint          string
 	Headers           map[string]string
 	Insecure          bool
+	InsecureSet       bool
+	Certificate       string
+	ClientCertificate string
+	ClientKey         string
 	Compression       string
 	Timeout           time.Duration
 	BatchSize         int
@@ -137,6 +141,9 @@ func (c Config) Validate() error {
 	}
 	validateStringMap(&errs, "Headers", c.Headers, true)
 	validateStringMap(&errs, "ResourceOverrides", c.ResourceOverrides, false)
+	if err := validateTLSConfig(c); err != nil {
+		errs = append(errs, err)
+	}
 	return errors.Join(errs...)
 }
 
@@ -151,8 +158,18 @@ func (c Config) MergeWith(override Config) Config {
 	if override.Headers != nil {
 		c.Headers = override.Headers
 	}
-	if override.Insecure {
-		c.Insecure = true
+	if override.Insecure || override.InsecureSet {
+		c.Insecure = override.Insecure
+		c.InsecureSet = override.InsecureSet
+	}
+	if override.Certificate != "" {
+		c.Certificate = override.Certificate
+	}
+	if override.ClientCertificate != "" {
+		c.ClientCertificate = override.ClientCertificate
+	}
+	if override.ClientKey != "" {
+		c.ClientKey = override.ClientKey
 	}
 	if override.Compression != "" {
 		c.Compression = override.Compression
@@ -202,6 +219,16 @@ func ConfigFromEnv() Config {
 	}
 	if value, ok := lookupSignalEnv("INSECURE"); ok {
 		c.Insecure = parseBool(value)
+		c.InsecureSet = true
+	}
+	if value, ok := lookupSignalEnv("CERTIFICATE"); ok {
+		c.Certificate = value
+	}
+	if value, ok := lookupSignalEnv("CLIENT_CERTIFICATE"); ok {
+		c.ClientCertificate = value
+	}
+	if value, ok := lookupSignalEnv("CLIENT_KEY"); ok {
+		c.ClientKey = value
 	}
 	if value, ok := os.LookupEnv("OTEL_TRACES_SAMPLER"); ok {
 		c.Sampler = parseSampler(value)

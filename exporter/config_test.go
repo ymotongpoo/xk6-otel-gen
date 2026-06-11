@@ -123,6 +123,9 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 		Endpoint:          "base:4317",
 		Headers:           map[string]string{"base": "kept"},
 		Timeout:           time.Second,
+		Certificate:       "base-ca.pem",
+		ClientCertificate: "base-client.pem",
+		ClientKey:         "base-client-key.pem",
 		BatchSize:         128,
 		BatchTimeout:      time.Second,
 		MaxQueueSize:      256,
@@ -136,6 +139,9 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 		Endpoint:          "override:4318",
 		Headers:           map[string]string{"override": "wins"},
 		Insecure:          true,
+		Certificate:       "override-ca.pem",
+		ClientCertificate: "override-client.pem",
+		ClientKey:         "override-client-key.pem",
 		Compression:       "gzip",
 		Timeout:           2 * time.Second,
 		BatchSize:         256,
@@ -153,6 +159,9 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 	}
 	if !reflect.DeepEqual(merged.Headers, map[string]string{"override": "wins"}) {
 		t.Fatalf("Headers = %#v, want replacement map", merged.Headers)
+	}
+	if merged.Certificate != "override-ca.pem" || merged.ClientCertificate != "override-client.pem" || merged.ClientKey != "override-client-key.pem" {
+		t.Fatalf("TLS fields = %#v, want override certificate paths", merged)
 	}
 	if !reflect.DeepEqual(merged.ResourceOverrides, map[string]string{string(semconv.ServiceNameKey): "override"}) {
 		t.Fatalf("ResourceOverrides = %#v, want replacement map", merged.ResourceOverrides)
@@ -172,9 +181,9 @@ func TestConfig_MergeWith_Examples(t *testing.T) {
 		t.Fatalf("empty map override did not replace maps: %#v", emptyMaps)
 	}
 
-	falseInsecure := Config{Insecure: true}.MergeWith(Config{Insecure: false})
-	if !falseInsecure.Insecure {
-		t.Fatal("Insecure=false override cleared true, want one-way merge")
+	falseInsecure := Config{Insecure: true, InsecureSet: true}.MergeWith(Config{Insecure: false, InsecureSet: true})
+	if falseInsecure.Insecure || !falseInsecure.InsecureSet {
+		t.Fatalf("Insecure=false override = %#v, want explicit false override", falseInsecure)
 	}
 }
 
@@ -205,14 +214,17 @@ func TestConfigFromEnv_Generic(t *testing.T) {
 	t.Parallel()
 
 	withOTLPEnv(t, map[string]string{
-		"OTEL_EXPORTER_OTLP_ENDPOINT":    "env:4317",
-		"OTEL_EXPORTER_OTLP_HEADERS":     "Authorization=Bearer%20token,X-Tenant=tenant-a",
-		"OTEL_EXPORTER_OTLP_PROTOCOL":    "http/protobuf",
-		"OTEL_EXPORTER_OTLP_COMPRESSION": "gzip",
-		"OTEL_EXPORTER_OTLP_TIMEOUT":     "1500",
-		"OTEL_EXPORTER_OTLP_INSECURE":    "true",
-		"OTEL_TRACES_SAMPLER":            "traceidratio",
-		"OTEL_TRACES_SAMPLER_ARG":        "0.25",
+		"OTEL_EXPORTER_OTLP_ENDPOINT":           "env:4317",
+		"OTEL_EXPORTER_OTLP_HEADERS":            "Authorization=Bearer%20token,X-Tenant=tenant-a",
+		"OTEL_EXPORTER_OTLP_PROTOCOL":           "http/protobuf",
+		"OTEL_EXPORTER_OTLP_COMPRESSION":        "gzip",
+		"OTEL_EXPORTER_OTLP_TIMEOUT":            "1500",
+		"OTEL_EXPORTER_OTLP_INSECURE":           "true",
+		"OTEL_EXPORTER_OTLP_CERTIFICATE":        "ca.pem",
+		"OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE": "client.pem",
+		"OTEL_EXPORTER_OTLP_CLIENT_KEY":         "client-key.pem",
+		"OTEL_TRACES_SAMPLER":                   "traceidratio",
+		"OTEL_TRACES_SAMPLER_ARG":               "0.25",
 	})
 
 	cfg := ConfigFromEnv()
@@ -222,11 +234,14 @@ func TestConfigFromEnv_Generic(t *testing.T) {
 	if cfg.Protocol != ProtocolHTTP {
 		t.Fatalf("Protocol = %v, want ProtocolHTTP", cfg.Protocol)
 	}
-	if cfg.Compression != "gzip" || cfg.Timeout != 1500*time.Millisecond || !cfg.Insecure {
+	if cfg.Compression != "gzip" || cfg.Timeout != 1500*time.Millisecond || !cfg.Insecure || !cfg.InsecureSet {
 		t.Fatalf("ConfigFromEnv() = %#v, want compression/timeout/insecure from env", cfg)
 	}
 	if cfg.Sampler != "traceidratio" || cfg.SamplerArg != 0.25 || !cfg.SamplerArgSet {
 		t.Fatalf("ConfigFromEnv() = %#v, want sampler from env", cfg)
+	}
+	if cfg.Certificate != "ca.pem" || cfg.ClientCertificate != "client.pem" || cfg.ClientKey != "client-key.pem" {
+		t.Fatalf("TLS env fields = %#v, want certificate/client certificate/client key", cfg)
 	}
 	wantHeaders := map[string]string{"Authorization": "Bearer token", "X-Tenant": "tenant-a"}
 	if !reflect.DeepEqual(cfg.Headers, wantHeaders) {
@@ -319,6 +334,9 @@ func withOTLPEnv(t *testing.T, values map[string]string) {
 		"OTEL_EXPORTER_OTLP_COMPRESSION",
 		"OTEL_EXPORTER_OTLP_TIMEOUT",
 		"OTEL_EXPORTER_OTLP_INSECURE",
+		"OTEL_EXPORTER_OTLP_CERTIFICATE",
+		"OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE",
+		"OTEL_EXPORTER_OTLP_CLIENT_KEY",
 		"OTEL_TRACES_SAMPLER",
 		"OTEL_TRACES_SAMPLER_ARG",
 	}
@@ -327,7 +345,7 @@ func withOTLPEnv(t *testing.T, values map[string]string) {
 		"OTEL_EXPORTER_OTLP_METRICS_",
 		"OTEL_EXPORTER_OTLP_LOGS_",
 	}
-	suffixes := []string{"ENDPOINT", "HEADERS", "PROTOCOL", "COMPRESSION", "TIMEOUT", "INSECURE"}
+	suffixes := []string{"ENDPOINT", "HEADERS", "PROTOCOL", "COMPRESSION", "TIMEOUT", "INSECURE", "CERTIFICATE", "CLIENT_CERTIFICATE", "CLIENT_KEY"}
 	for _, prefix := range signalPrefixes {
 		for _, suffix := range suffixes {
 			keys = append(keys, prefix+suffix)

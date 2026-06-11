@@ -4,6 +4,7 @@ package exporter
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"testing"
 	"time"
@@ -128,13 +129,13 @@ func TestNew_ExporterFailure_CleansUp(t *testing.T) {
 	sentinel := errors.New("metric builder failed")
 	traceInner := &fakeSpanExporter{}
 	_, err := newWithExporterBuilders(validPipelineConfig(),
-		func(context.Context, Config, *pipelineStats) (sdktrace.SpanExporter, error) {
+		func(context.Context, Config, *tls.Config, *pipelineStats) (sdktrace.SpanExporter, error) {
 			return traceInner, nil
 		},
-		func(context.Context, Config, *pipelineStats) (sdkmetric.Exporter, error) {
+		func(context.Context, Config, *tls.Config, *pipelineStats) (sdkmetric.Exporter, error) {
 			return nil, sentinel
 		},
-		func(context.Context, Config, *pipelineStats) (sdklog.Exporter, error) {
+		func(context.Context, Config, *tls.Config, *pipelineStats) (sdklog.Exporter, error) {
 			t.Fatal("log builder should not be called after metric builder failure")
 			return nil, nil
 		},

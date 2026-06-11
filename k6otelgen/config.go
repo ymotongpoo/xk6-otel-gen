@@ -40,6 +40,25 @@ func optsToConfig(opts map[string]any) (exporter.Config, error) {
 				return cfg, typeMismatch(key, value, "bool")
 			}
 			cfg.Insecure = b
+			cfg.InsecureSet = true
+		case "caCert":
+			s, ok := value.(string)
+			if !ok {
+				return cfg, typeMismatch(key, value, "string")
+			}
+			cfg.Certificate = s
+		case "clientCert":
+			s, ok := value.(string)
+			if !ok {
+				return cfg, typeMismatch(key, value, "string")
+			}
+			cfg.ClientCertificate = s
+		case "clientKey":
+			s, ok := value.(string)
+			if !ok {
+				return cfg, typeMismatch(key, value, "string")
+			}
+			cfg.ClientKey = s
 		case "headers":
 			headers, err := toStringMap(value)
 			if err != nil {

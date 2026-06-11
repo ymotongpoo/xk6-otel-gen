@@ -4,6 +4,7 @@ package exporter
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"sync"
 
@@ -30,9 +31,9 @@ type Pipeline struct {
 	shutdownErr  error
 }
 
-type traceBuilder func(context.Context, Config, *pipelineStats) (sdktrace.SpanExporter, error)
-type metricBuilder func(context.Context, Config, *pipelineStats) (sdkmetric.Exporter, error)
-type logBuilder func(context.Context, Config, *pipelineStats) (sdklog.Exporter, error)
+type traceBuilder func(context.Context, Config, *tls.Config, *pipelineStats) (sdktrace.SpanExporter, error)
+type metricBuilder func(context.Context, Config, *tls.Config, *pipelineStats) (sdkmetric.Exporter, error)
+type logBuilder func(context.Context, Config, *tls.Config, *pipelineStats) (sdklog.Exporter, error)
 
 // New builds a Pipeline with one shared resource and OTLP exporters for all signals.
 func New(cfg Config) (*Pipeline, error) {
@@ -50,18 +51,22 @@ func newWithExporterBuilders(cfg Config, buildTrace traceBuilder, buildMetric me
 	if err != nil {
 		return nil, &PipelineError{Stage: "resource", Inner: err}
 	}
+	tlsConfig, err := buildTLSConfig(cfg)
+	if err != nil {
+		return nil, &PipelineError{Stage: "tls", Inner: err}
+	}
 
 	stats := &pipelineStats{}
-	traceExp, err := buildTrace(ctx, cfg, stats)
+	traceExp, err := buildTrace(ctx, cfg, tlsConfig, stats)
 	if err != nil {
 		return nil, &PipelineError{Stage: "trace_exporter", Inner: err}
 	}
-	metricExp, err := buildMetric(ctx, cfg, stats)
+	metricExp, err := buildMetric(ctx, cfg, tlsConfig, stats)
 	if err != nil {
 		_ = traceExp.Shutdown(context.Background())
 		return nil, &PipelineError{Stage: "metric_exporter", Inner: err}
 	}
-	logExp, err := buildLog(ctx, cfg, stats)
+	logExp, err := buildLog(ctx, cfg, tlsConfig, stats)
 	if err != nil {
 		_ = traceExp.Shutdown(context.Background())
 		_ = metricExp.Shutdown(context.Background())

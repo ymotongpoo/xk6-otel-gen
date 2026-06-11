@@ -116,7 +116,7 @@ func ValidConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 func AnyConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 	return rapid.Custom(func(t *rapid.T) exporter.Config {
 		cfg := ValidConfig(opts...).Draw(t, "valid_config")
-		switch rapid.IntRange(0, 11).Draw(t, "config_mutation") {
+		switch rapid.IntRange(0, 14).Draw(t, "config_mutation") {
 		case 0:
 			return cfg
 		case 1:
@@ -143,6 +143,15 @@ func AnyConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 			cfg.Sampler = "traceidratio"
 			cfg.SamplerArg = rapid.SampledFrom([]float64{-0.1, 1.1}).Draw(t, "invalid_sampler_arg")
 			cfg.SamplerArgSet = true
+		case 12:
+			cfg.Insecure = true
+			cfg.Certificate = "ca.pem"
+		case 13:
+			cfg.ClientCertificate = "client.pem"
+			cfg.ClientKey = ""
+		case 14:
+			cfg.ClientCertificate = ""
+			cfg.ClientKey = "client-key.pem"
 		}
 		return cfg
 	})

@@ -213,6 +213,9 @@ otelgen.configure({
   endpoint: "localhost:4317",
   protocol: "grpc",
   insecure: true,
+  caCert: "/etc/otel/ca.pem",
+  clientCert: "/etc/otel/client.pem",
+  clientKey: "/etc/otel/client-key.pem",
   headers: { "x-demo": "minimal" },
   timeout: "10s",
   batchSize: 512,
@@ -222,6 +225,15 @@ otelgen.configure({
   samplerArg: 0.1,
 });
 ```
+
+TLS certificate options can be supplied through JS (`caCert`, `clientCert`,
+`clientKey`), `--out` args with the same keys, or OTEL environment variables:
+`OTEL_EXPORTER_OTLP_CERTIFICATE`,
+`OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE`, and `OTEL_EXPORTER_OTLP_CLIENT_KEY`
+including signal-specific variants such as
+`OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE`. `clientCert` and `clientKey` must be
+configured together. Certificate options cannot be combined with
+`insecure: true`.
 
 Sampling applies to traces only. Metrics and logs are still emitted; logs keep
 the active trace context even when the trace sampler drops spans.
@@ -239,6 +251,7 @@ Common output configuration:
 
 ```bash
 ./k6 run script.js --out otel-gen=endpoint=localhost:4317,protocol=grpc,insecure=true,queueSize=100
+./k6 run script.js --out otel-gen=endpoint=otel.example.com:4317,protocol=grpc,caCert=/etc/otel/ca.pem,clientCert=/etc/otel/client.pem,clientKey=/etc/otel/client-key.pem
 ```
 
 ### Sending to SaaS OTLP endpoints
@@ -300,9 +313,17 @@ otelgen.configure({
   endpoint: "otel-collector.example.internal:4317",
   protocol: "grpc",
   insecure: false,
+  caCert: "/etc/otel/ca.pem",
+  clientCert: "/etc/otel/client.pem",
+  clientKey: "/etc/otel/client-key.pem",
   headers: { authorization: "Bearer ${TOKEN}" },
 });
 ```
+
+The certificate files are read during pipeline validation and startup so
+missing files, malformed PEM data, incomplete client certificate/key pairs, and
+certificate options combined with `insecure: true` fail before traffic starts.
+Header values are never included in JS-module configuration logs.
 
 ## Contributing
 

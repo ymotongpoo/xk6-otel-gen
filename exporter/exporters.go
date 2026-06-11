@@ -4,6 +4,7 @@ package exporter
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"strings"
 
@@ -16,10 +17,11 @@ import (
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"google.golang.org/grpc/credentials"
 )
 
 // buildTraceExporter creates a protocol-specific OTLP trace exporter.
-func buildTraceExporter(ctx context.Context, cfg Config, stats *pipelineStats) (sdktrace.SpanExporter, error) {
+func buildTraceExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, stats *pipelineStats) (sdktrace.SpanExporter, error) {
 	var inner sdktrace.SpanExporter
 	var err error
 	switch cfg.Protocol {
@@ -35,6 +37,9 @@ func buildTraceExporter(ctx context.Context, cfg Config, stats *pipelineStats) (
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlptracegrpc.WithInsecure())
+		}
+		if tlsConfig != nil {
+			opts = append(opts, otlptracegrpc.WithTLSCredentials(credentials.NewTLS(tlsConfig)))
 		}
 		if cfg.Compression == "gzip" {
 			opts = append(opts, otlptracegrpc.WithCompressor("gzip"))
@@ -53,6 +58,9 @@ func buildTraceExporter(ctx context.Context, cfg Config, stats *pipelineStats) (
 		if cfg.Insecure {
 			opts = append(opts, otlptracehttp.WithInsecure())
 		}
+		if tlsConfig != nil {
+			opts = append(opts, otlptracehttp.WithTLSClientConfig(tlsConfig))
+		}
 		if cfg.Compression == "gzip" {
 			opts = append(opts, otlptracehttp.WithCompression(otlptracehttp.GzipCompression))
 		}
@@ -67,7 +75,7 @@ func buildTraceExporter(ctx context.Context, cfg Config, stats *pipelineStats) (
 }
 
 // buildMetricExporter creates a protocol-specific OTLP metric exporter.
-func buildMetricExporter(ctx context.Context, cfg Config, stats *pipelineStats) (sdkmetric.Exporter, error) {
+func buildMetricExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, stats *pipelineStats) (sdkmetric.Exporter, error) {
 	var inner sdkmetric.Exporter
 	var err error
 	switch cfg.Protocol {
@@ -83,6 +91,9 @@ func buildMetricExporter(ctx context.Context, cfg Config, stats *pipelineStats) 
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlpmetricgrpc.WithInsecure())
+		}
+		if tlsConfig != nil {
+			opts = append(opts, otlpmetricgrpc.WithTLSCredentials(credentials.NewTLS(tlsConfig)))
 		}
 		if cfg.Compression == "gzip" {
 			opts = append(opts, otlpmetricgrpc.WithCompressor("gzip"))
@@ -101,6 +112,9 @@ func buildMetricExporter(ctx context.Context, cfg Config, stats *pipelineStats) 
 		if cfg.Insecure {
 			opts = append(opts, otlpmetrichttp.WithInsecure())
 		}
+		if tlsConfig != nil {
+			opts = append(opts, otlpmetrichttp.WithTLSClientConfig(tlsConfig))
+		}
 		if cfg.Compression == "gzip" {
 			opts = append(opts, otlpmetrichttp.WithCompression(otlpmetrichttp.GzipCompression))
 		}
@@ -115,7 +129,7 @@ func buildMetricExporter(ctx context.Context, cfg Config, stats *pipelineStats) 
 }
 
 // buildLogExporter creates a protocol-specific OTLP log exporter.
-func buildLogExporter(ctx context.Context, cfg Config, stats *pipelineStats) (sdklog.Exporter, error) {
+func buildLogExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, stats *pipelineStats) (sdklog.Exporter, error) {
 	var inner sdklog.Exporter
 	var err error
 	switch cfg.Protocol {
@@ -131,6 +145,9 @@ func buildLogExporter(ctx context.Context, cfg Config, stats *pipelineStats) (sd
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlploggrpc.WithInsecure())
+		}
+		if tlsConfig != nil {
+			opts = append(opts, otlploggrpc.WithTLSCredentials(credentials.NewTLS(tlsConfig)))
 		}
 		if cfg.Compression == "gzip" {
 			opts = append(opts, otlploggrpc.WithCompressor("gzip"))
@@ -148,6 +165,9 @@ func buildLogExporter(ctx context.Context, cfg Config, stats *pipelineStats) (sd
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlploghttp.WithInsecure())
+		}
+		if tlsConfig != nil {
+			opts = append(opts, otlploghttp.WithTLSClientConfig(tlsConfig))
 		}
 		if cfg.Compression == "gzip" {
 			opts = append(opts, otlploghttp.WithCompression(otlploghttp.GzipCompression))
