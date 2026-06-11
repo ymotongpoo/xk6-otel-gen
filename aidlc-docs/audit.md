@@ -1167,3 +1167,23 @@ Notable Codex-introduced deviations:
 **CONSTRUCTION PHASE COMPLETE.** All 8 units (U1-U8) have completed Functional Design + NFR Requirements + NFR Design + Code Generation. Next: Build and Test stage per AIDLC workflow (CI workflows, release automation, SECURITY.md, CONTRIBUTING.md)."
 
 **Context**: U8 Code Generation — Part 2 complete. ENTIRE CONSTRUCTION PHASE COMPLETE. Awaiting Continue to Next Stage approval before moving to Build and Test stage.
+
+
+## Build and Test Stage — Instruction Files Generated
+**Timestamp**: 2026-06-11T02:00:00Z
+**User Input**: "Continue to Next Stage" (approving Construction phase completion)
+**AI Response**: "Generated 5 instruction files under aidlc-docs/construction/build-and-test/:
+
+(1) build-instructions.md — Prerequisites table (Go 1.25+, xk6, Docker, kubectl, kind optional, kustomize, golangci-lint, lychee optional), Go module build commands per unit, xk6 build (`xk6 build --with github.com/ymotongpoo/xk6-otel-gen=.`), cmd/xk6-otel-gen-schema build, Kubernetes manifest kustomize build (both minimal and astroshop with client + server dry-run options), build verification checklist (8 items), build caching guidance for CI, reproducibility notes including pinned tool versions and current image tags (Collector 0.154.0 / Tempo 3.0.0 / Loki 3.7.2 / Prometheus v3.12.0 / Grafana 13.0.2), common build issues troubleshooting (xk6 not found, import cycle, Docker unreachable, kustomize load restrictions, SPDX header missing).
+
+(2) unit-test-instructions.md — Test tool prerequisites (rapid PBT + testify + OTel SDK test utilities + modulestest), quick reference for go test -race -count=1, per-unit coverage targets table with achieved numbers (80.9% to 86.6% range), PBT inventory (22 testable properties across 6 units), race detector usage, t.Parallel() exceptions (k6otelgen Configure_Merge_Property serial due to t.Setenv, exporter shared_test.go), test helper locations per unit, CI workflow snippet, coverage verification with per-package threshold gates.
+
+(3) integration-test-instructions.md — Integration test scope per unit (5 units have integration/, U1/U7/U8 skip), prerequisites with graceful skip (Docker requireDocker, xk6 requireXK6, kind), per-unit invocation commands, Docker Collector lifecycle (startCollector → Pipeline → ForceFlush → ReadCollectorXxx assert → cleanup), xk6 build inline helper code, k6 run shell-out pattern, Collector file_exporter output verification (service.name + trace_id correlation + error.type / k6.* attribute), CI workflow snippet (nightly cron + manual trigger), cross-unit correlation test (U2→U3→U4→U6 full pipeline), graceful skip behavior table.
+
+(4) performance-test-instructions.md — Benchmark inventory across all 6 units with achieved-vs-target table (strict/soft/guidance categorization), all benchmark commands with benchstat-based comparison, regression detection strategy (5% threshold for strict bench), CI workflow with baseline checkout via git worktree, benchmark best practices (b.ReportAllocs, ResetTimer, b.RunParallel, -count=1 for cache bypass), soft target inventory for user-relaxed NFRs (U5 New/Load/Configure, U6 Start/Stop, U8 cmd), memory + CPU profiling commands, common issues (noisy results, race-flag slowdown).
+
+(5) build-and-test-summary.md — Construction completion table (8 units × FD/NFR-R/NFR-D/CG metrics), document suite overview, CI workflow recommendations (5 workflows: test/integration/bench/lint/kustomize), aggregated DoD checklist (15 items), quality highlights (performance budgets achieved by factor of 3.3x to 64,683x), PBT compliance (22 properties), coordination patches table (NewEngineWithSeed, Outcome.Cascaded, Pipeline.MetricExporter, U5/U6 guards), out-of-scope items deferred to post-stage (CI YAML actual files, GitHub releases, SECURITY.md, CONTRIBUTING.md, CODEOWNERS, SBOM, signing), pre-flight verification checklist, next stage clarity (Operations is PLACEHOLDER per AIDLC workflow), project status summary showing INCEPTION ✅ / CONSTRUCTION ✅ / BUILD AND TEST ✅ / OPERATIONS ⏸.
+
+Updated aidlc-state.md to mark Build and Test stage [x] complete and Current Status to BUILD AND TEST (complete)."
+
+**Context**: Build and Test stage — instruction files complete. Per AIDLC workflow, this stage's gate question is 'Build and test instructions complete. Ready to proceed to Operations stage?' — awaiting user approval. Operations stage is PLACEHOLDER per CLAUDE.md, so approval effectively closes the AIDLC workflow for this project.

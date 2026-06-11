@@ -55,17 +55,16 @@
 - [x] NFR Design
 - [x] Infrastructure Design — SKIPPED (binary distribution, no IaC)
 - [x] Code Generation
-- [ ] Build and Test — NEXT
+- [x] Build and Test
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations — PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION
-- **Current Unit**: U8 (Samples & Distribution)
+- **Lifecycle Phase**: BUILD AND TEST (complete)
 - **Completed Units**: U7, U1, U4, U3, U2, U5, U6, U8
 - **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → [✓ U3 complete] → [✓ U2 complete] → [✓ U5 complete] → [✓ U6 complete] → [✓ U8 complete]
-- **Status**: U8 code generation completed with schema CLI coverage 86.4%, `go test -race -count=1 ./...` clean, full lint clean, examples validation clean, and minimal/astroshop kustomize builds clean. All CONSTRUCTION phase units are complete. Next stage is Build and Test.
+- **Status**: All CONSTRUCTION units complete. Build and Test stage produced 5 instruction files (build / unit-test / integration-test / performance-test / summary) under aidlc-docs/construction/build-and-test/. Next stage is Operations (PLACEHOLDER per AIDLC workflow).
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)
