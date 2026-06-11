@@ -7,8 +7,8 @@
 #      - ai-dlc-rules-vX.X.X.zip (Rules format for Amazon Q, Kiro, etc.)
 #   2. Creates a draft GitHub Release with artifact attached
 #
-# The release is created as a draft so that build artifacts from CodeBuild
-# (codebuild.yml) can be attached before a human reviews and publishes it.
+# The release is created as a draft so a human can review the attached
+# artifacts before publishing it.
 #
 # Normal flow:
 #   1. release-pr.yml creates a PR with CHANGELOG update (manual dispatch)

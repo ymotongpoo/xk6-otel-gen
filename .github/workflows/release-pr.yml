@@ -4,7 +4,7 @@
 # The changelog is generated from conventional commits using git-cliff.
 #
 # When the PR is merged, tag-on-merge.yml automatically tags the merge commit,
-# which triggers release.yml (draft release) and codebuild.yml (build artifacts).
+# which triggers release.yml (draft release).
 #
 # Usage:
 #   1. Run this workflow via workflow_dispatch (optionally specify a version)
@@ -149,16 +149,13 @@ jobs:
           This pull request is for the $TAG release.
 
           ## Checklist (in order)
-          
-          1. [ ] Mark the pull request "Ready for review" and label with "codebuild" to trigger required workflows
-          2. [ ] Inspect the CHANGELOG.md and "Approve" or "Reject" the pending [CodeBuild](https://github.com/awslabs/aidlc-workflows/actions/workflows/codebuild.yml) GitHub Action
-          3. [ ] Evaluate the artifacts
-          4. [ ] Review the pull request (if approved set the "Merge when ready")
+
+          1. [ ] Inspect the CHANGELOG.md
+          2. [ ] Review the pull request (if approved set the "Merge when ready")
 
           ## Post Merge
 
           * [ ] Verify $TAG tag
-          * [ ] Approve "Approve" or "Reject" the pending [CodeBuild](https://github.com/awslabs/aidlc-workflows/actions/workflows/codebuild.yml) GitHub Action
           * [ ] Review the drafted release artifacts for completion
           * [ ] Publish the release
 
@@ -167,7 +164,6 @@ jobs:
 
           **When merged**, the merge commit will be automatically tagged as \`$TAG\`, which triggers:
           - \`release.yml\` — creates a draft GitHub Release with the rules zip
-          - \`codebuild.yml\` — runs CodeBuild and attaches build artifacts to the draft
 
           After both workflows complete, review and publish the draft release.
           EOF

@@ -5,10 +5,9 @@
 #   - The PR was actually merged (not just closed)
 #   - The branch name starts with "release/v"
 #
-# After tagging, dispatches release.yml first and waits for it to create the
-# draft release, then dispatches codebuild.yml. This ensures the draft exists
-# before build artifacts are uploaded. Uses workflow_dispatch (not tag push)
-# because tags created with GITHUB_TOKEN don't trigger other workflows.
+# After tagging, dispatches release.yml to create the draft release. Uses
+# workflow_dispatch (not tag push) because tags created with GITHUB_TOKEN
+# don't trigger other workflows.
 
 name: Tag Release
 
@@ -56,7 +55,7 @@ jobs:
 
           echo "Tag $TAG created on $SHA"
 
-      - name: Dispatch release workflow and wait
+      - name: Dispatch release workflow
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
@@ -65,34 +64,3 @@ jobs:
           TAG="${BRANCH#release/}"
           echo "Dispatching release.yml on ref $TAG"
           gh workflow run release.yml --ref "$TAG" --repo "$REPO"
-
-          # Wait for the run to appear, then watch it to completion
-          echo "Waiting for release workflow run to appear..."
-          sleep 5
-          for i in $(seq 1 12); do
-            RUN_ID=$(gh run list --workflow=release.yml --repo "$REPO" --json databaseId,headBranch,event,status --jq '[.[] | select(.event=="workflow_dispatch")] | first | .databaseId' 2>/dev/null || echo "")
-            if [[ -n "$RUN_ID" ]]; then
-              break
-            fi
-            echo "Waiting for run to appear (attempt $i/12)..."
-            sleep 5
-          done
-
-          if [[ -z "$RUN_ID" ]]; then
-            echo "WARNING: Could not find release workflow run — dispatching codebuild anyway"
-          else
-            echo "Watching release workflow run $RUN_ID"
-            gh run watch "$RUN_ID" --repo "$REPO" --exit-status || {
-              echo "WARNING: Release workflow did not succeed (run $RUN_ID) — dispatching codebuild anyway"
-            }
-          fi
-
-      - name: Dispatch codebuild workflow
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ github.event.pull_request.head.ref }}
-          REPO: ${{ github.repository }}
-        run: |
-          TAG="${BRANCH#release/}"
-          echo "Dispatching codebuild.yml on ref $TAG"
-          gh workflow run codebuild.yml --ref "$TAG" --repo "$REPO"
