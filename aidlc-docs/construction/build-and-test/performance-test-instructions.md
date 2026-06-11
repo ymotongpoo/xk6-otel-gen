@@ -210,6 +210,30 @@ go test -bench=. -count=1 ...  # -count=1 で cache bypass
 
 ## 6. Performance Soft Targets (NFR-R user-relaxed)
 
+### 6.1 1k RPS e2e benchmark (Round 2 NFR-1.1)
+
+The end-to-end journey benchmark exercises `examples/astroshop/topology.yaml`
+through weighted journey selection, the journey executor, the real Synthesizer,
+and OpenTelemetry SDK providers backed by no-op/in-memory exporters. It excludes
+network and Collector latency by design.
+
+```bash
+go test -bench BenchmarkE2E -benchtime=2s -count=1 ./journey/...
+go test -run TestSustained1kRPSBudget -count=1 ./journey/...
+```
+
+Interpretation:
+
+- `BenchmarkE2EAstroshopJourney` reports `journeys/sec`; use it for local
+  comparison and benchstat runs.
+- `TestSustained1kRPSBudget` runs for about 3 seconds and fails below 1,000
+  journeys/sec. It is skipped with `-short` and under the race detector.
+- The formal NFR-1.1 target hardware remains 4 vCPU / 8 GB; results from
+  smaller CI workers should be treated as diagnostic unless the guard fails
+  consistently.
+
+## 7. Performance Soft Targets (NFR-R user-relaxed)
+
 特定 unit で user が soft target (best-effort) を明示:
 
 | Unit | Operation | NFR-R reference |
@@ -224,7 +248,7 @@ go test -bench=. -count=1 ...  # -count=1 で cache bypass
 
 ---
 
-## 7. Memory Profiling
+## 8. Memory Profiling
 
 heap allocation hot spot 解析:
 
@@ -241,7 +265,7 @@ primary suspects:
 
 ---
 
-## 8. CPU Profiling
+## 9. CPU Profiling
 
 CPU bottleneck 解析:
 
@@ -257,7 +281,7 @@ primary suspects:
 
 ---
 
-## 9. Common Issues
+## 10. Common Issues
 
 | Issue | Solution |
 |---|---|
