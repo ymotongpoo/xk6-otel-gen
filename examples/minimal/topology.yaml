@@ -1,0 +1,77 @@
+# Minimal xk6-otel-gen topology.
+# This file models a classic frontend -> backend -> database flow.
+services:
+  # services is a map keyed by service name. Use stable names because journeys
+  # and faults reference them.
+  frontend:
+    kind: application
+    replicas: 2
+    language: go
+    framework: net/http
+    version: 1.0.0
+    operations:
+      # operations are entry points or downstream calls owned by this service.
+      - name: get_index
+        calls:
+          # calls describe outbound edges from this operation to another one.
+          - to:
+              service: backend
+              operation: get_user
+            protocol: http
+            latency:
+              distribution: lognormal
+              p50: 50ms
+              p95: 150ms
+            error_rate: 0.01
+            timeout: 1s
+            retries: 1
+            retry_backoff: exponential
+
+  backend:
+    kind: application
+    replicas: 3
+    language: java
+    framework: spring-boot
+    version: 2.5.0
+    operations:
+      - name: get_user
+        calls:
+          - to:
+              service: database
+              operation: select_user
+            protocol: grpc
+            latency:
+              distribution: lognormal
+              p50: 20ms
+              p95: 80ms
+            error_rate: 0.005
+            timeout: 500ms
+            retries: 1
+            retry_backoff: constant
+
+  database:
+    kind: database
+    replicas: 1
+    language: c
+    framework: postgresql
+    version: "16.4"
+    operations:
+      - name: select_user
+
+journeys:
+  # journeys name user-visible flows. Each step starts at an operation and the
+  # engine follows that operation's calls recursively.
+  checkout:
+    weight: 1.0
+    steps:
+      - service: frontend
+        operation: get_index
+
+faults:
+  # This demonstrates a small edge-level error-rate override on the frontend
+  # to backend call.
+  - target: edge:frontend.get_index->backend.get_user
+    kind: error_rate_override
+    severity:
+      probability: 1.0
+      value: 0.05
