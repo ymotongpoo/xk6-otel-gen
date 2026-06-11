@@ -208,6 +208,27 @@ Common output configuration:
 ./k6 run script.js --out otel-gen=endpoint=localhost:4317,protocol=grpc,insecure=true,queueSize=100
 ```
 
+### Sending to SaaS OTLP endpoints
+
+The same `configure(...)` / `--out otel-gen=...` mechanism works against managed OpenTelemetry endpoints. See [examples/saas-endpoints.md](examples/saas-endpoints.md) for full per-vendor instructions.
+
+**Grafana Cloud (OTLP gateway, HTTP/protobuf)**:
+```javascript
+otelgen.configure({
+  endpoint: "https://otlp-gateway-prod-us-central-0.grafana.net/otlp",
+  protocol: "http",
+  insecure: false,
+  headers: {
+    // base64("<instance_id>:<api_token>")
+    Authorization: `Basic ${__ENV.GRAFANA_CLOUD_OTLP_TOKEN}`,
+  },
+});
+```
+
+**Google Cloud Observability (via a sidecar Collector)** — Google's OTLP intake requires OAuth2 / ADC, so the recommended pattern is to keep xk6-otel-gen pointed at a local Collector that handles authentication and re-exports to `telemetry.googleapis.com`. The k6 side stays unchanged (`endpoint: "localhost:4317"`).
+
+A copy-pasteable Collector config for each vendor is in [examples/saas-endpoints.md](examples/saas-endpoints.md).
+
 ## Examples
 
 | Example | Size | Use case |
