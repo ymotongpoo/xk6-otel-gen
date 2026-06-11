@@ -1,0 +1,359 @@
+# Modeled after the OpenTelemetry Demo (astronomy shop) v2.2.0.
+# This topology is intentionally approximate: it preserves the service graph
+# shape and common user journeys without reproducing upstream implementation
+# details one-for-one.
+services:
+  # Frontend & API
+  frontend:
+    # Browser-facing web application and BFF entry point.
+    kind: application
+    replicas: 3
+    language: typescript
+    framework: nextjs
+    version: 2.2.0
+    operations:
+      - name: browse_home
+        calls:
+          - to: { service: product-catalog, operation: list_products }
+            protocol: http
+            latency: { distribution: lognormal, p50: 45ms, p95: 180ms }
+          - to: { service: ad, operation: get_ads }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 25ms, p95: 90ms }
+      - name: search_products
+        calls:
+          - to: { service: product-catalog, operation: search_products }
+            protocol: http
+            latency: { distribution: lognormal, p50: 55ms, p95: 220ms }
+      - name: add_to_cart
+        calls:
+          - to: { service: cart, operation: add_item }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 35ms, p95: 140ms }
+      - name: checkout
+        calls:
+          - to: { service: checkout, operation: quote_order }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 80ms, p95: 320ms }
+      - name: place_order
+        calls:
+          - to: { service: checkout, operation: place_order }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 120ms, p95: 500ms }
+
+  # Core commerce
+  product-catalog:
+    # Product lookup service backed by PostgreSQL metadata.
+    kind: application
+    replicas: 3
+    language: go
+    framework: grpc
+    version: 2.2.0
+    operations:
+      - name: list_products
+        calls:
+          - to: { service: postgres, operation: query_products }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 18ms, p95: 75ms }
+          - to: { service: image-provider, operation: get_image }
+            protocol: http
+            latency: { distribution: lognormal, p50: 30ms, p95: 120ms }
+      - name: search_products
+        calls:
+          - to: { service: postgres, operation: query_products }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 22ms, p95: 90ms }
+          - to: { service: recommendation, operation: get_recommendations }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 40ms, p95: 160ms }
+
+  cart:
+    # Shopping cart API with Redis-backed state.
+    kind: application
+    replicas: 2
+    language: csharp
+    framework: aspnetcore
+    version: 2.2.0
+    operations:
+      - name: get_cart
+        calls:
+          - to: { service: redis-cache, operation: get_cart }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 8ms, p95: 30ms }
+      - name: add_item
+        calls:
+          - to: { service: redis-cache, operation: set_cart }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 12ms, p95: 50ms }
+      - name: empty_cart
+        calls:
+          - to: { service: redis-cache, operation: set_cart }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 10ms, p95: 45ms }
+
+  checkout:
+    # Orchestrates payment, fraud, shipping, email, accounting, and order events.
+    kind: application
+    replicas: 2
+    language: go
+    framework: grpc
+    version: 2.2.0
+    operations:
+      - name: quote_order
+        calls:
+          - to: { service: cart, operation: get_cart }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 20ms, p95: 80ms }
+          - to: { service: currency, operation: convert }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 15ms, p95: 60ms }
+          - to: { service: shipping, operation: quote_shipping }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 55ms, p95: 220ms }
+      - name: place_order
+        calls:
+          - to: { service: cart, operation: get_cart }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 18ms, p95: 70ms }
+          - to: { service: payment, operation: authorize_card }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 90ms, p95: 420ms }
+            retries: 1
+            retry_backoff: exponential
+          - to: { service: fraud-detection, operation: score_order }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 70ms, p95: 260ms }
+          - to: { service: shipping, operation: ship_order }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 80ms, p95: 300ms }
+          - to: { service: email, operation: send_confirmation }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 45ms, p95: 180ms }
+          - to: { service: accounting, operation: record_order }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 50ms, p95: 210ms }
+          - to: { service: kafka, operation: publish_order }
+            protocol: messaging
+            latency: { distribution: lognormal, p50: 25ms, p95: 100ms }
+
+  payment:
+    # Payment authorization service.
+    kind: application
+    replicas: 2
+    language: javascript
+    framework: nodejs
+    version: 2.2.0
+    operations:
+      - name: authorize_card
+        calls:
+          - to: { service: flagd, operation: evaluate_flag }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 8ms, p95: 35ms }
+          - to: { service: postgres, operation: insert_payment }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 20ms, p95: 90ms }
+
+  shipping:
+    # Shipping quote and fulfillment service.
+    kind: application
+    replicas: 2
+    language: rust
+    framework: tonic
+    version: 2.2.0
+    operations:
+      - name: quote_shipping
+        calls:
+          - to: { service: quote, operation: get_quote }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 35ms, p95: 150ms }
+      - name: ship_order
+        calls:
+          - to: { service: kafka, operation: publish_order }
+            protocol: messaging
+            latency: { distribution: lognormal, p50: 20ms, p95: 95ms }
+
+  currency:
+    # Currency conversion service.
+    kind: application
+    replicas: 2
+    language: cpp
+    framework: grpc
+    version: 2.2.0
+    operations:
+      - name: convert
+
+  quote:
+    # Generates shipping quotes.
+    kind: application
+    replicas: 2
+    language: php
+    framework: grpc
+    version: 2.2.0
+    operations:
+      - name: get_quote
+
+  # Support
+  ad:
+    # Contextual advertisement service.
+    kind: application
+    replicas: 2
+    language: java
+    framework: grpc
+    version: 2.2.0
+    operations:
+      - name: get_ads
+
+  recommendation:
+    # Product recommendation service.
+    kind: application
+    replicas: 2
+    language: python
+    framework: grpc
+    version: 2.2.0
+    operations:
+      - name: get_recommendations
+        calls:
+          - to: { service: flagd, operation: evaluate_flag }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 10ms, p95: 40ms }
+
+  image-provider:
+    # Product image static asset service.
+    kind: application
+    replicas: 2
+    language: nginx
+    framework: http
+    version: 2.2.0
+    operations:
+      - name: get_image
+
+  email:
+    # Confirmation email sender.
+    kind: application
+    replicas: 1
+    language: ruby
+    framework: grpc
+    version: 2.2.0
+    operations:
+      - name: send_confirmation
+
+  accounting:
+    # Back-office order ledger service.
+    kind: application
+    replicas: 1
+    language: csharp
+    framework: worker
+    version: 2.2.0
+    operations:
+      - name: record_order
+        calls:
+          - to: { service: postgres, operation: insert_order }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 25ms, p95: 100ms }
+
+  fraud-detection:
+    # Risk scoring service for order placement.
+    kind: application
+    replicas: 1
+    language: kotlin
+    framework: grpc
+    version: 2.2.0
+    operations:
+      - name: score_order
+        calls:
+          - to: { service: postgres, operation: insert_fraud_check }
+            protocol: grpc
+            latency: { distribution: lognormal, p50: 45ms, p95: 190ms }
+
+  # Infrastructure deps
+  redis-cache:
+    # Cart state cache.
+    kind: cache
+    replicas: 1
+    language: c
+    framework: redis
+    version: "7.2"
+    operations:
+      - name: get_cart
+      - name: set_cart
+
+  postgres:
+    # Product, payment, order, and audit database.
+    kind: database
+    replicas: 1
+    language: c
+    framework: postgresql
+    version: "16.4"
+    operations:
+      - name: query_products
+      - name: insert_payment
+      - name: insert_order
+      - name: insert_fraud_check
+
+  kafka:
+    # Order event stream.
+    kind: queue
+    replicas: 1
+    language: java
+    framework: kafka
+    version: "3.8"
+    operations:
+      - name: publish_order
+
+  flagd:
+    # Feature flag service.
+    kind: external_api
+    replicas: 1
+    language: go
+    framework: openfeature
+    version: 2.2.0
+    operations:
+      - name: evaluate_flag
+
+journeys:
+  browse:
+    weight: 0.45
+    steps:
+      - service: frontend
+        operation: browse_home
+  search:
+    weight: 0.2
+    steps:
+      - service: frontend
+        operation: search_products
+  add-to-cart:
+    weight: 0.15
+    steps:
+      - service: frontend
+        operation: add_to_cart
+  checkout:
+    weight: 0.15
+    steps:
+      - service: frontend
+        operation: checkout
+  place-order:
+    weight: 0.05
+    steps:
+      - service: frontend
+        operation: place_order
+
+faults:
+  - target: operation:payment.authorize_card
+    kind: error_rate_override
+    severity:
+      probability: 1.0
+      value: 0.10
+  - target: operation:shipping.quote_shipping
+    kind: latency_inflation
+    severity:
+      probability: 1.0
+      multiplier: 2.0
+      add: 150ms
+  - target: node:recommendation
+    kind: crash
+    severity:
+      probability: 0.05
+  - target: edge:checkout.place_order->email.send_confirmation
+    kind: disconnect
+    severity:
+      probability: 0.05

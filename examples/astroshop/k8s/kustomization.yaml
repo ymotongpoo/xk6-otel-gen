@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: xk6-otel-gen-demo
+
+resources:
+  - namespace.yaml
+  - collector.yaml
+  - tempo.yaml
+  - loki.yaml
+  - prometheus.yaml
+  - grafana.yaml
+
+configMapGenerator:
+  - name: otel-collector-config
+    files:
+      - config.yaml=otel-collector-config.yaml
+  - name: grafana-datasources
+    files:
+      - datasources.yaml
+  - name: grafana-dashboards
+    files:
+      - dashboard-overview.json
