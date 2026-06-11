@@ -1067,3 +1067,27 @@ Rationale documented: Tempo is OTLP native (vs Jaeger v1 OTLP-via-translation), 
 Estimated total artifact size: ~3,300 lines (was ~3,000) due to additional manifests + dashboard JSON."
 
 **Context**: U8 FD update complete, still awaiting approval.
+
+
+## U8 Samples & Distribution — NFR-R Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-10T20:00:00Z
+**User Input**: "完了しました" — 13 answers with three notable refinements:
+- Q1=C ("数十秒とかかかるなら考えものだけど、1秒とかでも全然問題ないし、このあたりはベストエフォートでいいです") — no CLI performance target
+- Q4=A modified ("半年は遅いので1ヶ月ごとくらいにbumpしてもらいたいです") — monthly image bump instead of half-yearly
+- Q9=A + project skill request ("手動で追従と行ってもAIツールを使って対応することになるので、そのためのプロジェクトskillを作っておいてもらえると助かります") — create .claude/skills/sync-astroshop/SKILL.md for AI-assisted OTel Demo sync
+
+**AI Response**: "Acknowledged three user refinements:
+
+1. Q1=C: cmd CLI performance target dropped to soft/best-effort. NFR-U8-3 explicitly states 'no explicit target' with user quote.
+
+2. Q4=A monthly: dependabot config will use monthly cadence for all 5 container images (Collector + Tempo + Loki + Prometheus + Grafana). NFR-U8-7 documents this.
+
+3. Q9=A + skill: NFR-U8-11 mandates creation of .claude/skills/sync-astroshop/SKILL.md as part of Code Generation. The skill encodes (1) read OTel Demo repo dependency graph, (2) diff against current astroshop topology.yaml, (3) propose service/journey/fault additions, (4) review checklist. AI tools (Claude Code etc.) can invoke this skill for annual upstream review.
+
+Generated 2 NFR-R artifacts:
+
+(1) nfr-requirements.md — 13 applicable NFRs (NFR-U8-1 API stability with examples/ path SemVer, NFR-U8-2 cmd reliability, NFR-U8-3 no perf target, NFR-U8-4 examples validation 3-tier (topology.Validate + kubectl dry-run + script syntax), NFR-U8-5 README link integrity via lychee/markdown-link-check, NFR-U8-6 documentation completeness with 12-section breakdown + example per section, NFR-U8-7 monthly image tag bump, NFR-U8-8 SPDX header enforce, NFR-U8-9 CI build check, NFR-U8-10 security/SBOM with prebuilt=none stance, NFR-U8-11 astroshop maintainability with project skill requirement, NFR-U8-12 cmd coverage 70%, NFR-U8-13 minimum version table) + 12 N/A categories + DoD 14-item checklist + 5 risks + cross-unit requests (Build and Test stage owns dependabot config, Claude Code skill mechanism support).
+
+(2) tech-stack-decisions.md — production deps (zero external for cmd, stdlib + topology only; container images for examples), test deps (testify + topology for example validation), CI tool deps (xk6 + kubectl + kind + lychee + Docker + golangci-lint), AI-assisted maintenance section with skill structure, dependabot monthly cadence YAML snippet, 7 rejected alternatives (Docker Compose, Jaeger, cobra, prebuilt distribution, automated OTel Demo sync, Helm chart, six-monthly bump), CI integration table separating strict (build/test/lint) from informational (dependabot PRs) jobs, cross-unit summary, migration notes, 6 future-revisit open questions."
+
+**Context**: U8 NFR-R — artifacts generated, awaiting approval. Final unit's NFR-R complete.
