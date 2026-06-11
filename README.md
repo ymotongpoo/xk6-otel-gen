@@ -1,0 +1,302 @@
+# xk6-otel-gen
+
+## Table of Contents
+
+- [Project Description](#project-description)
+- [Badges](#badges)
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Building](#building)
+- [Usage](#usage)
+- [Topology YAML Reference](#topology-yaml-reference)
+- [Configuration](#configuration)
+- [Examples](#examples)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
+- [Compatibility](#compatibility)
+
+## Project Description
+
+`xk6-otel-gen` is a k6 extension that synthesizes OpenTelemetry traces, metrics, and logs from a declarative YAML topology. It lets you model microservice graphs, journeys, and faults without building real services.
+
+```yaml
+journeys:
+  checkout:
+    weight: 1.0
+    steps:
+      - service: frontend
+        operation: get_index
+```
+
+The extension can send OTLP/gRPC and OTLP/HTTP telemetry to collectors and can also forward k6 output metrics through the `otel-gen` output.
+
+## Badges
+
+[![Go 1.25+](https://img.shields.io/badge/Go-1.25%2B-00ADD8)](https://go.dev/)
+[![License Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue)](./LICENSE)
+[![CI](https://github.com/ymotongpoo/xk6-otel-gen/actions/workflows/ci.yml/badge.svg)](https://github.com/ymotongpoo/xk6-otel-gen/actions/workflows/ci.yml)
+
+| Badge | Meaning |
+|---|---|
+| Go 1.25+ | Minimum supported Go toolchain |
+| Apache-2.0 | Project license |
+| CI | GitHub Actions build status |
+
+## Quick Start
+
+Build k6, deploy the minimal observability stack, and run synthetic traffic:
+
+```bash
+# 1. Build a local k6 binary with this extension.
+xk6 build --with github.com/ymotongpoo/xk6-otel-gen=.
+
+# 2. Create a local Kubernetes cluster.
+kind create cluster --name xk6-otel-gen
+
+# 3. Deploy Collector, Tempo, Prometheus, Loki, and Grafana.
+kubectl apply -k examples/minimal/k8s/
+
+# 4. Forward OTLP/gRPC into the Collector.
+kubectl -n xk6-otel-gen-demo port-forward svc/otel-collector 4317:4317
+
+# 5. Run the minimal journey and export telemetry.
+./k6 run examples/minimal/script.js --out otel-gen=endpoint=localhost:4317,protocol=grpc,insecure=true
+```
+
+Open Grafana in another terminal:
+
+```bash
+kubectl -n xk6-otel-gen-demo port-forward svc/grafana 3000:3000
+```
+
+## Features
+
+| Feature | Concrete example |
+|---|---|
+| Topology DSL | `services.frontend.operations[].calls[]` models service edges |
+| Journey execution | `runJourney("checkout")` creates one synthetic trace |
+| Fault injection | `error_rate_override`, `latency_inflation`, `disconnect`, `crash` |
+| OTLP egress | gRPC on `localhost:4317` or HTTP on `localhost:4318` |
+| k6 output integration | `--out otel-gen=endpoint=localhost:4317` forwards k6 output |
+| JSON Schema export | `go run ./cmd/xk6-otel-gen-schema > topology.schema.json` |
+
+Example fault:
+
+```yaml
+faults:
+  - target: operation:payment.authorize_card
+    kind: error_rate_override
+    severity:
+      probability: 1.0
+      value: 0.10
+```
+
+## Building
+
+Install xk6 and build a custom k6 binary:
+
+```bash
+go install go.k6.io/xk6/cmd/xk6@latest
+xk6 build --with github.com/ymotongpoo/xk6-otel-gen
+```
+
+For local development, point xk6 at this checkout:
+
+```bash
+xk6 build --with github.com/ymotongpoo/xk6-otel-gen=.
+./k6 version
+```
+
+| Build mode | Command |
+|---|---|
+| Remote module | `xk6 build --with github.com/ymotongpoo/xk6-otel-gen` |
+| Local checkout | `xk6 build --with github.com/ymotongpoo/xk6-otel-gen=.` |
+
+## Usage
+
+Import the JS module, configure OTLP, load a topology, and run journeys:
+
+```javascript
+import otelgen from "k6/x/otel-gen";
+
+export function setup() {
+  otelgen.configure({
+    endpoint: "localhost:4317",
+    protocol: "grpc",
+    insecure: true,
+  });
+  return { topology: otelgen.load("./topology.yaml") };
+}
+
+export default function (data) {
+  data.topology.runJourney("checkout");
+}
+```
+
+| API | Purpose |
+|---|---|
+| `otelgen.configure(opts)` | Configure OTLP endpoint, protocol, TLS, headers, batching |
+| `otelgen.load(path)` | Parse and validate one topology YAML file |
+| `handle.runJourney(name)` | Execute a named journey |
+| `otelgen.stats()` | Return exporter success/failure counters |
+| `otelgen.journeys()` | List journey names after loading |
+| `handle.journeys()` | List journey names from a handle |
+
+See [examples/minimal](./examples/minimal/) and [examples/astroshop](./examples/astroshop/) for complete scripts.
+
+## Topology YAML Reference
+
+A topology file has three top-level sections:
+
+| Section | Required | Example |
+|---|---|---|
+| `services` | yes | `frontend`, `backend`, `database` |
+| `journeys` | yes | `checkout`, `browse`, `place-order` |
+| `faults` | no | `latency_inflation` on `operation:shipping.quote_shipping` |
+
+Minimal service declaration:
+
+```yaml
+services:
+  backend:
+    kind: application
+    replicas: 3
+    language: java
+    framework: spring-boot
+    version: 2.5.0
+    operations:
+      - name: get_user
+```
+
+Export the JSON Schema for editor integration:
+
+```bash
+go run ./cmd/xk6-otel-gen-schema > topology.schema.json
+go run ./cmd/xk6-otel-gen-schema -output topology.schema.json
+```
+
+## Configuration
+
+Configuration is merged by priority. Higher rows override lower rows.
+
+| Priority | Source | Example |
+|---:|---|---|
+| 1 | JS API | `otelgen.configure({ endpoint: "localhost:4317" })` |
+| 2 | `--out` args | `--out otel-gen=endpoint=localhost:4317,protocol=grpc` |
+| 3 | Environment | `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` |
+| 4 | Defaults | `localhost:4317`, gRPC, insecure false |
+
+Common JS configuration:
+
+```javascript
+otelgen.configure({
+  endpoint: "localhost:4317",
+  protocol: "grpc",
+  insecure: true,
+  headers: { "x-demo": "minimal" },
+  timeout: "10s",
+  batchSize: 512,
+  batchTimeout: "1s",
+  maxQueueSize: 2048,
+});
+```
+
+Common output configuration:
+
+```bash
+./k6 run script.js --out otel-gen=endpoint=localhost:4317,protocol=grpc,insecure=true,queueSize=100
+```
+
+## Examples
+
+| Example | Size | Use case |
+|---|---:|---|
+| [minimal](./examples/minimal/) | 3 services | First run, topology basics, local smoke test |
+| [astroshop](./examples/astroshop/) | 18 services | Larger commerce graph modeled after OTel Demo v2.2.0 |
+
+Run only the topology validation tests:
+
+```bash
+go test ./test/examples/...
+```
+
+Build the Kubernetes manifests:
+
+```bash
+kustomize build examples/minimal/k8s/ > /tmp/minimal.yaml
+kustomize build examples/astroshop/k8s/ > /tmp/astroshop.yaml
+```
+
+## Security
+
+This project distributes source code and examples, not prebuilt k6 binaries. Build your own k6 binary with xk6 so the final artifact is produced in your environment from audited inputs.
+
+| Security choice | Rationale |
+|---|---|
+| No prebuilt binary | Avoids asking users to trust an opaque load-testing executable |
+| Pinned demo images | Kubernetes examples use explicit image tags |
+| Synthetic data only | Examples do not require production credentials or user data |
+| OTLP TLS options | Configure secure endpoints through JS options or environment variables |
+
+Example production-style endpoint:
+
+```javascript
+otelgen.configure({
+  endpoint: "otel-collector.example.internal:4317",
+  protocol: "grpc",
+  insecure: false,
+  headers: { authorization: "Bearer ${TOKEN}" },
+});
+```
+
+## Contributing
+
+Keep changes scoped to the package or example being modified, run the relevant tests, and use Conventional Commits for commit messages.
+
+```bash
+go test ./...
+go test -race -count=1 ./...
+golangci-lint run
+```
+
+| Change type | Expected check |
+|---|---|
+| Topology parser | `go test ./topology/...` |
+| Journey engine | `go test ./journey/...` |
+| Examples | `go test ./test/examples/...` and `kustomize build examples/<name>/k8s/` |
+| k6 integration | `xk6 build --with github.com/ymotongpoo/xk6-otel-gen=.` |
+
+## License
+
+`xk6-otel-gen` is licensed under Apache-2.0.
+
+```text
+SPDX-License-Identifier: Apache-2.0
+```
+
+| File | Purpose |
+|---|---|
+| [LICENSE](./LICENSE) | Apache License 2.0 full text |
+| `.go` files | SPDX header enforced by lint |
+
+## Compatibility
+
+| Tool | Minimum version | Purpose |
+|---|---:|---|
+| Go | 1.25+ | Module build and tests |
+| xk6 | latest | Custom k6 binary build |
+| k6 | built by xk6 | Load-test runtime |
+| kubectl | 1.27+ | Apply and inspect manifests |
+| kind | 0.20+ | Local Kubernetes cluster |
+| Docker | latest stable | kind node runtime |
+
+Check local versions:
+
+```bash
+go version
+xk6 version
+kubectl version --client
+kind version
+docker version
+```
