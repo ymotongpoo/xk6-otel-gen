@@ -1091,3 +1091,17 @@ Generated 2 NFR-R artifacts:
 (2) tech-stack-decisions.md — production deps (zero external for cmd, stdlib + topology only; container images for examples), test deps (testify + topology for example validation), CI tool deps (xk6 + kubectl + kind + lychee + Docker + golangci-lint), AI-assisted maintenance section with skill structure, dependabot monthly cadence YAML snippet, 7 rejected alternatives (Docker Compose, Jaeger, cobra, prebuilt distribution, automated OTel Demo sync, Helm chart, six-monthly bump), CI integration table separating strict (build/test/lint) from informational (dependabot PRs) jobs, cross-unit summary, migration notes, 6 future-revisit open questions."
 
 **Context**: U8 NFR-R — artifacts generated, awaiting approval. Final unit's NFR-R complete.
+
+
+## U8 Samples & Distribution — NFR Design Answers Received & Artifacts Generated
+**Timestamp**: 2026-06-11T00:30:00Z
+**User Input**: "完了しました" (all 13 [Answer]: tags filled with A in u8-samples-nfr-d-plan.md)
+**AI Response**: "All 13 recommended options selected; no contradictions. This is the FINAL NFR Design — all 7 units' NFR-D now complete. Generated 2 NFR-D artifacts under aidlc-docs/construction/u8-samples/nfr-design/:
+
+(1) nfr-design-patterns.md — 14 sections covering cmd implementation (main thin wrapper + testable run() returning exit code 0/1/2 per Q1=A), examples validation (test/examples/examples_test.go with sub-test per example dir per Q2=A), k8s manifest authoring (kustomize-friendly single-manifest-per-service with --- separators per Q3=A; base+overlays rejected for learning barrier), Grafana datasources via Kustomize configMapGenerator (Q4=A) with anonymous Editor auth for demo convenience, 3-panel minimal dashboard (Tempo recent traces / Prometheus k6 iterations rate / Loki recent logs per Q5=A), dependabot config (gomod weekly grouped OTel/k6 + docker monthly per example + github-actions weekly per Q6=A), .lychee.toml with localhost/example.com exclusion (Q7=A), AI maintenance skill format with frontmatter + body markdown including When-to-use/Out-of-scope/Steps/Anti-patterns/Output sections (Q8=A), goheader linter via golangci-lint with .goheader.txt template (Q9=A), astroshop readability via 4-group section comments + inline service descriptions (Q10=A), single-file README with TOC and GitHub auto-anchors (Q11=A), cleanup commands in README rather than scripts (Q12=A), 14-item anti-pattern enumeration.
+
+(2) logical-components.md — 7 LCs (LC-0 project root docs / LC-1 cmd schema exporter / LC-2 minimal examples / LC-3 astroshop examples / LC-4 examples test / LC-5 AI maintenance skill / LC-6 CI config) each with 責務 / 公開 API / 実装スケッチ / 依存; component dependency graph showing LC-5 drives LC-3 updates and LC-4 validates LC-2/3 + LC-6 drives bumps; external package list (stdlib + topology only on Go side, no external Go deps for cmd); test component table; build/CI workflow task list; final summary noting deliverable is ~3,300 lines with extremely minimal Go surface (just cmd main()).
+
+This completes ALL Construction stage Functional Design + NFR Requirements + NFR Design for all 7 units (U1-U7 except U8 still pending its Code Generation). Next: U8 Code Generation Plan."
+
+**Context**: U8 NFR-D — artifacts generated, awaiting approval. **All units' NFR-D phase now complete**.
