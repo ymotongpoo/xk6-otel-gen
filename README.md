@@ -226,6 +226,11 @@ otelgen.configure({
 });
 ```
 
+`sampler` accepts `always_on`, `always_off`, or `traceidratio`.
+`samplerArg` is used by `traceidratio` and must be in `[0,1]`. Invalid sampler
+environment values fail pipeline validation with the original
+`OTEL_TRACES_SAMPLER` value and the allowed set in the error message.
+
 TLS certificate options can be supplied through JS (`caCert`, `clientCert`,
 `clientKey`), `--out` args with the same keys, or OTEL environment variables:
 `OTEL_EXPORTER_OTLP_CERTIFICATE`,

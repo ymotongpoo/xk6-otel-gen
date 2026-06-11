@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -120,6 +121,26 @@ func TestNew_ValidationError(t *testing.T) {
 	var cfgErr *ConfigError
 	if !errors.As(err, &cfgErr) {
 		t.Fatalf("New() error = %v, want wrapped ConfigError", err)
+	}
+}
+
+func TestNew_InvalidSamplerEnvErrorIncludesRawValueAndAllowedSet(t *testing.T) {
+	withOTLPEnv(t, map[string]string{
+		"OTEL_EXPORTER_OTLP_ENDPOINT": "localhost:4317",
+		"OTEL_EXPORTER_OTLP_INSECURE": "true",
+		"OTEL_TRACES_SAMPLER":         "parentbased_always_on",
+		"OTEL_TRACES_SAMPLER_ARG":     "0.25",
+	})
+
+	_, err := New(ConfigFromEnv())
+	if err == nil {
+		t.Fatal("New() error = nil, want invalid sampler error")
+	}
+	got := err.Error()
+	for _, want := range []string{"parentbased_always_on", "OTEL_TRACES_SAMPLER", "always_on", "always_off", "traceidratio"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("New() error = %q, want substring %q", got, want)
+		}
 	}
 }
 

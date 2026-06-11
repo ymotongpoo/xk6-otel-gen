@@ -134,7 +134,7 @@ func (c Config) Validate() error {
 		errs = append(errs, &ConfigError{Field: "Compression", Value: c.Compression, Message: `must be "" or "gzip"`})
 	}
 	if !validSampler(c.Sampler) {
-		errs = append(errs, &ConfigError{Field: "Sampler", Value: c.Sampler, Message: `must be "always_on", "always_off", or "traceidratio"`})
+		errs = append(errs, samplerConfigError(c.Sampler))
 	}
 	if c.Sampler == "traceidratio" && (c.SamplerArg < 0 || c.SamplerArg > 1) {
 		errs = append(errs, &ConfigError{Field: "SamplerArg", Value: c.SamplerArg, Message: "must be in [0,1]"})
@@ -275,11 +275,26 @@ func validHeaderKey(key string) bool {
 }
 
 func validSampler(value string) bool {
+	if strings.HasPrefix(value, "invalid:") {
+		return false
+	}
 	switch value {
 	case "", "always_on", "always_off", "traceidratio":
 		return true
 	default:
 		return false
+	}
+}
+
+func samplerConfigError(value string) *ConfigError {
+	raw := strings.TrimPrefix(value, "invalid:")
+	if raw == "" {
+		raw = value
+	}
+	return &ConfigError{
+		Field:   "Sampler",
+		Value:   raw,
+		Message: fmt.Sprintf(`unsupported value %q from OTEL_TRACES_SAMPLER (allowed: always_on | always_off | traceidratio)`, raw),
 	}
 }
 
