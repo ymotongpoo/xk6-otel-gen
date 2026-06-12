@@ -1,0 +1,68 @@
+# Block Pull Requests
+#
+# This repository does not accept external pull requests. The maintainer reads
+# issues (filed through the structured templates) and implements changes directly.
+#
+# Any pull request is automatically closed with an explanatory comment, EXCEPT:
+#   - release PRs from release-pr.yml (head branch `release/*`)
+#   - internal automation: github-actions[bot] and dependabot[bot]
+#   - the repository owner (so the maintainer can still open a PR when desired)
+#
+# Uses pull_request_target so it runs with repository (not fork) permissions and
+# can comment on / close PRs opened from forks.
+
+name: Block Pull Requests
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+
+permissions: {}
+
+jobs:
+  close:
+    name: Close unsolicited pull request
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    if: >-
+      !startsWith(github.event.pull_request.head.ref, 'release/')
+      && github.event.pull_request.user.login != 'github-actions[bot]'
+      && github.event.pull_request.user.login != 'dependabot[bot]'
+      && github.event.pull_request.author_association != 'OWNER'
+    steps:
+      - name: Comment and close
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const body = [
+              "👋 Thanks for your interest in **xk6-otel-gen**.",
+              "",
+              "This repository **does not accept pull requests**. Changes are implemented by the",
+              "maintainer based on issues. This keeps the project free of unsolicited / AI-generated",
+              "contributions and ensures every change is reviewed against the project's design.",
+              "",
+              "If you found a bug or want a feature, please open an issue using one of the templates:",
+              "",
+              "- 🐛 [Bug Report](https://github.com/" + context.repo.owner + "/" + context.repo.repo + "/issues/new?template=bug_report.yml)",
+              "- ✨ [Feature Request](https://github.com/" + context.repo.owner + "/" + context.repo.repo + "/issues/new?template=feature_request.yml)",
+              "",
+              "A clear, reproducible issue is the most effective way to get a change made.",
+              "This pull request is being closed automatically.",
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body,
+            });
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              state: "closed",
+            });

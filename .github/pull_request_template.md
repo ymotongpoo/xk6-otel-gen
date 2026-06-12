@@ -1,28 +1,21 @@
-# Summary
+# ⛔ This repository does not accept pull requests
 
-> replace with your summary...
+Changes to **xk6-otel-gen** are implemented by the maintainer based on issues — this keeps
+the project free of unsolicited / AI-generated contributions.
 
-## Changes
+**Unless** this is a release PR (`release/*`) or an automated dependency update, it will be
+**closed automatically**. Please open an issue instead:
 
-> replace with a description of the changes
+- 🐛 [Bug Report](https://github.com/ymotongpoo/xk6-otel-gen/issues/new?template=bug_report.yml)
+- ✨ [Feature Request](https://github.com/ymotongpoo/xk6-otel-gen/issues/new?template=feature_request.yml)
 
-## User experience
+---
 
-> Please share what the user experience looks like before and after this change
-
-## Checklist
-
-If your change doesn't seem to apply, please leave them unchecked.
-
-* [ ] I have reviewed the [contributing guidelines](https://github.com/awslabs/aidlc-workflows/blob/main/CONTRIBUTING.md)
-* [ ] I have performed a self-review of this change
-* [ ] Changes have been tested
-* [ ] Changes are documented
-
-## Test Plan
-
-> replace with instructions or a checklist for reviewers to verify
+<!--
+The text below is required only for the few PRs that are allowed (release/maintainer PRs);
+the PR validation workflow checks for the contributor statement. Leave it in place.
+-->
 
 ## Acknowledgment
 
-By submitting this pull request, I confirm that you can use, modify, copy, and redistribute this contribution, under the terms of the [project license](https://github.com/awslabs/aidlc-workflows/blob/main/LICENSE).
+By submitting this pull request, I confirm that you can use, modify, copy, and redistribute this contribution, under the terms of the [project license](https://github.com/ymotongpoo/xk6-otel-gen/blob/main/LICENSE).

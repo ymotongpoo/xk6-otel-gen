@@ -1,58 +1,105 @@
 name: Feature Request
-description: Suggest a small enhancement or improvement
+description: Propose a new capability or enhancement for xk6-otel-gen
 title: "[Feature]: "
-labels: ["enhancement"]
+labels: ["enhancement", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Suggest an enhancement or improvement. For larger, design-level proposals, please use the [RFC template](https://github.com/awslabs/aidlc-workflows/issues/new?template=rfc.yml) instead.
+        Thanks for the suggestion. This repository does **not** accept pull requests — the
+        maintainer reads issues directly and implements accepted features. Please describe the
+        problem and the desired behavior precisely enough that the work can be scoped and built
+        from this issue alone. Concrete YAML/API sketches and clear acceptance criteria are
+        especially valuable.
 
-  - type: textarea
-    id: description
+  - type: checkboxes
+    id: preflight
     attributes:
-      label: Description
-      description: A clear and concise description of the feature or improvement you'd like.
-    validations:
-      required: true
-
-  - type: textarea
-    id: use-case
-    attributes:
-      label: Use Case
-      description: What problem does this solve or what workflow does it improve?
-    validations:
-      required: true
-
-  - type: dropdown
-    id: version
-    attributes:
-      label: Version
-      description: Which version of AI-DLC does this relate to?
+      label: Pre-submission checks
       options:
-        - v1 (current)
-        - v2 (alpha)
+        - label: I searched existing issues and this has not already been requested.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+      description: What are you trying to do, and why is it hard or impossible today? Focus on the underlying need, not just the proposed solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the capability you want. Be specific about how it should behave.
     validations:
       required: true
 
   - type: dropdown
     id: area
     attributes:
-      label: Area
-      description: What area of AI-DLC does this relate to?
+      label: Affected area
+      description: Which part of the extension would this touch? Select all that apply.
+      multiple: true
       options:
-        - Inception phase rules
-        - Construction phase rules
-        - Operations phase rules
-        - New extension (e.g., compliance, security)
-        - Platform support
+        - Topology DSL / YAML schema (topology)
+        - Journey execution (journey)
+        - Fault injection
+        - Synthetic telemetry generation (synth)
+        - OTLP exporter — gRPC/HTTP (exporter)
+        - k6 output `otel-gen` (k6output)
+        - JS module API / k6otelgen
+        - Examples (minimal, astroshop)
         - Documentation
+        - Build / CI / release
         - Other
     validations:
       required: true
 
+  - type: dropdown
+    id: signals
+    attributes:
+      label: Signals involved
+      description: Which OpenTelemetry signals does this relate to?
+      multiple: true
+      options:
+        - Traces
+        - Metrics
+        - Logs
+        - Not signal-specific
+
+  - type: textarea
+    id: api-sketch
+    attributes:
+      label: Proposed YAML / API sketch
+      description: If applicable, show what the topology YAML, journey config, output args, or JS API would look like.
+      render: yaml
+      placeholder: |
+        services:
+          frontend:
+            operations:
+              - name: get_index
+                # new field you are proposing:
+                think_time: 200ms
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How will we know this is done? List the observable behaviors that must hold (e.g., "exported spans include attribute X", "k6 run fails fast with a clear error when Y").
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches or workarounds you evaluated, and why they fall short.
+
   - type: textarea
     id: additional
     attributes:
-      label: Additional Context
-      description: Any other context, examples, or references that help explain the request.
+      label: Additional context
+      description: Links to OpenTelemetry specs, related issues, prior art in other tools, or examples that clarify the request.

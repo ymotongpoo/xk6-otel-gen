@@ -1,1 +1,9 @@
-blank_issues_enabled: true
+# Only template-conforming issues are accepted.
+# Blank issues are disabled so every report carries the structured fields
+# the maintainer needs to reproduce and implement a fix directly.
+blank_issues_enabled: false
+
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/ymotongpoo/xk6-otel-gen/blob/main/README.md
+    about: For questions about building or running the extension, read the README first. This repository does not accept pull requests; please open a Bug Report or Feature Request issue instead.

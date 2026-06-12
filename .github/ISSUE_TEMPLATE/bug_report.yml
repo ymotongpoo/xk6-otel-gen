@@ -1,117 +1,166 @@
 name: Bug Report
-description: Report a bug or unexpected behavior
+description: Report incorrect or unexpected behavior in xk6-otel-gen
 title: "[Bug]: "
-labels: ["bug"]
+labels: ["bug", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report a bug. Please fill out the sections below so we can reproduce and fix the issue.
+        Thanks for reporting a bug. This repository does **not** accept pull requests — the
+        maintainer reads issues directly and implements the fix. Please fill in every required
+        field so the problem can be reproduced from your report alone. A minimal, self-contained
+        reproduction (topology YAML / journey config / k6 script + exact command) is the single
+        most important thing you can provide.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I searched existing issues and this has not already been reported.
+          required: true
+        - label: I can reproduce this with the latest `main` (or I state which version below).
+          required: true
 
   - type: textarea
     id: description
     attributes:
       label: Description
       description: A clear and concise description of the bug.
-      placeholder: Describe what went wrong.
+      placeholder: What goes wrong, and where (topology parsing, journey execution, fault injection, OTLP export, k6 output, …).
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      description: Which part of the extension is involved? Select all that apply.
+      multiple: true
+      options:
+        - Topology DSL / YAML parsing (topology)
+        - Journey execution (journey)
+        - Fault injection (error_rate_override, latency_inflation, disconnect, crash)
+        - Synthetic telemetry generation (synth)
+        - OTLP exporter — gRPC/HTTP (exporter)
+        - k6 output `otel-gen` (k6output)
+        - JS module API / k6otelgen
+        - Examples (minimal, astroshop)
+        - Build / xk6 / CI
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: signals
+    attributes:
+      label: Affected signals
+      description: Which OpenTelemetry signals are affected?
+      multiple: true
+      options:
+        - Traces
+        - Metrics
+        - Logs
+        - Not signal-specific
     validations:
       required: true
 
   - type: textarea
-    id: steps
+    id: repro-config
     attributes:
-      label: Steps to Reproduce
-      description: Steps to reproduce the behavior.
+      label: Minimal reproduction (topology / journey / script)
+      description: >-
+        Paste the smallest topology YAML, journey config, and/or k6 script that triggers the bug.
+        Trim it to the minimum needed to reproduce.
+      render: yaml
       placeholder: |
-        1. Set up ...
-        2. Run ...
-        3. Observe ...
+        # topology.yaml (trimmed)
+        services:
+          frontend:
+            operations:
+              - name: get_index
+        journeys:
+          checkout:
+            weight: 1.0
+            steps:
+              - service: frontend
+                operation: get_index
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command(s) run
+      description: The full `xk6 build` and `k6 run` (or output) command line you used.
+      render: shell
+      placeholder: |
+        xk6 build --with github.com/ymotongpoo/xk6-otel-gen=.
+        ./k6 run examples/minimal/script.js --out otel-gen=endpoint=localhost:4317,protocol=grpc,insecure=true
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: Expected Behavior
-      description: What you expected to happen.
+      label: Expected behavior
+      description: What you expected to happen (e.g., which spans/metrics/logs you expected to see).
     validations:
       required: true
 
   - type: textarea
     id: actual
     attributes:
-      label: Actual Behavior
-      description: What actually happened.
+      label: Actual behavior
+      description: What actually happened. Include error messages, panics, or the malformed telemetry you observed.
     validations:
       required: true
-
-  - type: dropdown
-    id: version
-    attributes:
-      label: AI-DLC Version
-      description: Which version of AI-DLC are you using?
-      options:
-        - v1 (current)
-        - v2 (alpha)
-    validations:
-      required: true
-
-  - type: input
-    id: version-detail
-    attributes:
-      label: Release / Commit
-      description: The release number or git commit hash if running from source.
-      placeholder: e.g., 0.1.5 or abc1234
-
-  - type: dropdown
-    id: phase
-    attributes:
-      label: AI-DLC Phase
-      description: Which workflow phase were you in when the bug occurred?
-      options:
-        - Inception (requirements, user stories, application design)
-        - Construction (component design, code generation, testing)
-        - Operations (deployment, monitoring)
-        - Not phase-specific
-    validations:
-      required: true
-
-  - type: dropdown
-    id: platform
-    attributes:
-      label: Platform / IDE
-      description: Which platform or IDE are you using AI-DLC with?
-      multiple: true
-      options:
-        - Kiro IDE
-        - Kiro CLI
-        - Amazon Q Developer IDE Plugin
-        - Cursor IDE
-        - Cline
-        - Claude Code
-        - GitHub Copilot
-        - Other
-    validations:
-      required: true
-
-  - type: input
-    id: model
-    attributes:
-      label: AI Model
-      description: Which AI model were you using?
-      placeholder: e.g., Claude Sonnet 4, GPT-4o, Amazon Nova
 
   - type: textarea
-    id: environment
+    id: logs
     attributes:
-      label: Environment
-      description: Any other relevant environment details (OS, IDE version, etc.).
-      placeholder: |
-        - OS: macOS 15.x
-        - IDE: VS Code 1.x
+      label: Relevant logs / output
+      description: Paste k6 output, Collector logs, or exporter errors. This is automatically formatted as code.
+      render: text
+
+  - type: input
+    id: version
+    attributes:
+      label: xk6-otel-gen version / commit
+      description: Release tag (e.g. v0.2.0) or the git commit hash you built from.
+      placeholder: e.g., v0.2.0 or abc1234
+    validations:
+      required: true
+
+  - type: input
+    id: k6-version
+    attributes:
+      label: k6 / xk6 version
+      description: Output of `./k6 version` and the xk6 version used to build.
+      placeholder: e.g., k6 v0.54.0, xk6 v0.13.0
+
+  - type: input
+    id: go-version
+    attributes:
+      label: Go version
+      description: Output of `go version` (the project requires Go 1.25+).
+      placeholder: e.g., go1.25.0
+
+  - type: input
+    id: otlp
+    attributes:
+      label: OTLP egress setup
+      description: Protocol, endpoint, and collector/backend you exported to.
+      placeholder: e.g., OTLP/gRPC to localhost:4317, OpenTelemetry Collector → Tempo/Prometheus/Loki
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / architecture
+      placeholder: e.g., Linux x86_64, macOS arm64
 
   - type: textarea
     id: additional
     attributes:
-      label: Additional Context
-      description: Add any other context, screenshots, or log output about the problem here.
+      label: Additional context
+      description: Anything else that helps — a hypothesis about the cause, a pointer to the suspected file, screenshots from Grafana, etc.
