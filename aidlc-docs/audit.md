@@ -1372,3 +1372,45 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: Stage-boundary Conventional Commit for Workflow Planning.
 
 ---
+## Workflow Planning Stage Commit — Created
+**Timestamp**: 2026-06-12T05:53:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Committed 7c781fd docs(plan): add execution plan for per-signal endpoint support (3 files). Starting Functional Design (U4 exporter)."
+**Context**: Stage-boundary commit recorded; entering CONSTRUCTION phase for this change request.
+
+---
+## Functional Design (U4 exporter) — Plan and Design Questions Presented
+**Timestamp**: 2026-06-12T05:58:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Created aidlc-docs/construction/plans/u4-exporter-endpoint-fd-plan.md with 4 design questions: (1) Config internal shape (flat TracesEndpoint/MetricsEndpoint/LogsEndpoint fields vs nested struct), (2) gRPC per-signal endpoint accepted forms (host:port + URL vs host:port only), (3) query-string handling on base URL (preserve and append path only vs reject), (4) resolved-endpoint logging shape (single exporter-configured line with 3 fields vs per-signal lines). Awaiting answers before generating FD artifacts."
+**Context**: Construction / Functional Design U4 — Step 3-4 (questions gate).
+
+---
+## Functional Design (U4 exporter) — Design Answers Received
+**Timestamp**: 2026-06-12T06:05:00Z
+**User Input**: "完了しました" (answers in u4-exporter-endpoint-fd-plan.md: Q1=A flat Config fields TracesEndpoint/MetricsEndpoint/LogsEndpoint; Q2=A gRPC per-signal accepts both host:port and URL forms reusing validEndpoint; Q3=A preserve query/fragment, append v1/{signal} to path only; Q4=A single exporter-configured INFO log line with resolved traces/metrics/logs fields)
+**AI Response**: "All 4 answers validated — no ambiguity. Generating FD artifact updates for u4-exporter."
+**Context**: Construction / Functional Design U4 — Step 5 complete.
+
+---
+## Functional Design (U4 exporter) — Artifacts Generated
+**Timestamp**: 2026-06-12T06:15:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Appended change-request sections to u4-exporter functional-design artifacts: domain-entities.md §9 (Config flat fields TracesEndpoint/MetricsEndpoint/LogsEndpoint, new ResolveEndpoints() contract, Validate/MergeWith/ConfigFromEnv contract changes), business-logic-model.md §9 (per-signal resolution algorithm, appendSignalPath OTLP-spec path construction preserving query/fragment, exporters.go wiring table, ConfigFromEnv fix, startup log shape), business-rules.md §11 (validation/precedence/path-append rules, breaking-change note, new PBT properties TP-U4-5 path-append structure preservation, TP-U4-6 resolution precedence, TP-U4-7 ConfigFromEnv per-signal application, plus extension of TP-U4-1/2 generators). Plan checkboxes marked complete. Presenting 2-option completion message."
+**Context**: Construction / Functional Design U4 — Steps 6-7. Extension compliance: PBT — compliant (TP-U4-5..7 defined, blocking); Security/Resiliency — disabled (N/A).
+
+---
+## Functional Design (U4 exporter) — Approval
+**Timestamp**: 2026-06-12T06:20:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Functional design approved. Proposing stage-boundary commit for U4 FD artifacts before entering Code Generation."
+**Context**: Construction / Functional Design U4 approved; next stage Code Generation (U4 → U5 → U6 → U8).
+
+---
+## Functional Design (U4) Stage Commit — User Confirmation
+**Timestamp**: 2026-06-12T06:23:00Z
+**User Input**: "コミットして次に行きましょう"
+**AI Response**: "Creating docs(exporter) FD commit, then proceeding to Code Generation."
+**Context**: Stage-boundary Conventional Commit for Functional Design U4.
+
+---

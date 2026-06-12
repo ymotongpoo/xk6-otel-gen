@@ -91,7 +91,7 @@ U7 (skeleton) → U1 → U4 → U3 → U2 → U5 → U6 → U8 (Q2=A bottom-up +
 - [x] Workflow Planning — approved 2026-06-12
 - [ ] Application Design — SKIP (no new components)
 - [ ] Units Generation — SKIP (existing unit inventory reused)
-- [ ] Functional Design (U4 only) — EXECUTE
+- [x] Functional Design (U4 only) — approved 2026-06-12
 - [ ] NFR Requirements — SKIP (NFRs captured in requirements doc)
 - [ ] NFR Design — SKIP
 - [ ] Infrastructure Design — SKIP (no infra)

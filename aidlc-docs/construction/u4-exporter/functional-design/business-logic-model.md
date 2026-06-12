@@ -449,3 +449,77 @@ Testable Properties は `business-rules.md` §6 で詳述。`exporter` パッケ
 - **TP-U4-4** (PBT-03 monotonicity): Stats counters は単調増加
 
 Integration test (real Collector に対する送信) は **本 FD では別件**、NFR-4.1 + Build and Test ステージで対応。
+
+---
+
+## 9. Change Request 2026-06-12: エンドポイント解決ロジック (Per-Signal Endpoint Support)
+
+規範: [OTLP Exporter Spec — Endpoint URLs for OTLP/HTTP](https://opentelemetry.io/docs/specs/otel/protocol/exporter/#endpoint-urls-for-otlphttp)
+
+### 9.1 解決アルゴリズム (`ResolveEndpoints`)
+
+シグナル σ ∈ {traces, metrics, logs} ごとに独立して解決する:
+
+```text
+resolve(σ):
+  if perSignal(σ) != ""           # TracesEndpoint / MetricsEndpoint / LogsEndpoint
+      return perSignal(σ)          # as-is — パス補完しない (Req Q3=A)
+  base := cfg.Endpoint             # fillDefaults 適用後 (default "localhost:4317")
+  if cfg.Protocol == HTTP && isURL(base)   # "://" を含む
+      return appendSignalPath(base, "v1/" + σ)   # OTLP 仕様のパス補完 (Req Q2=A)
+  return base                      # gRPC、または host:port 形式 (SDK デフォルトパス適用)
+```
+
+### 9.2 `appendSignalPath(base, signalPath)` — OTLP 仕様のパス構築
+
+```text
+appendSignalPath(base, sp):
+  u := url.Parse(base)             # Validate 済みなので失敗しない前提 (防御的に失敗時 base を返す)
+  if u.Path == "" or u.Path == "/":
+      u.Path = "/" + sp                       # https://host:4318      → /v1/traces
+  else if u.Path ends with "/":
+      u.Path = u.Path + sp                    # https://host/otlp/     → /otlp/v1/traces
+  else:
+      u.Path = u.Path + "/" + sp              # https://host/otlp      → /otlp/v1/traces
+  return u.String()                # query / fragment は保持 (FD-Q3=A)
+```
+
+- 重複ガードなし: 既に `/v1/traces` で終わるベースにも追記する (仕様厳格準拠、Req Q2=A)。
+- query / fragment はパス変更の影響を受けず保持される。
+
+### 9.3 Exporter 構築への接続 (exporters.go)
+
+`buildTraceExporter` / `buildMetricExporter` / `buildLogExporter` は cfg.Endpoint を直接見る代わりに
+`ResolveEndpoints()` の対応する戻り値を使う:
+
+| 解決結果の形式 | HTTP | gRPC |
+|---|---|---|
+| URL (`://` あり) | `WithEndpointURL(resolved)` — パスは解決済みなので as-is で正しい | `WithEndpointURL(resolved)` |
+| host:port | `WithEndpoint(resolved)` — SDK が `/v1/{signal}` を適用 | `WithEndpoint(resolved)` |
+
+既存の Insecure / TLS / Compression / Headers / Timeout オプション構築は不変。
+
+### 9.4 `ConfigFromEnv` の修正
+
+```text
+ConfigFromEnv():
+  if v := env("OTEL_EXPORTER_OTLP_ENDPOINT");          v != "" → cfg.Endpoint = v
+  if v := env("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");   v != "" → cfg.TracesEndpoint = v
+  if v := env("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT");  v != "" → cfg.MetricsEndpoint = v
+  if v := env("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT");     v != "" → cfg.LogsEndpoint = v
+  # ENDPOINT 以外のキー (HEADERS / PROTOCOL / ...) は従来の lookupSignalEnv のまま (スコープ外)
+```
+
+優先順位は解決アルゴリズム側で実現される (per-signal フィールド > ベース)。
+env 間の優先もこれに帰着する: per-signal env > base env。
+
+### 9.5 起動ログ (NFR-4, FD-Q4=A)
+
+U5 `instance.go` の `exporter configured` INFO ログに `ResolveEndpoints()` の 3 値を追加:
+
+```text
+INFO xk6-otel-gen: exporter configured  endpoint=... protocol=http
+     traces=https://host/otlp/v1/traces metrics=https://host/otlp/v1/metrics logs=https://host/otlp/v1/logs
+```
+
+(U6 k6output の `Description()` は metrics の解決結果を表示してもよい — Code Generation で判断)

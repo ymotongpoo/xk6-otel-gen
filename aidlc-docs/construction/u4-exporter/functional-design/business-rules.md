@@ -307,3 +307,59 @@ type SharedError struct {
 | Pipeline インスタンス 1 個のメモリ | < 100 KB (3 Exporter + 3 Provider + Resource + Stats、connection bufferを除く) |
 
 NFR-U4 (後の NFR-R で詳細確定) で各項目を厳密化する予定。
+
+---
+
+## 11. Change Request 2026-06-12: エンドポイント解決の規則 (Per-Signal Endpoint Support)
+
+### 11.1 バリデーション規則
+
+| Field | 規則 |
+|---|---|
+| `TracesEndpoint` / `MetricsEndpoint` / `LogsEndpoint` | 空 = 未設定 (valid)。非空なら `validEndpoint` (host:port または scheme://host[:port]) を満たすこと。違反は `ConfigError` |
+| ベース `Endpoint` | 従来どおり (変更なし) |
+
+### 11.2 優先順位規則 (シグナルごとに独立)
+
+```text
+per-signal フィールド (as-is)  >  ベース Endpoint (HTTP+URL ならパス補完)  >  デフォルト localhost:4317
+```
+
+- 設定サーフェス間の優先 (JS configure > env > default) は既存の 4 段階 merge (§2) を流用。
+  per-signal フィールドも MergeWith の「非空 override 採用」規則に従う。
+
+### 11.3 パス補完規則 (HTTP のみ)
+
+- 適用条件: ベース `Endpoint` が URL 形式 (`://` を含む) かつ Protocol == HTTP、
+  かつ該当シグナルの per-signal フィールドが未設定のとき。
+- 規則: パス末尾に `v1/{signal}` を追記 (末尾 `/` の有無で `/` を補う)。query / fragment 保持。
+- 重複ガードなし (仕様厳格準拠)。gRPC はパス補完を行わない。
+- **破壊的変更**: 従来「URL 形式ベースはパス as-is」だった挙動が変わる。README / CHANGELOG に明記 (Req Q6=A)。
+
+### 11.4 Testable Properties (PBT 拡張 Full — blocking)
+
+#### TP-U4-5: パス補完の構造保存 (新規)
+任意の有効な URL 形式ベースエンドポイント b と σ ∈ {traces, metrics, logs} について、
+r = appendSignalPath(b, "v1/"+σ) は:
+- **P1 (終端)**: r のパスは `/v1/{σ}` で終わる
+- **P2 (保存)**: r の scheme / host / port / query / fragment は b と一致する
+- **P3 (接頭辞)**: b のパス (末尾 `/` 正規化後) は r のパスの接頭辞である
+- **P4 (単回追記)**: r のパス長 = b の正規化パス長 + len("/v1/"+σ) — 二重追記しない
+
+#### TP-U4-6: 解決の優先順位 (新規)
+任意の Config (per-signal 設定 ⊆ {set, unset} の全組合せ × Protocol ∈ {gRPC, HTTP} ×
+ベース形式 ∈ {host:port, URL}) について、ResolveEndpoints() は:
+- **P1**: per-signal が set のシグナルは常にその値そのもの (変形なし)
+- **P2**: per-signal が unset かつ HTTP+URL ベースのシグナルは appendSignalPath(base) の結果
+- **P3**: per-signal が unset かつ (gRPC または host:port ベース) のシグナルはベースそのもの
+- **P4 (独立性)**: あるシグナルの per-signal 設定は他シグナルの解決結果に影響しない
+
+#### TP-U4-7: ConfigFromEnv の per-signal 適用 (新規)
+任意の env 組合せ (base ENDPOINT, per-signal ENDPOINT それぞれ set/unset) について:
+- **P1**: per-signal env が set ならその値が対応フィールドに、他フィールドには影響しない
+- **P2**: base env は Endpoint フィールドのみに入る
+- **P3**: ENDPOINT 以外のキーの挙動は変更前後で同一 (回帰)
+
+### 11.5 既存 TP との関係
+- TP-U4-1 (Merge 優先順位) / TP-U4-2 (Merge idempotency) のジェネレータに
+  per-signal 3 フィールドを追加して再実行する (既存プロパティは新フィールド込みで維持)。

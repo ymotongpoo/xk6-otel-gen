@@ -366,3 +366,44 @@ U4 Code Generation Planning にて Phase 13 (or 別 Phase) として登録。Cur
 - **OTel SDK 外部 metrics** (Provider 内部の dropped count 等) — 直接読まない、Q6=A 最小スコープ
 - **Lint API** — `topology.Lint` のような warning 集約 API。本 unit では `Validate` が error を返すのみ
 - **JSON serialization for testing** — `exporter` パッケージは YAML を扱わない (topology の責任)
+
+---
+
+## 9. Change Request 2026-06-12: Per-Signal Endpoint Support
+
+要件: `aidlc-docs/inception/requirements/endpoint-config-requirements.md` / FD プラン: `plans/u4-exporter-endpoint-fd-plan.md`
+
+### 9.1 `Config` 追加フィールド (FD-Q1=A: フラットフィールド)
+
+```go
+type Config struct {
+    // ... 既存フィールド ...
+    Endpoint        string // ベースエンドポイント (従来どおり)
+    TracesEndpoint  string // per-signal override (as-is, 空 = 未設定でベースへフォールバック)
+    MetricsEndpoint string // 同上
+    LogsEndpoint    string // 同上
+}
+```
+
+- ゼロ値 (`""`) は「未設定」を意味し、ベースエンドポイント解決にフォールバックする。
+- `fillDefaults` は per-signal フィールドにデフォルトを与えない(デフォルトはベース側のみ)。
+
+### 9.2 新規 Contract: `func (c Config) ResolveEndpoints() (traces, metrics, logs string)`
+
+- **目的**: 設定からシグナルごとの実効送信先を解決する純関数。exporters 構築と
+  起動ログ (NFR-4) の両方が同じ結果を参照する (単一の真実)。
+- **事前条件**: `c.Validate() == nil` 相当の整形済み Config。
+- **事後条件**: 各戻り値は以下の解決規則 (business-logic-model.md §9) による:
+  per-signal フィールドが非空ならその値 (as-is)、さもなくばベース `Endpoint`
+  (HTTP かつ URL 形式なら `v1/{signal}` パス補完済み、それ以外は as-is)。
+- **純粋性**: 副作用なし。同一入力に対し決定的。
+
+### 9.3 既存 Contract の変更
+
+- `Validate()`: `TracesEndpoint` / `MetricsEndpoint` / `LogsEndpoint` が非空の場合、
+  既存 `validEndpoint` (host:port または scheme://host[:port]) で検証 (FD-Q2=A: gRPC でも両形式可)。
+- `MergeWith(override)`: 3 フィールドとも「override 非空なら採用」の既存規則に従う。
+- `ConfigFromEnv()`: `OTEL_EXPORTER_OTLP_{TRACES|METRICS|LOGS}_ENDPOINT` を対応する
+  per-signal フィールドへ、`OTEL_EXPORTER_OTLP_ENDPOINT` をベース `Endpoint` へ格納する
+  (従来の lookupSignalEnv による「最初に見つかった値を共有」廃止 — ENDPOINT キーのみ。
+  他キーの per-signal lookup 挙動は本変更スコープ外で現状維持)。
