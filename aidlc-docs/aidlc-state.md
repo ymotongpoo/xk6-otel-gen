@@ -4,8 +4,8 @@
 - **Project Name**: xk6-otel-gen
 - **Project Type**: Greenfield
 - **Start Date**: 2026-06-07T00:00:00Z
-- **Completion Date**: 2026-06-11
-- **Current Stage**: AIDLC WORKFLOW COMPLETE (Operations is PLACEHOLDER per CLAUDE.md)
+- **Completion Date**: 2026-06-11 (initial delivery)
+- **Current Stage**: CHANGE REQUEST — Per-Signal Endpoint Support (see "Active Change Request" below)
 - **Description**: A k6 extension that consumes a declarative description of microservice component relationships (YAML / Mermaid) and synthesizes pseudo OpenTelemetry telemetry signals (metrics, logs, distributed traces), sending them to an OTLP endpoint — without requiring real microservices to exist.
 
 ## Workspace State
@@ -79,3 +79,21 @@
 
 ## Construction Order
 U7 (skeleton) → U1 → U4 → U3 → U2 → U5 → U6 → U8 (Q2=A bottom-up + Q4=A U7 先行 + Q6=A U8 末尾 + Q3=A 完全逐次)
+
+## Active Change Request — Per-Signal Endpoint Support (2026-06-12)
+- **Requirements**: aidlc-docs/inception/requirements/endpoint-config-requirements.md (approved, commit 46a38dd)
+- **Execution Plan**: aidlc-docs/inception/plans/endpoint-config-execution-plan.md
+- **Affected Units**: U4 exporter → U5 k6otelgen → U6 k6output → U8 examples/README (sequential)
+
+### Stage Progress (this change request)
+- [x] Requirements Analysis
+- [x] User Stories — SKIPPED (single-stakeholder config feature)
+- [x] Workflow Planning — approved 2026-06-12
+- [ ] Application Design — SKIP (no new components)
+- [ ] Units Generation — SKIP (existing unit inventory reused)
+- [ ] Functional Design (U4 only) — EXECUTE
+- [ ] NFR Requirements — SKIP (NFRs captured in requirements doc)
+- [ ] NFR Design — SKIP
+- [ ] Infrastructure Design — SKIP (no infra)
+- [ ] Code Generation (U4 → U5 → U6 → U8) — EXECUTE
+- [ ] Build and Test — EXECUTE

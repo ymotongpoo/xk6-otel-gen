@@ -1337,3 +1337,38 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: Stage-boundary Conventional Commit for Requirements Analysis.
 
 ---
+## Requirements Stage Commit — Created
+**Timestamp**: 2026-06-12T05:33:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Committed 46a38dd docs(requirements): add per-signal endpoint support requirements (3 files). Proceeding to Workflow Planning."
+**Context**: Stage-boundary commit recorded; starting Workflow Planning.
+
+---
+## Workflow Planning — Execution Plan Created
+**Timestamp**: 2026-06-12T05:40:00Z
+**User Input**: (none — AI action; prior commit confirmation "ok" logged above, commit 46a38dd)
+**AI Response**: "Created aidlc-docs/inception/plans/endpoint-config-execution-plan.md (Mermaid validated via Mermaid Chart tool, valid=true). Plan: execute Functional Design (U4 exporter only), Code Generation sequential U4→U5→U6→U8, Build and Test; skip User Stories, Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design. Risk Low-Medium; breaking change limited to URL-form base endpoints. Updated aidlc-state.md with Active Change Request section. Presenting approval gate."
+**Context**: Inception / Workflow Planning Step 9; awaiting user approval.
+
+---
+## Workflow Planning — Approval
+**Timestamp**: 2026-06-12T05:45:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: "Execution plan approved. Marking Workflow Planning complete in aidlc-state.md and proposing stage-boundary commit before proceeding to Functional Design (U4 exporter)."
+**Context**: Workflow plan approved — 3 stages to execute (FD U4, Code Generation U4→U5→U6→U8, Build and Test), 6 skipped.
+
+---
+## Requirements Directory Restored to Standard Location
+**Timestamp**: 2026-06-12T05:50:00Z
+**User Input**: "元の場所に戻す (Recommended)" (answer to directory-move question: aidlc-docs/inception/requirements/ had been moved under aidlc-docs/inception/plans/requirements/ outside this workflow)
+**AI Response**: "Moved aidlc-docs/inception/plans/requirements/ back to aidlc-docs/inception/requirements/ to keep AI-DLC standard structure and existing reference paths intact."
+**Context**: Pre-commit consistency check during Workflow Planning stage boundary.
+
+---
+## Workflow Planning Stage Commit — User Confirmation
+**Timestamp**: 2026-06-12T05:52:00Z
+**User Input**: "コミットして次に進んでください"
+**AI Response**: "Creating docs(plan) commit, then proceeding to Functional Design (U4 exporter)."
+**Context**: Stage-boundary Conventional Commit for Workflow Planning.
+
+---
