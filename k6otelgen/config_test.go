@@ -59,6 +59,32 @@ func TestOptsToConfig_AllFields_HappyPath(t *testing.T) {
 	}
 }
 
+func TestOptsToConfig_PerSignalEndpoints(t *testing.T) {
+	t.Parallel()
+
+	got, err := optsToConfig(map[string]any{
+		"endpoint":        "https://base.example.com/otlp",
+		"tracesEndpoint":  "https://traces.example.com/otlp/v1/traces",
+		"metricsEndpoint": "metrics.example.com:4318",
+		"logsEndpoint":    "https://logs.example.com/otlp/v1/logs",
+	})
+	if err != nil {
+		t.Fatalf("optsToConfig() error = %v", err)
+	}
+	if got.Endpoint != "https://base.example.com/otlp" {
+		t.Errorf("Endpoint = %q", got.Endpoint)
+	}
+	if got.TracesEndpoint != "https://traces.example.com/otlp/v1/traces" {
+		t.Errorf("TracesEndpoint = %q", got.TracesEndpoint)
+	}
+	if got.MetricsEndpoint != "metrics.example.com:4318" {
+		t.Errorf("MetricsEndpoint = %q", got.MetricsEndpoint)
+	}
+	if got.LogsEndpoint != "https://logs.example.com/otlp/v1/logs" {
+		t.Errorf("LogsEndpoint = %q", got.LogsEndpoint)
+	}
+}
+
 func TestOptsToConfig_TypeMismatch(t *testing.T) {
 	t.Parallel()
 
@@ -68,6 +94,9 @@ func TestOptsToConfig_TypeMismatch(t *testing.T) {
 		value any
 	}{
 		{name: "endpoint", field: "endpoint", value: 123},
+		{name: "tracesEndpoint", field: "tracesEndpoint", value: 123},
+		{name: "metricsEndpoint", field: "metricsEndpoint", value: true},
+		{name: "logsEndpoint", field: "logsEndpoint", value: []byte("x")},
 		{name: "protocol", field: "protocol", value: true},
 		{name: "insecure", field: "insecure", value: "true"},
 		{name: "caCert", field: "caCert", value: 123},

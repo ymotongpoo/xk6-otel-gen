@@ -21,6 +21,24 @@ func optsToConfig(opts map[string]any) (exporter.Config, error) {
 				return cfg, typeMismatch(key, value, "string")
 			}
 			cfg.Endpoint = s
+		case "tracesEndpoint":
+			s, ok := value.(string)
+			if !ok {
+				return cfg, typeMismatch(key, value, "string")
+			}
+			cfg.TracesEndpoint = s
+		case "metricsEndpoint":
+			s, ok := value.(string)
+			if !ok {
+				return cfg, typeMismatch(key, value, "string")
+			}
+			cfg.MetricsEndpoint = s
+		case "logsEndpoint":
+			s, ok := value.(string)
+			if !ok {
+				return cfg, typeMismatch(key, value, "string")
+			}
+			cfg.LogsEndpoint = s
 		case "protocol":
 			s, ok := value.(string)
 			if !ok {

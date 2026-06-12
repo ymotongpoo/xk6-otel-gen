@@ -1435,3 +1435,10 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: Construction / Code Generation Part 2 — U4 complete. PBT extension compliant (TP-U4-5/6/7 implemented and passing, blocking).
 
 ---
+## Code Generation U5 (k6otelgen) — Generated and Verified
+**Timestamp**: 2026-06-12T07:20:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Implemented U5: added JS flat keys tracesEndpoint/metricsEndpoint/logsEndpoint to optsToConfig (k6otelgen/config.go); added resolved traces/metrics/logs fields to the 'exporter configured' INFO log via ResolveEndpoints (k6otelgen/instance.go). Tests: TestOptsToConfig_PerSignalEndpoints + type-mismatch table entries (config_test.go), resolved-endpoint log assertions (instance_test.go). go build + go test ./k6otelgen/ green. Summary at u5-k6otelgen/code/endpoint-config-summary.md."
+**Context**: Construction / Code Generation Part 2 — U5 complete.
+
+---

@@ -124,9 +124,13 @@ func (i *ModuleInstance) Configure(opts map[string]any) error {
 		i.root.configured = true
 	})
 	if i.root.configureErr == nil {
+		traces, metrics, logs := i.root.config.ResolveEndpoints()
 		i.logInfo("xk6-otel-gen: exporter configured", logrus.Fields{
 			"endpoint": configuredEndpoint(i.root.config),
 			"protocol": i.root.config.Protocol.String(),
+			"traces":   traces,
+			"metrics":  metrics,
+			"logs":     logs,
 		})
 	}
 	return i.root.configureErr

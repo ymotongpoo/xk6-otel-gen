@@ -131,6 +131,13 @@ func TestConfigure_LogsEndpointAndProtocolOnly(t *testing.T) {
 	if entry.Data["endpoint"] != "otel.example.com:4317" || entry.Data["protocol"] != "http" {
 		t.Fatalf("log fields = %#v, want endpoint/protocol", entry.Data)
 	}
+	// host:port HTTP base is left as-is for the SDK default path, so every
+	// resolved signal endpoint equals the base.
+	for _, signal := range []string{"traces", "metrics", "logs"} {
+		if entry.Data[signal] != "otel.example.com:4317" {
+			t.Fatalf("log field %q = %v, want resolved base endpoint", signal, entry.Data[signal])
+		}
+	}
 	if _, ok := entry.Data["headers"]; ok {
 		t.Fatalf("log fields include headers: %#v", entry.Data)
 	}
