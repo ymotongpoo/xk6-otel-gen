@@ -19,13 +19,13 @@ func TestExports_Names(t *testing.T) {
 
 	instance := &ModuleInstance{root: newTestRootModule(t), vu: newFakeVU(t, 1)}
 	exports := instance.Exports()
-	for _, name := range []string{"configure", "load", "stats", "journeys"} {
+	for _, name := range []string{"configure", "load", "stats", "journeys", "flush"} {
 		if exports.Named[name] == nil {
 			t.Fatalf("Exports().Named[%q] missing in %#v", name, exports.Named)
 		}
 	}
-	if len(exports.Named) != 4 {
-		t.Fatalf("Exports().Named len = %d, want 4", len(exports.Named))
+	if len(exports.Named) != 5 {
+		t.Fatalf("Exports().Named len = %d, want 5", len(exports.Named))
 	}
 }
 

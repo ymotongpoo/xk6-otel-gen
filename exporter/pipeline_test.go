@@ -191,6 +191,31 @@ func TestPipeline_Shutdown_Idempotent(t *testing.T) {
 	}
 }
 
+func TestPipeline_ForceFlush_DeliversSpansWithoutClosing(t *testing.T) {
+	t.Parallel()
+
+	traceInner := &fakeSpanExporter{}
+	metricInner := &fakeMetricExporter{}
+	logInner := &fakeLogExporter{}
+	p := newPipelineFromExporters(validPipelineConfig(), sdkresource.Empty(), &pipelineStats{}, traceInner, metricInner, logInner)
+	t.Cleanup(func() { _ = p.Shutdown(context.Background()) })
+
+	// A span that has ended sits in the batch processor's queue until the
+	// batch timeout or an explicit flush. ForceFlush must drain it now.
+	_, span := p.TracerProvider().Tracer("test").Start(context.Background(), "root")
+	span.End()
+
+	if err := p.ForceFlush(context.Background()); err != nil {
+		t.Fatalf("ForceFlush() error = %v", err)
+	}
+	if traceInner.exports == 0 {
+		t.Fatalf("ForceFlush() did not export queued spans (exports = 0)")
+	}
+	if traceInner.shutdown != 0 {
+		t.Fatalf("ForceFlush() closed the exporter (shutdown = %d, want 0)", traceInner.shutdown)
+	}
+}
+
 func TestPipeline_Stats_DelegatesToSnapshot(t *testing.T) {
 	t.Parallel()
 

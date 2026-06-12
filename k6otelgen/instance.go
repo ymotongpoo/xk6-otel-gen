@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"time"
 
 	"github.com/grafana/sobek"
 	"github.com/sirupsen/logrus"
@@ -17,6 +18,10 @@ import (
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 )
+
+// flushTimeout bounds a single flush() call so a stalled OTLP endpoint cannot
+// hang k6's teardown indefinitely.
+const flushTimeout = 30 * time.Second
 
 // ModuleInstance is constructed once per k6 VU and holds per-VU state.
 type ModuleInstance struct {
@@ -49,6 +54,7 @@ func (i *ModuleInstance) Exports() modules.Exports {
 			"load":      i.jsLoad,
 			"stats":     i.jsStats,
 			"journeys":  i.jsJourneys,
+			"flush":     i.jsFlush,
 		},
 	}
 }
@@ -153,6 +159,26 @@ func (i *ModuleInstance) Stats() (Stats, error) {
 	}, nil
 }
 
+// Flush synchronously exports any telemetry still queued in the shared
+// pipeline's batch processors without closing the exporters.
+//
+// Call it from k6 teardown() to guarantee delivery of root spans — which End
+// last and therefore enter the trace batch queue last — regardless of whether
+// an otel-gen output is configured. This decouples trace/log/metric delivery
+// from the --out otel-gen lifecycle, which otherwise owns the only Shutdown.
+func (i *ModuleInstance) Flush() error {
+	pipeline, err := i.getOrBuildPipeline()
+	if err != nil {
+		return &ConfigError{Kind: "pipeline_error", Inner: err}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), flushTimeout)
+	defer cancel()
+	if err := pipeline.ForceFlush(ctx); err != nil {
+		return &ConfigError{Kind: "flush_error", Inner: err}
+	}
+	return nil
+}
+
 // Journeys returns sorted journey names, or an empty slice before load.
 func (i *ModuleInstance) Journeys() []string {
 	if i.root == nil || i.root.schema == nil || i.engine == nil {
@@ -193,6 +219,13 @@ func (i *ModuleInstance) jsStats(sobek.FunctionCall) sobek.Value {
 
 func (i *ModuleInstance) jsJourneys(sobek.FunctionCall) sobek.Value {
 	return i.vu.Runtime().ToValue(i.Journeys())
+}
+
+func (i *ModuleInstance) jsFlush(sobek.FunctionCall) sobek.Value {
+	if err := i.Flush(); err != nil {
+		throwJSException(i.vu.Runtime(), err)
+	}
+	return sobek.Undefined()
 }
 
 func (i *ModuleInstance) getOrBuildPipeline() (*exporter.Pipeline, error) {

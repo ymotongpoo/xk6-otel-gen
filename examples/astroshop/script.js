@@ -40,5 +40,9 @@ export function checkout() {
 }
 
 export function teardown() {
-  // Pipeline shutdown is handled by the otel-gen k6 output Stop hook.
+  // Flush queued telemetry — notably each trace's root span, which ends last
+  // and would otherwise be dropped at process exit. This makes trace delivery
+  // independent of whether the otel-gen output is enabled; when it is, the
+  // output's Stop hook still performs the final pipeline shutdown.
+  otelgen.flush();
 }

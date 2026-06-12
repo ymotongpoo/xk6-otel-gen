@@ -147,6 +147,21 @@ func (p *Pipeline) LoggerProvider() log.LoggerProvider {
 	return p.lp
 }
 
+// ForceFlush synchronously exports any spans, metrics, and log records still
+// queued in the batch processors WITHOUT closing the underlying exporters.
+//
+// Unlike Shutdown, ForceFlush leaves the Pipeline usable, so it is safe to call
+// from a k6 teardown() to guarantee root spans (which End last and therefore
+// enter the batch queue last) are delivered before the process exits — even
+// when no otel-gen output is configured to trigger Shutdown.
+func (p *Pipeline) ForceFlush(ctx context.Context) error {
+	return errors.Join(
+		p.tp.ForceFlush(ctx),
+		p.mp.ForceFlush(ctx),
+		p.lp.ForceFlush(ctx),
+	)
+}
+
 // Shutdown flushes and closes all providers once, returning the first result thereafter.
 func (p *Pipeline) Shutdown(ctx context.Context) error {
 	p.shutdownOnce.Do(func() {
