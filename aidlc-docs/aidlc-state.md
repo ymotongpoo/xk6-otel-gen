@@ -95,5 +95,5 @@ U7 (skeleton) → U1 → U4 → U3 → U2 → U5 → U6 → U8 (Q2=A bottom-up +
 - [ ] NFR Requirements — SKIP (NFRs captured in requirements doc)
 - [ ] NFR Design — SKIP
 - [ ] Infrastructure Design — SKIP (no infra)
-- [ ] Code Generation (U4 → U5 → U6 → U8) — EXECUTE
-- [ ] Build and Test — EXECUTE
+- [x] Code Generation (U4 → U5 → U6 → U8) — done 2026-06-12 (commits 5700235, 7e54832, 5cc32d2, 9495211)
+- [x] Build and Test — done 2026-06-12 (go build/test green, PBT TP-U4-5/6/7 pass, xk6 build + live base-/otlp e2e: paths now /otlp/v1/{signal}, no 404)

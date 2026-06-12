@@ -1456,3 +1456,24 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: Construction / Code Generation Part 2 — U8 complete; all 14 plan steps done.
 
 ---
+## Code Generation — Approval
+**Timestamp**: 2026-06-12T08:00:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Code generation approved (4 commits). Proceeding to Build and Test: full suite, xk6 build, and a local OTLP/HTTP receiver run to confirm base-endpoint path completion (the original Grafana Cloud 404 scenario)."
+**Context**: Construction / Code Generation approved; entering Build and Test stage.
+
+---
+## Build and Test — Executed and Verified
+**Timestamp**: 2026-06-12T08:15:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Build and Test complete. go build ./... + go test ./... green; PBT TP-U4-5/6/7 pass (blocking). Built k6 via xk6 (v1.8.0, GOFLAGS=-buildvcs=false, local extension). End-to-end against a local OTLP/HTTP mock receiver with base endpoint http://127.0.0.1:14318/otlp (no /v1 path, matching the original Grafana Cloud bug): startup log resolved traces/metrics/logs to /otlp/v1/{signal}; mock received POSTs at /otlp/v1/traces, /otlp/v1/metrics (JS module + k6 native output), /otlp/v1/logs; no 404, no exporter-failure warnings, 3 iterations complete. markdownlint clean. Original all-signal 404 against base OTLP gateways resolved. Summary at aidlc-docs/construction/build-and-test/endpoint-config-build-and-test.md. Temp artifacts (mock, built k6, scratch script/topology) cleaned up."
+**Context**: Construction / Build and Test complete for the endpoint-config change request.
+
+---
+## Build and Test Stage Commit — User Confirmation
+**Timestamp**: 2026-06-12T08:20:00Z
+**User Input**: "良いですよ"
+**AI Response**: "Creating test(ci) Build and Test commit. This closes the AI-DLC workflow for the per-signal endpoint change request (Operations remains PLACEHOLDER)."
+**Context**: Stage-boundary Conventional Commit for Build and Test; change request complete.
+
+---
