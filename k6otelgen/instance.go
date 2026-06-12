@@ -89,10 +89,14 @@ func (i *ModuleInstance) Load(path string) (*TopologyHandle, error) {
 			return nil, err
 		}
 	}
-	i.logInfo("xk6-otel-gen: topology loaded", logrus.Fields{
-		"path":     i.root.loadedPath,
-		"services": len(i.root.schema.Services),
-		"journeys": len(i.root.schema.Journeys),
+	// load() is documented as safe to call every iteration (it returns the
+	// cached handle), so log the summary only once per test run.
+	i.root.loadLogOnce.Do(func() {
+		i.logInfo("xk6-otel-gen: topology loaded", logrus.Fields{
+			"path":     i.root.loadedPath,
+			"services": len(i.root.schema.Services),
+			"journeys": len(i.root.schema.Journeys),
+		})
 	})
 	return i.handle, nil
 }

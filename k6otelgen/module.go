@@ -15,11 +15,12 @@ import (
 
 // RootModule is the process-singleton k6 extension module.
 type RootModule struct {
-	schemaOnce sync.Once
-	schemaErr  error
-	schema     *topology.Schema
-	overlay    *topology.FaultOverlay
-	loadedPath string
+	schemaOnce  sync.Once
+	schemaErr   error
+	schema      *topology.Schema
+	overlay     *topology.FaultOverlay
+	loadedPath  string
+	loadLogOnce sync.Once
 
 	configureOnce sync.Once
 	configureMu   sync.Mutex
