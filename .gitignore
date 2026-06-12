@@ -8,6 +8,9 @@
 .env
 buildspec.yml
 codebuild_build.sh
+# Locally built k6 binary at repo root (xk6 build --output ./k6). Anchored so it
+# does not also ignore the k6otelgen/ and k6output/ package directories.
+/k6
 
 # Codex CLI / Cursor implementation-agent run logs
 logs/
