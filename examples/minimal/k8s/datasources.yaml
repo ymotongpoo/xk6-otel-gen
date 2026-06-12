@@ -14,6 +14,15 @@ datasources:
         datasourceUid: loki
         spanStartTimeShift: -5m
         spanEndTimeShift: 5m
+        # trace_id arrives as Loki structured metadata (not a stream label),
+        # so "Logs for this span" must filter it with a line/label filter.
+        # Without the custom query Grafana degrades to {service_name="..."}
+        # and returns the whole service's logs for the time window instead
+        # of the single span's. Promoting trace_id to a stream label would
+        # explode Loki cardinality, so we filter on structured metadata here.
+        filterByTraceID: false
+        customQuery: true
+        query: '{service_name="${__tags["service.name"]}"} | trace_id = "${__trace.traceId}"'
         tags:
           - service.name
   - name: Prometheus

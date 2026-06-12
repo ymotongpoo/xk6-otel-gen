@@ -127,6 +127,42 @@ If nothing shows up:
   the cause is a malformed `Authorization` header (whitespace, missing
   `Basic` prefix, or the wrong base64 alphabet).
 
+### 1.6 Fix "Logs for this span" (trace → logs correlation)
+
+On the OTLP → Loki ingest path, log records' `trace_id` and `span_id` are
+stored as Loki **structured metadata**, not stream labels — this is fixed
+by the OTLP spec (only resource attributes such as `service.name` become
+stream labels). As a result, Tempo's **Logs for this span** button
+degrades to a `{service_name="..."}` + time-range query and returns the
+whole service's logs instead of the single span's lines.
+
+Do **not** try to fix this by promoting `trace_id` to a Loki stream
+label: trace IDs are unbounded cardinality, so a new stream per trace
+would severely degrade Loki's index and query performance.
+
+The correct fix is to configure the Tempo datasource's **Trace to logs**
+custom query so it filters `trace_id` as structured metadata:
+
+1. Grafana Cloud → **Connections → Data sources** → open your traces
+   datasource (e.g. `grafanacloud-<stack>-traces`).
+2. Open the **Trace to logs** section.
+3. Set **Data source** to your logs datasource
+   (e.g. `grafanacloud-<stack>-logs`).
+4. Enable **Custom query** and set:
+
+   ```logql
+   {service_name="${__tags["service.name"]}"} | trace_id = "${__trace.traceId}"
+   ```
+
+5. Save.
+
+"Logs for this span" now issues a query with the structured-metadata
+filter `| trace_id = "..."`, returning only that span's log lines.
+
+> The local LGTM-lite stacks under `examples/minimal/k8s/` and
+> `examples/astroshop/k8s/` already ship this fix via the provisioned
+> `tracesToLogsV2` block in their `datasources.yaml`.
+
 ---
 
 ## 2. Google Cloud Observability (via local Collector)
