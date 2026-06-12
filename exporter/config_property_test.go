@@ -24,6 +24,15 @@ func TestMergeWith_OverrideWins_Property(t *testing.T) {
 		if override.Endpoint != "" && merged.Endpoint != override.Endpoint {
 			t.Fatalf("Endpoint = %q, want override %q", merged.Endpoint, override.Endpoint)
 		}
+		if override.TracesEndpoint != "" && merged.TracesEndpoint != override.TracesEndpoint {
+			t.Fatalf("TracesEndpoint = %q, want override %q", merged.TracesEndpoint, override.TracesEndpoint)
+		}
+		if override.MetricsEndpoint != "" && merged.MetricsEndpoint != override.MetricsEndpoint {
+			t.Fatalf("MetricsEndpoint = %q, want override %q", merged.MetricsEndpoint, override.MetricsEndpoint)
+		}
+		if override.LogsEndpoint != "" && merged.LogsEndpoint != override.LogsEndpoint {
+			t.Fatalf("LogsEndpoint = %q, want override %q", merged.LogsEndpoint, override.LogsEndpoint)
+		}
 		if override.Headers != nil && !reflect.DeepEqual(merged.Headers, override.Headers) {
 			t.Fatalf("Headers = %#v, want override %#v", merged.Headers, override.Headers)
 		}

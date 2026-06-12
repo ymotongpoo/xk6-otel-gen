@@ -29,14 +29,16 @@ func (f configOptionFunc) applyConfigOption(o *configOptions) {
 }
 
 type configOptions struct {
-	fixedEndpoint *string
-	protocol      *exporter.Protocol
-	minTimeout    time.Duration
+	fixedEndpoint      *string
+	protocol           *exporter.Protocol
+	minTimeout         time.Duration
+	perSignalEndpoints bool
 }
 
 func defaultConfigOptions() configOptions {
 	return configOptions{
-		minTimeout: minValidConfigTimeout,
+		minTimeout:         minValidConfigTimeout,
+		perSignalEndpoints: true,
 	}
 }
 
@@ -74,6 +76,14 @@ func WithMinTimeout(timeout time.Duration) ConfigOption {
 	})
 }
 
+// WithoutPerSignalEndpoints disables generation of per-signal endpoint
+// overrides (TracesEndpoint/MetricsEndpoint/LogsEndpoint), leaving them empty.
+func WithoutPerSignalEndpoints() ConfigOption {
+	return configOptionFunc(func(o *configOptions) {
+		o.perSignalEndpoints = false
+	})
+}
+
 // ValidConfig returns an exporter Config that passes Config.Validate.
 func ValidConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 	o := applyConfigOptions(opts)
@@ -94,9 +104,19 @@ func ValidConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 		batchSize := rapid.IntRange(128, 8192).Draw(t, "batch_size")
 		maxQueueSize := rapid.IntRange(batchSize, batchSize*4).Draw(t, "max_queue_size")
 
+		var tracesEndpoint, metricsEndpoint, logsEndpoint string
+		if o.perSignalEndpoints {
+			tracesEndpoint = optionalExporterEndpoint(t, "traces_endpoint")
+			metricsEndpoint = optionalExporterEndpoint(t, "metrics_endpoint")
+			logsEndpoint = optionalExporterEndpoint(t, "logs_endpoint")
+		}
+
 		return exporter.Config{
 			Protocol:          protocol,
 			Endpoint:          endpoint,
+			TracesEndpoint:    tracesEndpoint,
+			MetricsEndpoint:   metricsEndpoint,
+			LogsEndpoint:      logsEndpoint,
 			Headers:           validHeaderMap(t, "headers"),
 			Insecure:          rapid.Bool().Draw(t, "insecure"),
 			Compression:       rapid.SampledFrom([]string{"", "gzip"}).Draw(t, "compression"),
@@ -159,6 +179,15 @@ func AnyConfig(opts ...ConfigOption) *rapid.Generator[exporter.Config] {
 
 func validSampler(t *rapid.T, label string) string {
 	return rapid.SampledFrom([]string{"always_on", "always_off", "traceidratio"}).Draw(t, label)
+}
+
+// optionalExporterEndpoint returns a valid endpoint roughly half the time and
+// an empty string ("unset") otherwise, for per-signal override generation.
+func optionalExporterEndpoint(t *rapid.T, label string) string {
+	if !rapid.Bool().Draw(t, label+"_set") {
+		return ""
+	}
+	return validExporterEndpoint(t, label)
 }
 
 func validExporterEndpoint(t *rapid.T, label string) string {

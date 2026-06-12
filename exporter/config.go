@@ -60,8 +60,18 @@ func (p Protocol) String() string {
 
 // Config contains all settings needed to build an OTLP Pipeline.
 type Config struct {
-	Protocol          Protocol
-	Endpoint          string
+	Protocol Protocol
+	// Endpoint is the base OTLP endpoint shared by all signals. For HTTP it is
+	// treated as the OTLP base endpoint (OTEL_EXPORTER_OTLP_ENDPOINT semantics):
+	// the per-signal path v1/{signal} is appended. See ResolveEndpoints.
+	Endpoint string
+	// TracesEndpoint, MetricsEndpoint and LogsEndpoint are optional per-signal
+	// endpoint overrides. When set they take precedence over Endpoint and are
+	// used as-is with no path completion (OTEL_EXPORTER_OTLP_{SIGNAL}_ENDPOINT
+	// semantics). An empty value means "unset" and falls back to Endpoint.
+	TracesEndpoint    string
+	MetricsEndpoint   string
+	LogsEndpoint      string
 	Headers           map[string]string
 	Insecure          bool
 	InsecureSet       bool
@@ -116,6 +126,15 @@ func (c Config) Validate() error {
 	} else if !validEndpoint(c.Endpoint) {
 		errs = append(errs, &ConfigError{Field: "Endpoint", Value: c.Endpoint, Message: "must be host:port or scheme://host[:port]"})
 	}
+	for field, value := range map[string]string{
+		"TracesEndpoint":  c.TracesEndpoint,
+		"MetricsEndpoint": c.MetricsEndpoint,
+		"LogsEndpoint":    c.LogsEndpoint,
+	} {
+		if value != "" && !validEndpoint(value) {
+			errs = append(errs, &ConfigError{Field: field, Value: value, Message: "must be host:port or scheme://host[:port]"})
+		}
+	}
 	if c.Timeout <= 0 {
 		errs = append(errs, &ConfigError{Field: "Timeout", Value: c.Timeout, Message: "must be > 0"})
 	}
@@ -154,6 +173,15 @@ func (c Config) MergeWith(override Config) Config {
 	}
 	if override.Endpoint != "" {
 		c.Endpoint = override.Endpoint
+	}
+	if override.TracesEndpoint != "" {
+		c.TracesEndpoint = override.TracesEndpoint
+	}
+	if override.MetricsEndpoint != "" {
+		c.MetricsEndpoint = override.MetricsEndpoint
+	}
+	if override.LogsEndpoint != "" {
+		c.LogsEndpoint = override.LogsEndpoint
 	}
 	if override.Headers != nil {
 		c.Headers = override.Headers
@@ -202,8 +230,21 @@ func (c Config) MergeWith(override Config) Config {
 // ConfigFromEnv reads OTEL_EXPORTER_OTLP_* environment variables into a Config.
 func ConfigFromEnv() Config {
 	var c Config
-	if value, ok := lookupSignalEnv("ENDPOINT"); ok {
+	// Endpoint env vars follow OTLP per-signal semantics: the base
+	// OTEL_EXPORTER_OTLP_ENDPOINT fills Endpoint (path completion applies at
+	// resolution time), while OTEL_EXPORTER_OTLP_{SIGNAL}_ENDPOINT fills the
+	// matching per-signal field and is used as-is.
+	if value, ok := os.LookupEnv("OTEL_EXPORTER_OTLP_ENDPOINT"); ok {
 		c.Endpoint = value
+	}
+	if value, ok := os.LookupEnv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"); ok {
+		c.TracesEndpoint = value
+	}
+	if value, ok := os.LookupEnv("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"); ok {
+		c.MetricsEndpoint = value
+	}
+	if value, ok := os.LookupEnv("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"); ok {
+		c.LogsEndpoint = value
 	}
 	if value, ok := lookupSignalEnv("HEADERS"); ok {
 		c.Headers = parseHeaders(value)

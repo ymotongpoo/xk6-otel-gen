@@ -249,7 +249,7 @@ func TestConfigFromEnv_Generic(t *testing.T) {
 	}
 }
 
-func TestConfigFromEnv_SignalSpecificPriority(t *testing.T) {
+func TestConfigFromEnv_SignalSpecificEndpoints(t *testing.T) {
 	t.Parallel()
 
 	withOTLPEnv(t, map[string]string{
@@ -260,8 +260,19 @@ func TestConfigFromEnv_SignalSpecificPriority(t *testing.T) {
 	})
 
 	cfg := ConfigFromEnv()
-	if cfg.Endpoint != "traces:4317" {
-		t.Fatalf("Endpoint = %q, want traces:4317", cfg.Endpoint)
+	// Per OTLP spec, the base ENDPOINT and each per-signal ENDPOINT map to their
+	// own fields; per-signal vars must not leak into the base Endpoint.
+	if cfg.Endpoint != "generic:4317" {
+		t.Fatalf("Endpoint = %q, want generic:4317", cfg.Endpoint)
+	}
+	if cfg.TracesEndpoint != "traces:4317" {
+		t.Fatalf("TracesEndpoint = %q, want traces:4317", cfg.TracesEndpoint)
+	}
+	if cfg.MetricsEndpoint != "metrics:4317" {
+		t.Fatalf("MetricsEndpoint = %q, want metrics:4317", cfg.MetricsEndpoint)
+	}
+	if cfg.LogsEndpoint != "logs:4317" {
+		t.Fatalf("LogsEndpoint = %q, want logs:4317", cfg.LogsEndpoint)
 	}
 }
 

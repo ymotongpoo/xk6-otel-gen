@@ -22,6 +22,7 @@ import (
 
 // buildTraceExporter creates a protocol-specific OTLP trace exporter.
 func buildTraceExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, stats *pipelineStats) (sdktrace.SpanExporter, error) {
+	endpoint, _, _ := cfg.ResolveEndpoints()
 	var inner sdktrace.SpanExporter
 	var err error
 	switch cfg.Protocol {
@@ -30,10 +31,10 @@ func buildTraceExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, 
 			otlptracegrpc.WithHeaders(cfg.Headers),
 			otlptracegrpc.WithTimeout(cfg.Timeout),
 		}
-		if endpointIsURL(cfg.Endpoint) {
-			opts = append(opts, otlptracegrpc.WithEndpointURL(cfg.Endpoint))
+		if endpointIsURL(endpoint) {
+			opts = append(opts, otlptracegrpc.WithEndpointURL(endpoint))
 		} else {
-			opts = append(opts, otlptracegrpc.WithEndpoint(cfg.Endpoint))
+			opts = append(opts, otlptracegrpc.WithEndpoint(endpoint))
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlptracegrpc.WithInsecure())
@@ -50,10 +51,10 @@ func buildTraceExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, 
 			otlptracehttp.WithHeaders(cfg.Headers),
 			otlptracehttp.WithTimeout(cfg.Timeout),
 		}
-		if endpointIsURL(cfg.Endpoint) {
-			opts = append(opts, otlptracehttp.WithEndpointURL(cfg.Endpoint))
+		if endpointIsURL(endpoint) {
+			opts = append(opts, otlptracehttp.WithEndpointURL(endpoint))
 		} else {
-			opts = append(opts, otlptracehttp.WithEndpoint(cfg.Endpoint))
+			opts = append(opts, otlptracehttp.WithEndpoint(endpoint))
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlptracehttp.WithInsecure())
@@ -76,6 +77,7 @@ func buildTraceExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, 
 
 // buildMetricExporter creates a protocol-specific OTLP metric exporter.
 func buildMetricExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, stats *pipelineStats) (sdkmetric.Exporter, error) {
+	_, endpoint, _ := cfg.ResolveEndpoints()
 	var inner sdkmetric.Exporter
 	var err error
 	switch cfg.Protocol {
@@ -84,10 +86,10 @@ func buildMetricExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config,
 			otlpmetricgrpc.WithHeaders(cfg.Headers),
 			otlpmetricgrpc.WithTimeout(cfg.Timeout),
 		}
-		if endpointIsURL(cfg.Endpoint) {
-			opts = append(opts, otlpmetricgrpc.WithEndpointURL(cfg.Endpoint))
+		if endpointIsURL(endpoint) {
+			opts = append(opts, otlpmetricgrpc.WithEndpointURL(endpoint))
 		} else {
-			opts = append(opts, otlpmetricgrpc.WithEndpoint(cfg.Endpoint))
+			opts = append(opts, otlpmetricgrpc.WithEndpoint(endpoint))
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlpmetricgrpc.WithInsecure())
@@ -104,10 +106,10 @@ func buildMetricExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config,
 			otlpmetrichttp.WithHeaders(cfg.Headers),
 			otlpmetrichttp.WithTimeout(cfg.Timeout),
 		}
-		if endpointIsURL(cfg.Endpoint) {
-			opts = append(opts, otlpmetrichttp.WithEndpointURL(cfg.Endpoint))
+		if endpointIsURL(endpoint) {
+			opts = append(opts, otlpmetrichttp.WithEndpointURL(endpoint))
 		} else {
-			opts = append(opts, otlpmetrichttp.WithEndpoint(cfg.Endpoint))
+			opts = append(opts, otlpmetrichttp.WithEndpoint(endpoint))
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlpmetrichttp.WithInsecure())
@@ -130,6 +132,7 @@ func buildMetricExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config,
 
 // buildLogExporter creates a protocol-specific OTLP log exporter.
 func buildLogExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, stats *pipelineStats) (sdklog.Exporter, error) {
+	_, _, endpoint := cfg.ResolveEndpoints()
 	var inner sdklog.Exporter
 	var err error
 	switch cfg.Protocol {
@@ -138,10 +141,10 @@ func buildLogExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, st
 			otlploggrpc.WithHeaders(cfg.Headers),
 			otlploggrpc.WithTimeout(cfg.Timeout),
 		}
-		if endpointIsURL(cfg.Endpoint) {
-			opts = append(opts, otlploggrpc.WithEndpointURL(cfg.Endpoint))
+		if endpointIsURL(endpoint) {
+			opts = append(opts, otlploggrpc.WithEndpointURL(endpoint))
 		} else {
-			opts = append(opts, otlploggrpc.WithEndpoint(cfg.Endpoint))
+			opts = append(opts, otlploggrpc.WithEndpoint(endpoint))
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlploggrpc.WithInsecure())
@@ -158,10 +161,10 @@ func buildLogExporter(ctx context.Context, cfg Config, tlsConfig *tls.Config, st
 			otlploghttp.WithHeaders(cfg.Headers),
 			otlploghttp.WithTimeout(cfg.Timeout),
 		}
-		if endpointIsURL(cfg.Endpoint) {
-			opts = append(opts, otlploghttp.WithEndpointURL(cfg.Endpoint))
+		if endpointIsURL(endpoint) {
+			opts = append(opts, otlploghttp.WithEndpointURL(endpoint))
 		} else {
-			opts = append(opts, otlploghttp.WithEndpoint(cfg.Endpoint))
+			opts = append(opts, otlploghttp.WithEndpoint(endpoint))
 		}
 		if cfg.Insecure {
 			opts = append(opts, otlploghttp.WithInsecure())

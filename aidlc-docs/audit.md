@@ -1414,3 +1414,24 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: Stage-boundary Conventional Commit for Functional Design U4.
 
 ---
+## Code Generation (Part 1 — Planning) — Plan Created
+**Timestamp**: 2026-06-12T06:30:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Created consolidated aidlc-docs/construction/plans/endpoint-config-code-generation-plan.md (14 steps across U4 exporter → U5 k6otelgen → U6 k6output → U8 docs): U4 Config fields + ResolveEndpoints/appendSignalPath (new exporter/endpoints.go) + ConfigFromEnv fix + exporters.go wiring + unit tests + PBT (TP-U4-5/6/7, generator extension); U5 JS keys tracesEndpoint/metricsEndpoint/logsEndpoint + resolved-endpoint startup log; U6 --out metricsEndpoint key; U8 README/doc.go/saas-endpoints.md + breaking-change note. Implementation by Claude (cohesive bugfix+enhancement, consistent with this session's prior code work). One commit per unit. Presenting plan for approval."
+**Context**: Construction / Code Generation Part 1; awaiting plan approval before generation.
+
+---
+## Code Generation (Part 1) — Plan Approved
+**Timestamp**: 2026-06-12T06:35:00Z
+**User Input**: "Approve & Generate"
+**AI Response**: "Plan approved. Marking Part 1 complete and starting Part 2 generation from U4 exporter."
+**Context**: Construction / Code Generation — entering Part 2 (generation).
+
+---
+## Code Generation U4 (exporter) — Generated and Verified
+**Timestamp**: 2026-06-12T07:05:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Implemented U4: added Config per-signal fields + Validate/MergeWith/ConfigFromEnv changes (exporter/config.go), new exporter/endpoints.go (ResolveEndpoints/resolveSignalEndpoint/appendSignalPath), wired build*Exporter to resolved endpoints (exporter/exporters.go). Tests: endpoints_test.go (examples incl. Grafana Cloud /otlp), endpoints_property_test.go (TP-U4-5/6/7), extended config_property_test.go MergeWith property and generator (testutil/generators/exporter_config.go per-signal generation + WithoutPerSignalEndpoints option), replaced stale TestConfigFromEnv_SignalSpecificPriority (asserted old buggy behavior) with TestConfigFromEnv_SignalSpecificEndpoints (OTLP-spec mapping). go build ./... + go test ./... all green. Summary at aidlc-docs/construction/u4-exporter/code/endpoint-config-summary.md."
+**Context**: Construction / Code Generation Part 2 — U4 complete. PBT extension compliant (TP-U4-5/6/7 implemented and passing, blocking).
+
+---
