@@ -291,9 +291,12 @@ otelgen.configure({
   clientKey: "/etc/otel/client-key.pem",
   headers: { "x-demo": "minimal" },
   timeout: "10s",
-  batchSize: 512,
-  batchTimeout: "1s",
-  maxQueueSize: 2048,
+  // Batch/queue headroom. Defaults shown in parentheses; the values below are
+  // generous, suited to sustained load. See "Throughput, batching, and
+  // dropped root spans" below.
+  batchSize: 2048,        // (default 512)
+  batchTimeout: "1s",     // (default 1s)
+  maxQueueSize: 16384,    // (default 2048)
   sampler: "traceidratio",
   samplerArg: 0.1,
 });
@@ -303,6 +306,58 @@ otelgen.configure({
 `samplerArg` is used by `traceidratio` and must be in `[0,1]`. Invalid sampler
 environment values fail pipeline validation with the original
 `OTEL_TRACES_SAMPLER` value and the allowed set in the error message.
+
+### Throughput, batching, and dropped root spans
+
+The synthesizer emits one trace per journey iteration, as fast as k6 runs
+iterations. With a `constant-vus` executor and no think time, a single VU can
+drive **10,000+ iterations/s**, far more telemetry than most backends — or the
+OTLP exporter — can absorb.
+
+When generation outpaces export, the trace `BatchSpanProcessor` queue fills and
+**spans are dropped**. These drops happen *before* the exporter, so they are
+**not** counted in `otelgen.stats().tracesFailed`. Crucially, a trace's **root
+span ends after all of its children**, so it is enqueued last and is the first
+casualty when the queue overflows. The backend then receives child spans but no
+root, and Grafana Tempo shows `<root span not yet received>` in the Service
+column of the trace list.
+
+Two independent controls address this:
+
+**1. Cap the generation rate.** Use a rate-based executor so journeys are
+produced at a fixed, ingestable rate instead of at full CPU speed:
+
+```javascript
+export const options = {
+  scenarios: {
+    checkout: {
+      executor: "constant-arrival-rate",
+      rate: 300,            // journeys/s; × spans-per-journey ≈ backend span rate
+      timeUnit: "1s",
+      duration: "30s",
+      preAllocatedVUs: 20,
+      maxVUs: 100,
+    },
+  },
+};
+```
+
+Pick `rate` so that `rate × spans-per-journey` stays within your backend's
+ingest budget. The bundled examples target roughly **1,000 spans/s**: the
+minimal journey emits 3 spans, so it runs at `rate: 300`.
+
+**2. Size the exporter queue and batches.** Give the batch processor enough
+headroom to absorb bursts without dropping:
+
+| Option | Default | Generous | Effect |
+|---|---:|---:|---|
+| `maxQueueSize` | 2048 | 16384 | Spans buffered before drops begin. Raise this first to stop drops. |
+| `batchSize` | 512 | 2048 | Max spans per OTLP export request. Must be ≤ `maxQueueSize`. |
+| `batchTimeout` | 1s | 1s | Max time a span waits before its batch is flushed. Lower values reduce how long a root span lags its children. |
+
+Always call `otelgen.flush()` in `teardown()` (see [Usage](#usage)) so the final
+batch — which contains the most recent root spans — is delivered before the
+process exits.
 
 ### Endpoint resolution
 
