@@ -98,7 +98,12 @@ func (o *Output) Description() string {
 	if o == nil {
 		return "k6 native metrics to OTLP/Metrics via xk6-otel-gen"
 	}
-	return fmt.Sprintf("k6 native metrics to OTLP/Metrics via xk6-otel-gen (endpoint=%s)", o.params.Endpoint)
+	_, metricsEndpoint, _ := exporter.Config{
+		Protocol:        o.params.Protocol,
+		Endpoint:        o.params.Endpoint,
+		MetricsEndpoint: o.params.MetricsEndpoint,
+	}.ResolveEndpoints()
+	return fmt.Sprintf("k6 native metrics to OTLP/Metrics via xk6-otel-gen (endpoint=%s)", metricsEndpoint)
 }
 
 // Start initializes the shared pipeline, runner MeterProvider, instruments,
@@ -216,6 +221,9 @@ func buildPipelineConfig(params Params) exporter.Config {
 	out := params.exporterConfig()
 	if params.wasProvided("endpoint") {
 		cfg.Endpoint = out.Endpoint
+	}
+	if params.wasProvided("metricsEndpoint") {
+		cfg.MetricsEndpoint = out.MetricsEndpoint
 	}
 	if params.wasProvided("protocol") {
 		cfg.Protocol = out.Protocol

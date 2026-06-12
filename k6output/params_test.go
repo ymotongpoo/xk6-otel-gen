@@ -151,6 +151,29 @@ func TestParseOutArgs_InvalidURL(t *testing.T) {
 	assertConfigError(t, err, ConfigErrorKindInvalidURL, "endpoint", "://")
 }
 
+func TestParseOutArgs_MetricsEndpoint(t *testing.T) {
+	t.Parallel()
+
+	got, err := parseOutArgs("endpoint=https://base.example.com/otlp,metricsEndpoint=https://metrics.example.com/otlp/v1/metrics")
+	if err != nil {
+		t.Fatalf("parseOutArgs() error = %v", err)
+	}
+	if got.MetricsEndpoint != "https://metrics.example.com/otlp/v1/metrics" {
+		t.Fatalf("MetricsEndpoint = %q", got.MetricsEndpoint)
+	}
+	cfg := got.exporterConfig()
+	if cfg.MetricsEndpoint != "https://metrics.example.com/otlp/v1/metrics" {
+		t.Fatalf("exporterConfig().MetricsEndpoint = %q", cfg.MetricsEndpoint)
+	}
+}
+
+func TestParseOutArgs_MetricsEndpoint_InvalidURL(t *testing.T) {
+	t.Parallel()
+
+	_, err := parseOutArgs("metricsEndpoint=://")
+	assertConfigError(t, err, ConfigErrorKindInvalidURL, "metricsEndpoint", "://")
+}
+
 func TestParseOutArgs_TypeMismatch_Insecure(t *testing.T) {
 	t.Parallel()
 

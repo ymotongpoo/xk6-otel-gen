@@ -1442,3 +1442,10 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: Construction / Code Generation Part 2 — U5 complete.
 
 ---
+## Code Generation U6 (k6output) — Generated and Verified
+**Timestamp**: 2026-06-12T07:35:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Implemented U6: added Params.MetricsEndpoint, --out metricsEndpoint key with validEndpointArg validation, exporterConfig + buildPipelineConfig mapping (k6output/params.go, output.go). Description now shows the resolved metrics endpoint via ResolveEndpoints built directly from params fields (provided-map independent, keeps TestDescription_ContainsEndpoint green). Tests: TestParseOutArgs_MetricsEndpoint + _InvalidURL (params_test.go). go build + go test ./k6output/ green. Summary at u6-k6output/code/endpoint-config-summary.md."
+**Context**: Construction / Code Generation Part 2 — U6 complete.
+
+---

@@ -22,18 +22,19 @@ const (
 
 // Params is the parsed --out args representation used by the otel-gen output.
 type Params struct {
-	Endpoint     string
-	Protocol     exporter.Protocol
-	Insecure     bool
-	Certificate  string
-	ClientCert   string
-	ClientKey    string
-	Headers      map[string]string
-	Compression  string
-	Timeout      time.Duration
-	BatchSize    int
-	BatchTimeout time.Duration
-	MaxQueueSize int
+	Endpoint        string
+	MetricsEndpoint string
+	Protocol        exporter.Protocol
+	Insecure        bool
+	Certificate     string
+	ClientCert      string
+	ClientKey       string
+	Headers         map[string]string
+	Compression     string
+	Timeout         time.Duration
+	BatchSize       int
+	BatchTimeout    time.Duration
+	MaxQueueSize    int
 
 	QueueSize     int
 	FlushInterval time.Duration
@@ -84,6 +85,11 @@ func applyKV(p *Params, key, val string) error {
 			return &ConfigError{Kind: ConfigErrorKindInvalidURL, Field: key, Value: val}
 		}
 		p.Endpoint = val
+	case "metricsEndpoint":
+		if !validEndpointArg(val) {
+			return &ConfigError{Kind: ConfigErrorKindInvalidURL, Field: key, Value: val}
+		}
+		p.MetricsEndpoint = val
 	case "protocol":
 		switch strings.ToLower(val) {
 		case "grpc":
@@ -216,6 +222,9 @@ func (p Params) exporterConfig() exporter.Config {
 	var cfg exporter.Config
 	if p.wasProvided("endpoint") {
 		cfg.Endpoint = p.Endpoint
+	}
+	if p.wasProvided("metricsEndpoint") {
+		cfg.MetricsEndpoint = p.MetricsEndpoint
 	}
 	if p.wasProvided("protocol") {
 		cfg.Protocol = p.Protocol
