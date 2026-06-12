@@ -118,8 +118,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-          echo "$VERSION" > aidlc-rules/VERSION
-          git add CHANGELOG.md aidlc-rules/VERSION
+          git add CHANGELOG.md
           if git diff --cached --quiet CHANGELOG.md; then
             echo "::error::No releasable commits since last tag – CHANGELOG.md is already up to date. Push new conventional commits or adjust the requested version before rerunning this workflow."
             exit 1
@@ -130,7 +129,7 @@ jobs:
           git push origin "$BRANCH"
 
           label_args=()
-          for LABEL in "release" "rules"; do
+          for LABEL in "release"; do
             if gh label list --search "$LABEL" --json name --jq '.[].name' | grep -qx "$LABEL"; then
               label_args+=("--label" "$LABEL")
             fi
@@ -163,9 +162,9 @@ jobs:
           > Simply closing this will block a subsequent $TAG release, so delete the branch or reopen the pull request if necessary
 
           **When merged**, the merge commit will be automatically tagged as \`$TAG\`, which triggers:
-          - \`release.yml\` — creates a draft GitHub Release with the rules zip
+          - \`release.yml\` — creates a draft GitHub Release with prebuilt k6 binaries
 
-          After both workflows complete, review and publish the draft release.
+          After the workflow completes, review and publish the draft release.
           EOF
           )" \
             "${label_args[@]}"

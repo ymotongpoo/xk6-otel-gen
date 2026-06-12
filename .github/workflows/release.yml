@@ -1,11 +1,12 @@
 # Release Pipeline
 #
-# This workflow handles versioning and distribution of the AI-DLC methodology.
-# It triggers when a version tag is pushed (by tag-on-merge.yml or manually) and:
+# This workflow handles versioning and distribution of the xk6-otel-gen
+# k6 extension. It triggers when a version tag is pushed (by tag-on-merge.yml
+# or manually) and:
 #
-#   1. Creates distribution artifact:
-#      - ai-dlc-rules-vX.X.X.zip (Rules format for Amazon Q, Kiro, etc.)
-#   2. Creates a draft GitHub Release with artifact attached
+#   1. Cross-compiles k6 binaries bundled with this extension via xk6
+#      for common platforms (linux/darwin/windows, amd64/arm64)
+#   2. Creates a draft GitHub Release with the binaries and checksums attached
 #
 # The release is created as a draft so a human can review the attached
 # artifacts before publishing it.
@@ -31,7 +32,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -50,11 +51,52 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
-      - name: Create release artifact
+      - name: Set up Go
         if: steps.version.outputs.skip != 'true'
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install xk6
+        if: steps.version.outputs.skip != 'true'
+        run: go install go.k6.io/xk6/cmd/xk6@latest
+
+      - name: Build k6 binaries with xk6-otel-gen
+        if: steps.version.outputs.skip != 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          zip -r "ai-dlc-rules-v${VERSION}.zip" aidlc-rules/
+          set -euo pipefail
+          # Pin the k6 core to the version this module is tested against
+          K6_VERSION=$(go list -m -f '{{.Version}}' go.k6.io/k6)
+          echo "Building k6 $K6_VERSION with xk6-otel-gen $TAG"
+          mkdir -p dist
+          for platform in linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 windows-amd64; do
+            GOOS="${platform%-*}"
+            GOARCH="${platform#*-}"
+            BIN=k6
+            if [[ "$GOOS" == "windows" ]]; then
+              BIN=k6.exe
+            fi
+            echo "::group::Build $platform"
+            # -buildvcs=false: xk6 builds in a temp module outside the repo,
+            # where VCS stamping fails with exit status 128
+            GOFLAGS=-buildvcs=false GOOS="$GOOS" GOARCH="$GOARCH" CGO_ENABLED=0 \
+              xk6 build "$K6_VERSION" \
+              --with github.com/ymotongpoo/xk6-otel-gen=. \
+              --output "dist/$BIN"
+            NAME="xk6-otel-gen-$TAG-$platform"
+            if [[ "$GOOS" == "windows" ]]; then
+              (cd dist && zip -q "$NAME.zip" "$BIN" && rm "$BIN")
+            else
+              tar -czf "dist/$NAME.tar.gz" -C dist "$BIN"
+              rm "dist/$BIN"
+            fi
+            echo "::endgroup::"
+          done
+          (cd dist && sha256sum -- * > checksums.txt)
+          ls -l dist/
 
       - name: Create GitHub Release
         if: steps.version.outputs.skip != 'true'
@@ -62,15 +104,31 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           draft: true
-          name: "AI-DLC Workflow v${{ steps.version.outputs.version }}"
+          name: "xk6-otel-gen v${{ steps.version.outputs.version }}"
           body: |
             Release v${{ steps.version.outputs.version }}
-            
+
             See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ steps.version.outputs.tag }}/CHANGELOG.md) for details.
-            
+
             ## Downloads
-            - **ai-dlc-rules** - Rules format (Amazon Q, Kiro, etc.)
+
+            Prebuilt `k6` binaries with the `k6/x/otel-gen` extension included
+            (verify with `checksums.txt`):
+
+            | Platform | Archive |
+            |---|---|
+            | Linux amd64 | `xk6-otel-gen-${{ steps.version.outputs.tag }}-linux-amd64.tar.gz` |
+            | Linux arm64 | `xk6-otel-gen-${{ steps.version.outputs.tag }}-linux-arm64.tar.gz` |
+            | macOS amd64 | `xk6-otel-gen-${{ steps.version.outputs.tag }}-darwin-amd64.tar.gz` |
+            | macOS arm64 | `xk6-otel-gen-${{ steps.version.outputs.tag }}-darwin-arm64.tar.gz` |
+            | Windows amd64 | `xk6-otel-gen-${{ steps.version.outputs.tag }}-windows-amd64.zip` |
+
+            Alternatively, build your own binary:
+
+            ```sh
+            xk6 build --with github.com/ymotongpoo/xk6-otel-gen@${{ steps.version.outputs.tag }}
+            ```
           files: |
-            ai-dlc-rules-v${{ steps.version.outputs.version }}.zip
+            dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
