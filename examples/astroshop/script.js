@@ -23,17 +23,20 @@ export function setup() {
     protocol: "grpc",
     insecure: true,
   });
+}
 
+// Call load() inside the iteration functions, not in setup(): k6
+// JSON-serializes setup() return values, which strips the handle's methods.
+// load() parses the YAML only once and returns the cached handle afterwards.
+
+export function browse() {
   const topology = otelgen.load("./topology.yaml");
-  return { topology };
+  topology.runRandomJourney();
 }
 
-export function browse(data) {
-  data.topology.runRandomJourney();
-}
-
-export function checkout(data) {
-  data.topology.runJourney("checkout");
+export function checkout() {
+  const topology = otelgen.load("./topology.yaml");
+  topology.runJourney("checkout");
 }
 
 export function teardown() {

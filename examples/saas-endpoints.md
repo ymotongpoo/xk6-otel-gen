@@ -79,11 +79,14 @@ export function setup() {
     batchTimeout: "5s",
     maxQueueSize: 4096,
   });
-  return { topology: otelgen.load("./topology.yaml") };
 }
 
-export default function (data) {
-  data.topology.runJourney("checkout");
+export default function () {
+  // load() must run here, not in setup(): k6 JSON-serializes setup()
+  // return values, which strips the handle's methods. The parsed topology
+  // is cached, so per-iteration calls add no overhead.
+  const topology = otelgen.load("./topology.yaml");
+  topology.runJourney("checkout");
 }
 ```
 
@@ -268,11 +271,11 @@ export function setup() {
     protocol: "grpc",
     insecure: true,
   });
-  return { topology: otelgen.load("./topology.yaml") };
 }
 
-export default function (data) {
-  data.topology.runJourney("checkout");
+export default function () {
+  const topology = otelgen.load("./topology.yaml");
+  topology.runJourney("checkout");
 }
 ```
 

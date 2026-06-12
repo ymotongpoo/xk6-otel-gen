@@ -1264,3 +1264,23 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: Documentation authoring; runtime bug found in README/examples script pattern during hands-on verification.
 
 ---
+## README/Examples setup() Serialization Bug Fix
+**Timestamp**: 2026-06-12T02:00:00Z
+**User Input**: "前回のタスクで次の問題が発覚しています。コードをよく調査して、修正してください。
+
+---
+ただし、検証の過程で重要なバグを発見しました:
+
+  README と examples/minimal/script.js のサンプルは実行時に動きません。 両者は setup() で otelgen.load() したハンドルを return し
+  default(data) で data.topology.runJourney(...) を呼ぶパターンですが、k6 は setup() の戻り値を JSON シリアライズするため TopologyHandle
+  のメソッドが消え、TypeError: Object has no member 'runJourney' が全イテレーションで発生します(実際に再現しました)。動くパターンは
+  configure() を setup() に置き、load() を default() 内で呼ぶ形です(load()
+  は初回以降キャッシュ済みハンドルを返すだけなのでオーバーヘッドなし)。記事はこの動くパターンで書いてあります。README(Usage セクション)と
+  examples/minimal/script.js、おそらく examples/astroshop/script.js の修正が必要です — 必要なら対応します。
+
+  細かい点として、お使いの環境の xk6 ビルドにはリポジトリ作業ディレクトリ外の VCS stamping 問題があるため、記事のビルドコマンドは素の xk6
+  build のままにしています(一般読者の環境では問題にならず、前ターンで release.yml にだけ GOFLAGS=-buildvcs=false を入れた件と同根です)。"
+**AI Response**: "Fixed the broken setup()-returns-handle pattern in all user-facing docs/examples: README.md Usage section (plus an explanatory note on why load() belongs in default()), examples/minimal/script.js, examples/astroshop/script.js, and examples/saas-endpoints.md (two script blocks: Grafana Cloud and GCP). All now use the verified working pattern: configure() in setup(), load() inside the iteration function. aidlc-docs historical design artifacts containing the old pattern were intentionally left untouched (stage records). Accompanying Go fix: instance.go's 'topology loaded' INFO log fired on every Load() call including cache hits, which would flood logs under the new per-iteration load() pattern — added loadLogOnce sync.Once to RootModule so the summary logs once per test run; TestLoad_LogsTopologySummary still passes. Verification: go build + go test ./... green; rebuilt k6 via xk6 with the local module and ran examples/minimal (5 VUs, 5s → 145,266 iterations, zero TypeError, 'topology loaded' logged exactly once) and an astroshop-topology script exercising both runRandomJourney() and runJourney('checkout') successfully."
+**Context**: Bug fix follow-up from Getting Started article verification; user-facing script pattern corrected everywhere.
+
+---

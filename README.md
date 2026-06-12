@@ -126,13 +126,18 @@ export function setup() {
     protocol: "grpc",
     insecure: true,
   });
-  return { topology: otelgen.load("./topology.yaml") };
 }
 
-export default function (data) {
-  data.topology.runRandomJourney();
+export default function () {
+  const topology = otelgen.load("./topology.yaml");
+  topology.runRandomJourney();
 }
 ```
+
+Call `load()` inside `default()`, not in `setup()`: k6 JSON-serializes
+`setup()` return values, which strips the handle's methods. `load()` parses
+and validates the YAML only once per test run and returns the cached handle
+on every subsequent call, so calling it per iteration adds no overhead.
 
 | API | Purpose |
 |---|---|

@@ -11,13 +11,14 @@ export function setup() {
     protocol: "grpc",
     insecure: true,
   });
-
-  const topology = otelgen.load("./topology.yaml");
-  return { topology };
 }
 
-export default function (data) {
-  data.topology.runJourney("checkout");
+export default function () {
+  // Call load() here, not in setup(): k6 JSON-serializes setup() return
+  // values, which strips the handle's methods. load() parses the YAML only
+  // once and returns the cached handle on subsequent calls.
+  const topology = otelgen.load("./topology.yaml");
+  topology.runJourney("checkout");
 }
 
 export function teardown() {
