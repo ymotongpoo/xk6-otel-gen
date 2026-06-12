@@ -290,6 +290,44 @@ otelgen.configure({
 environment values fail pipeline validation with the original
 `OTEL_TRACES_SAMPLER` value and the allowed set in the error message.
 
+### Endpoint resolution
+
+There are two ways to point the exporter at a destination, following the
+[OTLP exporter specification](https://opentelemetry.io/docs/specs/otel/protocol/exporter/#endpoint-urls-for-otlphttp):
+
+1. **Base endpoint** — set a single `endpoint`. For HTTP, the per-signal path
+   is appended automatically: `v1/traces`, `v1/metrics`, `v1/logs`. For
+   example, `https://otlp-gateway.example.com/otlp` sends traces to
+   `https://otlp-gateway.example.com/otlp/v1/traces`. gRPC and `host:port`
+   endpoints are used unchanged (the SDK applies its own per-signal path).
+2. **Per-signal endpoints** — set `tracesEndpoint`, `metricsEndpoint` and/or
+   `logsEndpoint`. These are used **as-is** with no path completion and take
+   precedence over the base `endpoint` for the matching signal.
+
+| Surface | Base | Per-signal |
+|---|---|---|
+| JS API | `endpoint` | `tracesEndpoint`, `metricsEndpoint`, `logsEndpoint` |
+| `--out` args | `endpoint` | `metricsEndpoint` (this output emits metrics only) |
+| Environment | `OTEL_EXPORTER_OTLP_ENDPOINT` | `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_ENDPOINT` |
+
+```javascript
+otelgen.configure({
+  // Base endpoint: v1/{signal} is appended for HTTP.
+  endpoint: "https://otlp-gateway-prod-us-central-0.grafana.net/otlp",
+  protocol: "http",
+  // Optional per-signal overrides (used as-is, no path completion):
+  // tracesEndpoint: "https://traces.example.com/v1/traces",
+  // metricsEndpoint: "https://metrics.example.com/v1/metrics",
+  // logsEndpoint: "https://logs.example.com/v1/logs",
+});
+```
+
+> **Breaking change (per-signal endpoint support):** URL-form base endpoints
+> (those with a `scheme://`) now have `v1/{signal}` appended for HTTP. Previously
+> the URL path was sent as-is. If you relied on the old behavior — e.g. setting
+> `endpoint: "https://host:4318/v1/traces"` — move that value to the matching
+> per-signal key (`tracesEndpoint`), which is used as-is.
+
 TLS certificate options can be supplied through JS (`caCert`, `clientCert`,
 `clientKey`), `--out` args with the same keys, or OTEL environment variables:
 `OTEL_EXPORTER_OTLP_CERTIFICATE`,

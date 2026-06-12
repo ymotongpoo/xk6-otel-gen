@@ -19,17 +19,18 @@
 //
 // Supported --out args are comma-separated key=value pairs:
 //
-//	Key           Value                         Default
-//	endpoint      host:port or scheme://host     localhost:4317
-//	protocol      grpc or http                   grpc
-//	insecure      true or false                  false
-//	headers       key1:val1;key2:val2            none
-//	compression   gzip or empty                  empty
-//	timeout       Go duration, for example 10s   10s
-//	batchSize     integer                        512
-//	batchTimeout  Go duration                    1s
-//	maxQueueSize  integer                        2048
-//	queueSize     integer in [10, 10000]         100
+//	Key             Value                         Default
+//	endpoint        host:port or scheme://host    localhost:4317
+//	metricsEndpoint host:port or scheme://host    none (falls back to endpoint, used as-is)
+//	protocol        grpc or http                  grpc
+//	insecure        true or false                 false
+//	headers         key1:val1;key2:val2           none
+//	compression     gzip or empty                 empty
+//	timeout         Go duration, for example 10s  10s
+//	batchSize       integer                       512
+//	batchTimeout    Go duration                   1s
+//	maxQueueSize    integer                       2048
+//	queueSize       integer in [10, 10000]        100
 //
 // Configuration priority, from highest to lowest, is: JavaScript
 // otelgen.configure options, --out otel-gen args, OTEL_EXPORTER_OTLP_* env

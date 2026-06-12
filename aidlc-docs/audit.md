@@ -1449,3 +1449,10 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: Construction / Code Generation Part 2 — U6 complete.
 
 ---
+## Code Generation U8 (docs) — Generated and Verified
+**Timestamp**: 2026-06-12T07:55:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Implemented U8 docs: README.md Configuration gains an Endpoint resolution subsection (base path completion + per-signal overrides, surface table, per-signal JS example, breaking-change callout for URL-form base endpoints); k6otelgen/doc.go godoc Endpoint resolution note; k6output/doc.go args table gains metricsEndpoint row (table realigned); examples/saas-endpoints.md Grafana troubleshooting clarified (extension appends v1/{signal} per OTLP spec; per-signal overrides documented). CHANGELOG.md left to git-cliff generation (no breaking-change grouping in cliff.toml; README is the user-facing breaking-change doc). k6otelgen/doc.go setup() lifecycle example left untouched (separate out-of-scope serialization concern). go build/test ./... green; markdownlint-cli2 clean. Summary at u8-samples/code/endpoint-config-summary.md."
+**Context**: Construction / Code Generation Part 2 — U8 complete; all 14 plan steps done.
+
+---

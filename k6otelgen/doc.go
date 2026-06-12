@@ -25,6 +25,16 @@
 //
 //	k6 run --out otel-gen=endpoint=localhost:4317 script.js
 //
+// Endpoint resolution:
+//
+//   - endpoint is the base endpoint. For HTTP it follows the OTLP exporter
+//     spec: the per-signal path v1/{signal} is appended (for example
+//     "https://host/otlp" sends traces to "https://host/otlp/v1/traces").
+//     gRPC and host:port endpoints are used unchanged.
+//   - tracesEndpoint, metricsEndpoint and logsEndpoint optionally override a
+//     single signal. They are used as-is (no path completion) and take
+//     precedence over endpoint for that signal.
+//
 // State model:
 //
 //   - Process singleton: topology schema, fault overlay, and shared exporter

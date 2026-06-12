@@ -113,9 +113,12 @@ minute. Metrics (Mimir) and logs (Loki) populate similarly.
 
 If nothing shows up:
 
-- The endpoint path must end with `/otlp`. The OTLP HTTP protocol then
-  appends `/v1/traces`, `/v1/metrics`, `/v1/logs` automatically. Do not
-  append those manually.
+- Use the base gateway URL ending in `/otlp`. For HTTP, xk6-otel-gen
+  appends `/v1/traces`, `/v1/metrics`, `/v1/logs` automatically per the
+  OTLP exporter spec — do not append those manually. If you need a signal
+  to go elsewhere, set `tracesEndpoint` / `metricsEndpoint` / `logsEndpoint`
+  (or the `OTEL_EXPORTER_OTLP_{SIGNAL}_ENDPOINT` env var), which are used
+  as-is.
 - `protocol: "http"` is required because Grafana Cloud's OTLP gateway is
   HTTP/protobuf. The gRPC endpoint is hosted on a different domain — use
   it only if you have a contract specifying gRPC.
