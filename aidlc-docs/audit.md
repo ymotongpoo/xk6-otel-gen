@@ -1242,3 +1242,25 @@ AI-DLCを使って、負荷テストツールであるk6向けの拡張を作り
 **Context**: Round 2 remediation verified and history restructured to per-task commits on main (unpushed).
 
 ---
+
+## Release Workflow Adaptation and go.mod Cleanup
+**Timestamp**: 2026-06-12T00:15:00Z
+**User Input**: "先の調査で次のようなことがわかりました。対応してください。
+
+---
+release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DLC ルール zip」をリリースする内容で、この
+  Go/k6 拡張のリリースとは噛み合っていません（タグ時のみ起動するため日常の CI 失敗には出ません）。また round-2 のログ実装で go.mod の logrus
+  が indirect のまま（go mod tidy で direct
+  化すべき）という軽微な点もあります。どちらも今回のスコープ外なので未対応です。必要なら対応します。"
+**AI Response**: "Fixed both items. (1) go.mod: ran `go mod tidy` — sirupsen/logrus promoted from indirect to direct (it is imported by k6otelgen package code); build and full test suite green. (2) Release workflows adapted from AI-DLC-template leftovers to this Go/k6 extension: release.yml now cross-compiles k6 binaries bundled with the extension via xk6 (pinned to the go.mod k6 version, GOFLAGS=-buildvcs=false to avoid VCS-stamping failure in xk6's temp module — verified by an actual local xk6 build whose binary lists k6/x/otel-gen) for linux/darwin amd64+arm64 and windows/amd64, packages them as tar.gz/zip with sha256 checksums.txt, and attaches them to the draft GitHub Release; release-pr.yml no longer writes the nonexistent aidlc-rules/VERSION, drops the 'rules' label, and its PR-body wording now references prebuilt k6 binaries; created the previously missing cliff.toml (referenced by release-pr.yml's git-cliff steps) with conventional-commit groups matching the repo's commit types. Noted but left untouched: .github/labeler.yml still references aidlc-rules/** (no labeler workflow exists, so it is inert)."
+**Context**: Chore/CI follow-up from prior CI-migration session; release pipeline (release-pr → tag-on-merge → release) structure preserved.
+
+---
+
+## Getting Started Article Creation
+**Timestamp**: 2026-06-12T02:00:00Z
+**User Input**: "このツールの使い方を紹介するGetting Started系記事を書きたいです。インストール方法や簡単なシミュレーションなどを紹介する記事をMarkdown形式で書いてください。"
+**AI Response**: "Wrote docs/getting-started.ja.md (Japanese Getting Started article): concept/architecture, prerequisites, xk6 install/build, Docker-based OTel Collector (debug exporter) receiver, 3-tier topology YAML, k6 script, run output, fault injection (latency_inflation + error_rate_override), config priority table, --out otel-gen usage, Grafana stack pointer, next steps. Every command and output in the article was executed and verified locally (xk6 build, collector container, k6 runs; sample outputs are real). markdownlint-cli2 clean. IMPORTANT FINDING during verification: the README Usage example and examples/minimal/script.js pattern of returning otelgen.load()'s handle from setup() does NOT work at runtime — k6 JSON-serializes setup() return data, so the TopologyHandle loses its methods and runJourney throws 'TypeError: Object has no member runJourney'. Working pattern (used in the article): configure() in setup(), load() inside default() (cached after first call per VU). README/examples fix not yet applied — reported to user as a follow-up item."
+**Context**: Documentation authoring; runtime bug found in README/examples script pattern during hands-on verification.
+
+---
