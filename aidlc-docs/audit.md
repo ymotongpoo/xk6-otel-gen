@@ -1284,3 +1284,10 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: Bug fix follow-up from Getting Started article verification; user-facing script pattern corrected everywhere.
 
 ---
+## Getting Started Article Removed from Repository History
+**Timestamp**: 2026-06-12T02:30:00Z
+**User Input**: "さきほど docs/getting-started.ja.md をリポジトリに追加してしまいましたがこれは本来リポジトリに入れるべきものではありませんでした。そもそも履歴に入れたことすら削除したいです。"
+**AI Response**: "Rewrote main history to remove docs/getting-started.ja.md entirely. Original commit 7a25fec (already pushed to origin/main) contained both the article and 22 lines of audit.md entries; it was replaced by an audit-only commit (docs(aidlc): record release follow-up and getting-started article in audit log) so the mandated audit trail is preserved while the article file never enters history. The two subsequent fix commits (fix(examples) 2a1f791, fix(k6otelgen) 2d116b1) were cherry-picked on top with new hashes. Verified: no commit on new main touches docs/getting-started.ja.md, and the tree diff vs the pre-rewrite state is exactly the 307-line article deletion. The article file is preserved untracked at docs/getting-started.ja.md in the working tree (plus a backup at /tmp/getting-started.ja.md.bak). origin/main force-pushed (--force-with-lease) to replace the published history; noted to user that GitHub may keep the old commit reachable by SHA until garbage-collected."
+**Context**: History rewrite at user request; article is intentionally untracked going forward.
+
+---
