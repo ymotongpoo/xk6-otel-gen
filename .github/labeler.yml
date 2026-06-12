@@ -1,16 +1,44 @@
 # Auto-label configuration for actions/labeler
 # See https://github.com/actions/labeler#match-object for syntax
-
-rules:
-- changed-files:
-  - any-glob-to-any-file: 'aidlc-rules/**'
+#
+# Applied by the auto-label job in pull-request-lint.yml. PRs are blocked for
+# external contributors, so in practice this labels the allowed PRs
+# (release PRs and dependabot updates) by the area they touch.
 
 documentation:
 - changed-files:
-  - all-globs-to-any-file:
-    - '**/*.md'
-    - '!aidlc-rules/**'
+  - any-glob-to-any-file: '**/*.md'
 
 github:
 - changed-files:
   - any-glob-to-any-file: '.github/**'
+
+dependencies:
+- changed-files:
+  - any-glob-to-any-file:
+    - 'go.mod'
+    - 'go.sum'
+
+area/topology:
+- changed-files:
+  - any-glob-to-any-file: 'topology/**'
+
+area/journey:
+- changed-files:
+  - any-glob-to-any-file: 'journey/**'
+
+area/exporter:
+- changed-files:
+  - any-glob-to-any-file: 'exporter/**'
+
+area/synth:
+- changed-files:
+  - any-glob-to-any-file: 'synth/**'
+
+area/output:
+- changed-files:
+  - any-glob-to-any-file: 'k6output/**'
+
+area/examples:
+- changed-files:
+  - any-glob-to-any-file: 'examples/**'

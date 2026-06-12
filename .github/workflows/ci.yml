@@ -64,7 +64,6 @@ jobs:
           matches=$(find . -name '*.md' \
             -not -path './node_modules/*' \
             -not -path './.claude/*' \
-            -not -path './scripts/aidlc-evaluator/test_cases/*' \
             -not -path './.git/*' \
             -not -name 'CHANGELOG.md' \
             -print | xargs awk '

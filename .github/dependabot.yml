@@ -40,32 +40,9 @@ updates:
         patterns:
           - "*"
 
-  # Python (uv) — evaluator framework dependencies
-  - package-ecosystem: "uv"
-    directory: "/scripts/aidlc-evaluator"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "chore(deps)"
-      prefix-development: "chore(deps-dev)"
-      include: "scope"
-    groups:
-      evaluator-deps:
-        patterns:
-          - "*"
-
   # Pre-commit hooks — .pre-commit-config.yaml rev pins
   - package-ecosystem: "pre-commit"
     directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
-
-  # Docker — sandbox Dockerfile base image
-  - package-ecosystem: "docker"
-    directory: "/scripts/aidlc-evaluator/docker/sandbox"
     schedule:
       interval: "weekly"
     commit-message:

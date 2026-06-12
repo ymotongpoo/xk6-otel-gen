@@ -1,21 +1,10 @@
-# [CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners#about-code-owners)
+# [CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
+#
+# Single-maintainer project. The repository does not accept external pull
+# requests (see .github/workflows/block-pull-requests.yml); ownership is recorded
+# here mainly to protect sensitive paths on the few allowed PRs (release/maintainer).
 
-## Default owners for everything in the repo
+* @ymotongpoo
 
-*                                      @awslabs/aidlc-admins @awslabs/aidlc-maintainers
-
-.github/                               @awslabs/aidlc-admins
-.gitignore                             @awslabs/aidlc-admins
-aidlc-rules/                           @awslabs/aidlc-admins @awslabs/aidlc-maintainers @awslabs/aidlc-writers
-assets/                                @awslabs/aidlc-admins @awslabs/aidlc-maintainers @awslabs/aidlc-writers
-CHANGELOG.md                           @awslabs/aidlc-admins
-cliff.toml                             @awslabs/aidlc-admins
-CODE_OF_CONDUCT.md                     @awslabs/aidlc-admins
-CONTRIBUTING.md                        @awslabs/aidlc-admins
-LICENSE                                @awslabs/aidlc-admins
-README.md                              @awslabs/aidlc-admins
-scripts/                               @awslabs/aidlc-admins @awslabs/aidlc-maintainers
-
-## Secure the CODEOWNERS file
-
-/.github/CODEOWNERS                    @awslabs/aidlc-admins
+# Secure the CODEOWNERS file and CI/release automation.
+/.github/ @ymotongpoo
