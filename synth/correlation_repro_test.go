@@ -17,7 +17,7 @@ import (
 // of Grafana's trace->logs correlation.
 func TestEmitLog_CarriesActiveSpanContext(t *testing.T) {
 	tp, mp, lp, spanExporter, _, recorder := newTestProviders(t)
-	syn := NewDefault(tp, mp, lp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
 
 	svc := makeSpanService("frontend", topology.KindApplication)
 	start := time.Now()
@@ -66,7 +66,7 @@ func TestEmitLog_CarriesActiveSpanContext(t *testing.T) {
 // the real clock; the log must follow the span, not the wall clock.
 func TestEmitLog_UsesSuppliedTimestamp(t *testing.T) {
 	tp, mp, lp, spanExporter, _, recorder := newTestProviders(t)
-	syn := NewDefault(tp, mp, lp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
 
 	svc := makeSpanService("checkout", topology.KindApplication)
 
@@ -109,7 +109,7 @@ func TestEmitLog_UsesSuppliedTimestamp(t *testing.T) {
 // fallback path still stamps a non-zero time when no simulated time is given.
 func TestEmitLog_ZeroTimestampFallsBackToNow(t *testing.T) {
 	tp, mp, lp, _, _, recorder := newTestProviders(t)
-	syn := NewDefault(tp, mp, lp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
 
 	before := time.Now()
 	syn.EmitLog(context.Background(), LogInput{

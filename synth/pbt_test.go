@@ -11,12 +11,15 @@ import (
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/testutil/generators"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
+	otellog "go.opentelemetry.io/otel/log"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	sdkresource "go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
+	oteltrace "go.opentelemetry.io/otel/trace"
 	"pgregory.net/rapid"
 )
 
@@ -145,7 +148,23 @@ func newPBTSynthesizer(t *testing.T) (synth.Synthesizer, *tracetest.InMemoryExpo
 		_ = mp.Shutdown(context.Background())
 		_ = lp.Shutdown(context.Background())
 	})
-	return synth.NewDefault(tp, mp, lp), spanExporter, reader
+	return synth.NewDefault(fixedProviderFactory{tp: tp, lp: lp}, mp), spanExporter, reader
+}
+
+// fixedProviderFactory routes every synthetic service to one shared
+// tracer/logger provider, ignoring the per-service resource. Used by external
+// (synth_test) tests and examples that only need a working ProviderFactory.
+type fixedProviderFactory struct {
+	tp oteltrace.TracerProvider
+	lp otellog.LoggerProvider
+}
+
+func (f fixedProviderFactory) TracerProviderForService(string, *sdkresource.Resource) oteltrace.TracerProvider {
+	return f.tp
+}
+
+func (f fixedProviderFactory) LoggerProviderForService(string, *sdkresource.Resource) otellog.LoggerProvider {
+	return f.lp
 }
 
 func statusCodeForEdge(edge *topology.Edge) int {

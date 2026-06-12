@@ -287,10 +287,11 @@ func (e *engineImpl) finishAndEmitAt(ctx context.Context, node *Node, instanceId
 		InstanceIdx: instanceIdx,
 	})
 	e.synth.EmitLog(ctx, synth.LogInput{
-		Service:   node.Service,
-		Severity:  logSeverity(outcome),
-		Body:      node.Operation + " " + outcomeLabel(outcome),
-		Timestamp: end,
+		Service:     node.Service,
+		Severity:    logSeverity(outcome),
+		Body:        node.Operation + " " + outcomeLabel(outcome),
+		Timestamp:   end,
+		InstanceIdx: instanceIdx,
 		Attributes: map[string]any{
 			"outcome":    outcomeLabel(outcome),
 			"error.type": outcome.ErrorType,

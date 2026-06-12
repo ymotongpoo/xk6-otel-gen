@@ -101,5 +101,5 @@ func newBenchSynthesizer(b *testing.B) (Synthesizer, *tracetest.InMemoryExporter
 		_ = mp.Shutdown(context.Background())
 		_ = lp.Shutdown(context.Background())
 	})
-	return NewDefault(tp, mp, lp), spanExporter
+	return NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp), spanExporter
 }

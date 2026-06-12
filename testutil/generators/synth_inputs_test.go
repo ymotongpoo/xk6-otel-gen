@@ -9,9 +9,12 @@ import (
 	"time"
 
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
+	otellog "go.opentelemetry.io/otel/log"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdkresource "go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	oteltrace "go.opentelemetry.io/otel/trace"
 	"pgregory.net/rapid"
 )
 
@@ -152,7 +155,22 @@ func newGeneratorSynthesizer(t *testing.T) synth.Synthesizer {
 		_ = mp.Shutdown(context.Background())
 		_ = lp.Shutdown(context.Background())
 	})
-	return synth.NewDefault(tp, mp, lp)
+	return synth.NewDefault(fixedFactory{tp: tp, lp: lp}, mp)
+}
+
+// fixedFactory routes every service to one shared tracer/logger provider,
+// ignoring the per-service resource.
+type fixedFactory struct {
+	tp oteltrace.TracerProvider
+	lp otellog.LoggerProvider
+}
+
+func (f fixedFactory) TracerProviderForService(string, *sdkresource.Resource) oteltrace.TracerProvider {
+	return f.tp
+}
+
+func (f fixedFactory) LoggerProviderForService(string, *sdkresource.Resource) otellog.LoggerProvider {
+	return f.lp
 }
 
 func validSpanShape(in synth.SpanInput) bool {

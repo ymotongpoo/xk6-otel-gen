@@ -83,7 +83,7 @@ func BuildEngine(t *testing.T, schema *topology.Schema, overlay *topology.FaultO
 	if err != nil {
 		t.Fatalf("exporter.New() error = %v", err)
 	}
-	syn := synth.NewDefault(p.TracerProvider(), p.MeterProvider(), p.LoggerProvider())
+	syn := synth.NewDefault(p, p.MeterProvider())
 	return journey.NewEngine(schema, overlay, syn), p
 }
 

@@ -19,6 +19,7 @@ import (
 
 // Pipeline owns the trace, metric, and log providers for one OTLP destination.
 type Pipeline struct {
+	cfg   Config
 	tp    *sdktrace.TracerProvider
 	mp    *sdkmetric.MeterProvider
 	lp    *sdklog.LoggerProvider
@@ -26,6 +27,16 @@ type Pipeline struct {
 	stats *pipelineStats
 
 	metricExp sdkmetric.Exporter
+	traceExp  sdktrace.SpanExporter
+	logExp    sdklog.Exporter
+
+	// Per-virtual-service trace and log providers, each carrying that service's
+	// own service.name resource attribute while sharing this Pipeline's single
+	// OTLP exporter. Built lazily and cached by service key so all VUs share one
+	// provider (hence one batch processor) per synthetic service instance.
+	svcMu      sync.Mutex
+	svcTracers map[string]*sdktrace.TracerProvider
+	svcLoggers map[string]*sdklog.LoggerProvider
 
 	shutdownOnce sync.Once
 	shutdownErr  error
@@ -76,7 +87,38 @@ func newWithExporterBuilders(cfg Config, buildTrace traceBuilder, buildMetric me
 	return newPipelineFromExporters(cfg, res, stats, traceExp, metricExp, logExp), nil
 }
 
+// onceShutdownSpanExporter guards Shutdown with sync.Once so the span exporter
+// shared by the default and per-service TracerProviders is closed exactly once.
+type onceShutdownSpanExporter struct {
+	sdktrace.SpanExporter
+	once sync.Once
+	err  error
+}
+
+func (e *onceShutdownSpanExporter) Shutdown(ctx context.Context) error {
+	e.once.Do(func() { e.err = e.SpanExporter.Shutdown(ctx) })
+	return e.err
+}
+
+// onceShutdownLogExporter is the log-exporter counterpart of
+// onceShutdownSpanExporter.
+type onceShutdownLogExporter struct {
+	sdklog.Exporter
+	once sync.Once
+	err  error
+}
+
+func (e *onceShutdownLogExporter) Shutdown(ctx context.Context) error {
+	e.once.Do(func() { e.err = e.Exporter.Shutdown(ctx) })
+	return e.err
+}
+
 func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipelineStats, traceExp sdktrace.SpanExporter, metricExp sdkmetric.Exporter, logExp sdklog.Exporter) *Pipeline {
+	// Wrap the span and log exporters so the default and per-service providers
+	// can each own a batch processor over the SAME exporter without closing it
+	// more than once on Shutdown.
+	traceExp = &onceShutdownSpanExporter{SpanExporter: traceExp}
+	logExp = &onceShutdownLogExporter{Exporter: logExp}
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithResource(res),
 		sdktrace.WithSampler(samplerForConfig(cfg)),
@@ -101,12 +143,17 @@ func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipe
 		)),
 	)
 	return &Pipeline{
-		tp:        tp,
-		mp:        mp,
-		lp:        lp,
-		res:       res,
-		stats:     stats,
-		metricExp: metricExp,
+		cfg:        cfg,
+		tp:         tp,
+		mp:         mp,
+		lp:         lp,
+		res:        res,
+		stats:      stats,
+		metricExp:  metricExp,
+		traceExp:   traceExp,
+		logExp:     logExp,
+		svcTracers: make(map[string]*sdktrace.TracerProvider),
+		svcLoggers: make(map[string]*sdklog.LoggerProvider),
 	}
 }
 
@@ -147,6 +194,68 @@ func (p *Pipeline) LoggerProvider() log.LoggerProvider {
 	return p.lp
 }
 
+// TracerProviderForService returns a TracerProvider whose resource is res
+// (carrying the synthetic service's service.name), sharing this Pipeline's span
+// exporter, sampler, and batching config. Providers are cached by key so every
+// VU shares one provider — and therefore one batch processor — per service
+// instance. This is how each virtual service in the topology shows up in
+// Tempo/Grafana under its own service.name instead of OTLPResourceNoServiceName.
+func (p *Pipeline) TracerProviderForService(key string, res *sdkresource.Resource) trace.TracerProvider {
+	p.svcMu.Lock()
+	defer p.svcMu.Unlock()
+	if tp, ok := p.svcTracers[key]; ok {
+		return tp
+	}
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithResource(res),
+		sdktrace.WithSampler(samplerForConfig(p.cfg)),
+		sdktrace.WithBatcher(p.traceExp,
+			sdktrace.WithMaxQueueSize(p.cfg.MaxQueueSize),
+			sdktrace.WithMaxExportBatchSize(p.cfg.BatchSize),
+			sdktrace.WithBatchTimeout(p.cfg.BatchTimeout),
+		),
+	)
+	p.svcTracers[key] = tp
+	return tp
+}
+
+// LoggerProviderForService returns a LoggerProvider whose resource is res,
+// sharing this Pipeline's log exporter and batching config, cached by key.
+// See TracerProviderForService.
+func (p *Pipeline) LoggerProviderForService(key string, res *sdkresource.Resource) log.LoggerProvider {
+	p.svcMu.Lock()
+	defer p.svcMu.Unlock()
+	if lp, ok := p.svcLoggers[key]; ok {
+		return lp
+	}
+	lp := sdklog.NewLoggerProvider(
+		sdklog.WithResource(res),
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(p.logExp,
+			sdklog.WithMaxQueueSize(p.cfg.MaxQueueSize),
+			sdklog.WithExportMaxBatchSize(p.cfg.BatchSize),
+			sdklog.WithExportInterval(p.cfg.BatchTimeout),
+		)),
+	)
+	p.svcLoggers[key] = lp
+	return lp
+}
+
+// svcProviderSnapshot returns the currently cached per-service providers so
+// flush/shutdown can act on them without holding svcMu during network I/O.
+func (p *Pipeline) svcProviderSnapshot() ([]*sdktrace.TracerProvider, []*sdklog.LoggerProvider) {
+	p.svcMu.Lock()
+	defer p.svcMu.Unlock()
+	tps := make([]*sdktrace.TracerProvider, 0, len(p.svcTracers))
+	for _, tp := range p.svcTracers {
+		tps = append(tps, tp)
+	}
+	lps := make([]*sdklog.LoggerProvider, 0, len(p.svcLoggers))
+	for _, lp := range p.svcLoggers {
+		lps = append(lps, lp)
+	}
+	return tps, lps
+}
+
 // ForceFlush synchronously exports any spans, metrics, and log records still
 // queued in the batch processors WITHOUT closing the underlying exporters.
 //
@@ -155,21 +264,40 @@ func (p *Pipeline) LoggerProvider() log.LoggerProvider {
 // enter the batch queue last) are delivered before the process exits — even
 // when no otel-gen output is configured to trigger Shutdown.
 func (p *Pipeline) ForceFlush(ctx context.Context) error {
-	return errors.Join(
+	tps, lps := p.svcProviderSnapshot()
+	errs := []error{
 		p.tp.ForceFlush(ctx),
 		p.mp.ForceFlush(ctx),
 		p.lp.ForceFlush(ctx),
-	)
+	}
+	for _, tp := range tps {
+		errs = append(errs, tp.ForceFlush(ctx))
+	}
+	for _, lp := range lps {
+		errs = append(errs, lp.ForceFlush(ctx))
+	}
+	return errors.Join(errs...)
 }
 
 // Shutdown flushes and closes all providers once, returning the first result thereafter.
 func (p *Pipeline) Shutdown(ctx context.Context) error {
 	p.shutdownOnce.Do(func() {
-		p.shutdownErr = errors.Join(
+		tps, lps := p.svcProviderSnapshot()
+		errs := []error{
 			p.tp.Shutdown(ctx),
 			p.mp.Shutdown(ctx),
 			p.lp.Shutdown(ctx),
-		)
+		}
+		// Per-service providers share the underlying exporters with the default
+		// providers above; shutting a provider down flushes its queue but does
+		// not close the shared exporter twice, so this is safe.
+		for _, tp := range tps {
+			errs = append(errs, tp.Shutdown(ctx))
+		}
+		for _, lp := range lps {
+			errs = append(errs, lp.Shutdown(ctx))
+		}
+		p.shutdownErr = errors.Join(errs...)
 	})
 	return p.shutdownErr
 }

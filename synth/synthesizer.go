@@ -5,6 +5,8 @@ package synth
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -21,9 +23,15 @@ import (
 const instrumentationName = "github.com/ymotongpoo/xk6-otel-gen/synth"
 
 type defaultSynthesizer struct {
-	tracer trace.Tracer
-	meter  metric.Meter
-	logger log.Logger
+	factory ProviderFactory
+	meter   metric.Meter
+
+	// Per-service-instance tracers and loggers, lazily resolved from factory so
+	// every synthetic service emits under its own service.name resource. Keyed
+	// by svcKey(service, instanceIdx).
+	provMu  sync.Mutex
+	tracers map[string]trace.Tracer
+	loggers map[string]log.Logger
 
 	httpClientDur  metric.Float64Histogram
 	httpServerDur  metric.Float64Histogram
@@ -38,24 +46,25 @@ type defaultSynthesizer struct {
 	staticSetCache *staticSetCache
 }
 
-// NewDefault creates the default Synthesizer using injected OpenTelemetry
-// providers and eagerly creates all U3 instruments.
-func NewDefault(tp trace.TracerProvider, mp metric.MeterProvider, lp log.LoggerProvider) Synthesizer {
-	if tp == nil {
-		panic("synth: NewDefault: tp must not be nil")
+// NewDefault creates the default Synthesizer. Traces and logs are emitted
+// through per-virtual-service providers obtained from factory (so each
+// synthetic service carries its own service.name resource), while metrics share
+// the single MeterProvider mp with service.name as a data-point attribute. All
+// U3 instruments are created eagerly.
+func NewDefault(factory ProviderFactory, mp metric.MeterProvider) Synthesizer {
+	if factory == nil {
+		panic("synth: NewDefault: factory must not be nil")
 	}
 	if mp == nil {
 		panic("synth: NewDefault: mp must not be nil")
 	}
-	if lp == nil {
-		panic("synth: NewDefault: lp must not be nil")
-	}
 
 	meter := mp.Meter(instrumentationName)
 	s := &defaultSynthesizer{
-		tracer:         tp.Tracer(instrumentationName),
+		factory:        factory,
 		meter:          meter,
-		logger:         lp.Logger(instrumentationName),
+		tracers:        make(map[string]trace.Tracer),
+		loggers:        make(map[string]log.Logger),
 		staticSetCache: &staticSetCache{},
 	}
 
@@ -83,7 +92,7 @@ func (s *defaultSynthesizer) BeginSpan(ctx context.Context, in SpanInput) (conte
 	spanAttrs = append(spanAttrs, staticAttrs.ToSlice()...)
 	spanAttrs = append(spanAttrs, networkPeerAddressAttr(in.Edge, in.InstanceIdx, policy.Direction)...)
 
-	ctx, span := s.tracer.Start(ctx, spanName(in.Service, in.Operation),
+	ctx, span := s.tracerFor(in.Service, in.InstanceIdx).Start(ctx, spanName(in.Service, in.Operation),
 		trace.WithTimestamp(in.StartTime),
 		trace.WithSpanKind(policy.SpanKind),
 		trace.WithAttributes(spanAttrs...),
@@ -182,7 +191,44 @@ func (s *defaultSynthesizer) EmitLog(ctx context.Context, in LogInput) {
 		Value: log.StringValue(string(in.Service.Name)),
 	})
 
-	s.logger.Emit(ctx, record)
+	s.loggerFor(in.Service, in.InstanceIdx).Emit(ctx, record)
+}
+
+// svcKey identifies one synthetic service instance for provider/tracer/logger
+// caching. It matches the granularity of BuildResource (per service instance,
+// so service.instance.id is distinct per replica).
+func svcKey(svc *topology.Service, instanceIdx int) string {
+	return string(svc.Name) + "/" + strconv.Itoa(instanceIdx)
+}
+
+// tracerFor returns the cached tracer for a service instance, creating its
+// per-service TracerProvider (with that service's resource) on first use.
+func (s *defaultSynthesizer) tracerFor(svc *topology.Service, instanceIdx int) trace.Tracer {
+	key := svcKey(svc, instanceIdx)
+	s.provMu.Lock()
+	defer s.provMu.Unlock()
+	if t, ok := s.tracers[key]; ok {
+		return t
+	}
+	tp := s.factory.TracerProviderForService(key, BuildResource(svc, instanceIdx))
+	t := tp.Tracer(instrumentationName)
+	s.tracers[key] = t
+	return t
+}
+
+// loggerFor returns the cached logger for a service instance, creating its
+// per-service LoggerProvider (with that service's resource) on first use.
+func (s *defaultSynthesizer) loggerFor(svc *topology.Service, instanceIdx int) log.Logger {
+	key := svcKey(svc, instanceIdx)
+	s.provMu.Lock()
+	defer s.provMu.Unlock()
+	if l, ok := s.loggers[key]; ok {
+		return l
+	}
+	lp := s.factory.LoggerProviderForService(key, BuildResource(svc, instanceIdx))
+	l := lp.Logger(instrumentationName)
+	s.loggers[key] = l
+	return l
 }
 
 func exceptionAttrs(outcome Outcome, operation string) []attribute.KeyValue {

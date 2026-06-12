@@ -8,8 +8,10 @@ import (
 	"testing"
 	"time"
 
+	otellog "go.opentelemetry.io/otel/log"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdkresource "go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -17,6 +19,23 @@ import (
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 )
+
+// reproFactory builds a real per-service TracerProvider/LoggerProvider for each
+// synthetic service (carrying that service's resource), all routed to one
+// in-memory span exporter and log recorder. This exercises the same
+// per-service-resource path as production.
+type reproFactory struct {
+	spanExp *tracetest.InMemoryExporter
+	logRec  *reproLogRecorder
+}
+
+func (f *reproFactory) TracerProviderForService(_ string, res *sdkresource.Resource) trace.TracerProvider {
+	return sdktrace.NewTracerProvider(sdktrace.WithResource(res), sdktrace.WithSyncer(f.spanExp))
+}
+
+func (f *reproFactory) LoggerProviderForService(_ string, res *sdkresource.Resource) otellog.LoggerProvider {
+	return sdklog.NewLoggerProvider(sdklog.WithResource(res), sdklog.WithProcessor(sdklog.NewSimpleProcessor(f.logRec)))
+}
 
 type reproLogRecorder struct {
 	mu      sync.Mutex
@@ -74,17 +93,13 @@ func reproLatencySchema() *topology.Schema {
 // time-windowed trace->logs query finds them even for deep, high-latency spans.
 func TestExecute_LogsAlignWithSpanTimeline(t *testing.T) {
 	spanExp := tracetest.NewInMemoryExporter()
-	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(spanExp))
 	mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(sdkmetric.NewManualReader()))
 	rec := &reproLogRecorder{}
-	lp := sdklog.NewLoggerProvider(sdklog.WithProcessor(sdklog.NewSimpleProcessor(rec)))
 	t.Cleanup(func() {
-		_ = tp.Shutdown(context.Background())
 		_ = mp.Shutdown(context.Background())
-		_ = lp.Shutdown(context.Background())
 	})
 
-	syn := synth.NewDefault(tp, mp, lp)
+	syn := synth.NewDefault(&reproFactory{spanExp: spanExp, logRec: rec}, mp)
 	schema := reproLatencySchema()
 	eng := NewEngineWithSeed(schema, schema.ApplyFaults(), syn, 42)
 
@@ -134,5 +149,30 @@ func TestExecute_LogsAlignWithSpanTimeline(t *testing.T) {
 
 	if misses > 0 {
 		t.Errorf("%d/%d logs fall outside their span's time window; trace->logs correlation would miss them (logs must use the span's simulated timestamp, not wall-clock now())", misses, len(logs))
+	}
+
+	// Each span must carry its synthetic service's service.name as a RESOURCE
+	// attribute (not just a span attribute), or Tempo/Grafana shows the trace as
+	// OTLPResourceNoServiceName. Map span name prefix -> expected service.name.
+	wantSvc := map[string]string{
+		"api.GET /checkout":     "api",
+		"payments.POST /charge": "payments",
+		"db.INSERT payment":     "db",
+	}
+	for _, s := range spans {
+		var got string
+		for _, kv := range s.Resource.Attributes() {
+			if kv.Key == "service.name" {
+				got = kv.Value.AsString()
+			}
+		}
+		want := wantSvc[s.Name]
+		if got == "" {
+			t.Errorf("span %q resource has no service.name (OTLPResourceNoServiceName)", s.Name)
+			continue
+		}
+		if want != "" && got != want {
+			t.Errorf("span %q resource service.name = %q, want %q", s.Name, got, want)
+		}
 	}
 }

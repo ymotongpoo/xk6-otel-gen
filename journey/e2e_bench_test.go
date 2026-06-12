@@ -14,11 +14,30 @@ import (
 
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
+	otellog "go.opentelemetry.io/otel/log"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdkresource "go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	oteltrace "go.opentelemetry.io/otel/trace"
 )
+
+// fixedFactory routes every service to one shared tracer/logger provider,
+// ignoring the per-service resource. Used by benchmarks that don't assert on
+// resource identity.
+type fixedFactory struct {
+	tp oteltrace.TracerProvider
+	lp otellog.LoggerProvider
+}
+
+func (f fixedFactory) TracerProviderForService(string, *sdkresource.Resource) oteltrace.TracerProvider {
+	return f.tp
+}
+
+func (f fixedFactory) LoggerProviderForService(string, *sdkresource.Resource) otellog.LoggerProvider {
+	return f.lp
+}
 
 const sustainedBudgetDuration = 3 * time.Second
 
@@ -109,7 +128,7 @@ func newAstroshopBenchEngine(tb testing.TB) (*Engine, func()) {
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(tracetest.NewNoopExporter()))
 	mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(sdkmetric.NewManualReader()))
 	lp := sdklog.NewLoggerProvider(sdklog.WithProcessor(sdklog.NewSimpleProcessor(noopLogExporter{})))
-	engine := NewEngineWithSeed(schema, schema.ApplyFaults(), synth.NewDefault(tp, mp, lp), 42)
+	engine := NewEngineWithSeed(schema, schema.ApplyFaults(), synth.NewDefault(fixedFactory{tp: tp, lp: lp}, mp), 42)
 	cleanup := func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()

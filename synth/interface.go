@@ -7,9 +7,22 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/log"
+	sdkresource "go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 )
+
+// ProviderFactory supplies per-virtual-service trace and log providers that
+// share one OTLP connection. Each synthetic service gets its own provider whose
+// resource carries that service's service.name, so the service shows up under
+// its own name in Tempo/Grafana rather than OTLPResourceNoServiceName.
+// Implemented by exporter.Pipeline; the key uniquely identifies a service
+// instance and providers are cached by it.
+type ProviderFactory interface {
+	TracerProviderForService(key string, res *sdkresource.Resource) trace.TracerProvider
+	LoggerProviderForService(key string, res *sdkresource.Resource) log.LoggerProvider
+}
 
 // Synthesizer is the interface used by the journey engine to emit synthetic
 // OpenTelemetry spans, metrics, and logs with Semantic Conventions v1.27.0
@@ -54,6 +67,10 @@ type LogInput struct {
 	Service  *topology.Service
 	Severity log.Severity
 	Body     string
+	// InstanceIdx selects which replica of Service emitted the record; it
+	// determines the per-instance logger (and thus the service.instance.id
+	// resource attribute) so logs carry the same service identity as the span.
+	InstanceIdx int
 	// Timestamp is the simulated event time for the record. It must align with
 	// the corresponding span's timeline (typically the span's end time) so that
 	// Grafana's time-windowed trace->logs correlation finds the record. When

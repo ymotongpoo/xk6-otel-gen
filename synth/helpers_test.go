@@ -11,10 +11,45 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdkresource "go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
 )
+
+// singleProviderFactory routes every service to one shared tracer/logger
+// provider, ignoring the per-service resource. It lets the existing unit tests
+// (which assert on span/log content, not resource identity) keep using a single
+// in-memory recorder after NewDefault switched to a per-service ProviderFactory.
+type singleProviderFactory struct {
+	tp trace.TracerProvider
+	lp log.LoggerProvider
+}
+
+func (f singleProviderFactory) TracerProviderForService(string, *sdkresource.Resource) trace.TracerProvider {
+	return f.tp
+}
+
+func (f singleProviderFactory) LoggerProviderForService(string, *sdkresource.Resource) log.LoggerProvider {
+	return f.lp
+}
+
+// recordingFactory builds a real per-service TracerProvider/LoggerProvider for
+// each distinct resource, all syncing to one in-memory span exporter and log
+// recorder, so tests can assert the per-service resource attached to each
+// span/log.
+type recordingFactory struct {
+	spanExp *tracetest.InMemoryExporter
+	logRec  *logRecorder
+}
+
+func (f *recordingFactory) TracerProviderForService(_ string, res *sdkresource.Resource) trace.TracerProvider {
+	return sdktrace.NewTracerProvider(sdktrace.WithResource(res), sdktrace.WithSyncer(f.spanExp))
+}
+
+func (f *recordingFactory) LoggerProviderForService(_ string, res *sdkresource.Resource) log.LoggerProvider {
+	return sdklog.NewLoggerProvider(sdklog.WithResource(res), sdklog.WithProcessor(sdklog.NewSimpleProcessor(f.logRec)))
+}
 
 func newTestProviders(t *testing.T) (
 	trace.TracerProvider,

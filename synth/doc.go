@@ -11,7 +11,7 @@
 //
 // The normal span lifecycle is:
 //
-//	syn := synth.NewDefault(tp, mp, lp)
+//	syn := synth.NewDefault(factory, mp) // factory is exporter.Pipeline
 //	ctx, finish := syn.BeginSpan(ctx, synth.SpanInput{...})
 //	// execute child journey work with ctx
 //	finish(synth.Outcome{Success: true, EndTime: time.Now()})
