@@ -51,9 +51,14 @@ type MetricInput struct {
 
 // LogInput describes one synthetic log record to emit for a journey operation.
 type LogInput struct {
-	Service    *topology.Service
-	Severity   log.Severity
-	Body       string
+	Service  *topology.Service
+	Severity log.Severity
+	Body     string
+	// Timestamp is the simulated event time for the record. It must align with
+	// the corresponding span's timeline (typically the span's end time) so that
+	// Grafana's time-windowed trace->logs correlation finds the record. When
+	// zero, EmitLog falls back to time.Now().
+	Timestamp  time.Time
 	Attributes map[string]any
 }
 

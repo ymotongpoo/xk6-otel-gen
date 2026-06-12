@@ -149,9 +149,17 @@ func (s *defaultSynthesizer) EmitLog(ctx context.Context, in LogInput) {
 	}
 
 	record := log.Record{}
-	now := time.Now()
-	record.SetTimestamp(now)
-	record.SetObservedTimestamp(now)
+	// Use the caller-supplied simulated event time so the record lands on the
+	// same timeline as its span. Falling back to time.Now() here would stamp
+	// every log at the real wall-clock instant of the journey iteration while
+	// spans use simulated timestamps, pushing logs outside their span's time
+	// window and breaking Grafana's trace->logs correlation search.
+	eventTime := in.Timestamp
+	if eventTime.IsZero() {
+		eventTime = time.Now()
+	}
+	record.SetTimestamp(eventTime)
+	record.SetObservedTimestamp(eventTime)
 	record.SetSeverity(severity)
 	record.SetBody(log.StringValue(body))
 	if !logAttrsContain(in.Attributes, string(semconv.ExceptionTypeKey)) {
