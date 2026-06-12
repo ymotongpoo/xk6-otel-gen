@@ -1291,3 +1291,49 @@ release 系ワークフロー（release.yml / release-pr.yml）は今も「AI-DL
 **Context**: History rewrite at user request; article is intentionally untracked going forward.
 
 ---
+
+## Per-Signal Endpoint Support — Initial User Request
+**Timestamp**: 2026-06-12T05:08:51Z
+**User Input**: "このツールはログ、トレース、メトリクスの全テレメトリーを扱うので、ベースエンドポイントを受け付けるバターンと、各シグナルでエンドポイントが異なるパターンがありそうです。それに応じて、次の2パターンに対応するようにしてください。
+
+1. 共通のベースエンドポイントを指定して、OTelの規約にしたがってツール内でシグナル種類に応じてパスを補完する
+2. 各シグナルに応じたエンドポイントを別々に指定する"
+**AI Response**: "Resumed AI-DLC workflow (project previously complete) as a new Enhancement request. Preceding context in this session: user reported all-signal 404 errors against Grafana Cloud OTLP gateway (https://otlp-gateway-prod-ap-northeast-0.grafana.net/otlp); root cause identified as exporter/exporters.go using WithEndpointURL for URL-form endpoints, which takes the URL path as-is (per-signal semantics) instead of appending /v1/{signal} (base-endpoint semantics), so all three signals POSTed to /otlp and got 404 page not found. Starting Requirements Analysis (standard depth) for dual endpoint-pattern support."
+**Context**: Inception / Requirements Analysis start — endpoint configuration enhancement (exporter, k6otelgen, k6output, examples affected).
+
+---
+## Requirements Analysis — Verification Questions Presented
+**Timestamp**: 2026-06-12T05:12:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Created aidlc-docs/inception/requirements/endpoint-config-verification-questions.md with 6 questions: (1) JS per-signal key shape (flat tracesEndpoint/metricsEndpoint/logsEndpoint vs nested endpoints object), (2) base-endpoint HTTP path-append semantics (strict OTLP spec vs spec+dedupe guard), (3) per-signal endpoint as-is semantics per OTLP spec, (4) env var scope (fix ConfigFromEnv per-signal handling vs out of scope), (5) k6 output key support (endpoint+metricsEndpoint vs endpoint only), (6) backward compatibility stance (breaking change vs dedupe-guard rescue). Awaiting user answers — gate before requirements.md generation."
+**Context**: Inception / Requirements Analysis Step 6 (clarifying questions gate). Extension opt-ins not re-asked: Extension Configuration already recorded in aidlc-state.md (Security No / Resiliency No / PBT Yes Full).
+
+---
+## Requirements Analysis — Verification Answers Received
+**Timestamp**: 2026-06-12T05:20:00Z
+**User Input**: "完了しました" (answers filled in endpoint-config-verification-questions.md: Q1=A flat keys tracesEndpoint/metricsEndpoint/logsEndpoint; Q2=A strict OTLP spec path append, user cited https://opentelemetry.io/docs/specs/otel/protocol/exporter/#endpoint-urls-for-otlphttp; Q3=A per-signal endpoints used as-is; Q4=A fix ConfigFromEnv per-signal env handling per spec; Q5=A k6 output supports endpoint + metricsEndpoint; Q6=A accept breaking change, document in CHANGELOG/README)
+**AI Response**: "All 6 answers validated — consistent (uniform strict-OTLP-spec stance, no contradictions). Proceeding to generate endpoint-config-requirements.md."
+**Context**: Inception / Requirements Analysis Step 6 gate passed.
+
+---
+## Requirements Analysis — Requirements Document Generated
+**Timestamp**: 2026-06-12T05:25:00Z
+**User Input**: (none — AI action)
+**AI Response**: "Created aidlc-docs/inception/requirements/endpoint-config-requirements.md (standard depth): FR-1 base-endpoint OTLP-spec path append (HTTP only, gRPC as-is, no dedupe guard), FR-2 per-signal endpoints as-is with precedence per-signal > base > default, FR-3 JS flat keys tracesEndpoint/metricsEndpoint/logsEndpoint, FR-4 ConfigFromEnv per-signal fix (endpoint keys only; other env keys out of scope), FR-5 k6output metricsEndpoint key, FR-6 docs/examples updates; NFR-1 spec compliance, NFR-2 documented breaking change for URL-form base endpoints, NFR-3 PBT for path-join and precedence logic (PBT extension Full/blocking), NFR-4 resolved-endpoint logging. Presenting approval gate."
+**Context**: Inception / Requirements Analysis Step 7 complete; awaiting user approval before Workflow Planning.
+
+---
+## Requirements Analysis — Approval
+**Timestamp**: 2026-06-12T05:30:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: "Requirements approved. Proposing stage-boundary Conventional Commit for requirements artifacts before proceeding to Workflow Planning."
+**Context**: Inception / Requirements Analysis approved; next stage Workflow Planning.
+
+---
+## Requirements Stage Commit — User Confirmation
+**Timestamp**: 2026-06-12T05:32:00Z
+**User Input**: "ok"
+**AI Response**: "Creating docs(requirements) commit with requirements artifacts and audit log."
+**Context**: Stage-boundary Conventional Commit for Requirements Analysis.
+
+---
