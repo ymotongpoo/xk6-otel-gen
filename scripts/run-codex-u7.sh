@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Yoshi Yamaguchi <ymotongpoo@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
 # run-codex-u7.sh — Long-running batch execution of U7 implementation by Codex CLI.
 #
 # Hand-off contract (also documented in scripts/README.md):

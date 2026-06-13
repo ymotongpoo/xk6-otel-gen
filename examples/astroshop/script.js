@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Yoshi Yamaguchi <ymotongpoo@gmail.com>
+// SPDX-License-Identifier: Apache-2.0
+
 import otelgen from "k6/x/otel-gen";
 
 export const options = {

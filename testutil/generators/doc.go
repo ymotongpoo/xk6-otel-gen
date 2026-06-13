@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText: Yoshi Yamaguchi <ymotongpoo@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
 
 // Package generators provides domain-specific PBT (property-based testing)

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Yoshi Yamaguchi <ymotongpoo@gmail.com>
+# SPDX-License-Identifier: Apache-2.0
 # run-cursor.sh — One-shot batch execution of a unit's
 # code-generation-plan.md by Cursor Composer (Agent mode).
 #

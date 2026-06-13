@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText: Yoshi Yamaguchi <ymotongpoo@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
 
 // Command xk6-otel-gen-schema exports the topology JSON Schema for editor

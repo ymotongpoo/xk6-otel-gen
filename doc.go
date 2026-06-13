@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText: Yoshi Yamaguchi <ymotongpoo@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
 
 // Package xk6otelgen registers the k6/x/otel-gen JavaScript module and the
