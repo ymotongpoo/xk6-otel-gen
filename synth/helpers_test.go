@@ -34,23 +34,6 @@ func (f singleProviderFactory) LoggerProviderForService(string, *sdkresource.Res
 	return f.lp
 }
 
-// recordingFactory builds a real per-service TracerProvider/LoggerProvider for
-// each distinct resource, all syncing to one in-memory span exporter and log
-// recorder, so tests can assert the per-service resource attached to each
-// span/log.
-type recordingFactory struct {
-	spanExp *tracetest.InMemoryExporter
-	logRec  *logRecorder
-}
-
-func (f *recordingFactory) TracerProviderForService(_ string, res *sdkresource.Resource) trace.TracerProvider {
-	return sdktrace.NewTracerProvider(sdktrace.WithResource(res), sdktrace.WithSyncer(f.spanExp))
-}
-
-func (f *recordingFactory) LoggerProviderForService(_ string, res *sdkresource.Resource) log.LoggerProvider {
-	return sdklog.NewLoggerProvider(sdklog.WithResource(res), sdklog.WithProcessor(sdklog.NewSimpleProcessor(f.logRec)))
-}
-
 func newTestProviders(t *testing.T) (
 	trace.TracerProvider,
 	metric.MeterProvider,
