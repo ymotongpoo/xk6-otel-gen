@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Pre-push hook — runs the heavy race-enabled test suite from the
+# "Go Build & Test" job of .github/workflows/ci.yml before code reaches a
+# remote (in practice, before a manual `dev` -> `main` merge is pushed).
+#
+# Enable once per clone:
+#   git config core.hooksPath .githooks
+#
+# Bypass for a single push (use sparingly):
+#   git push --no-verify
+
+set -uo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root" || exit 1
+
+echo "==> go test -race -count=1 ./..."
+if ! go test -race -count=1 ./...; then
+  echo "" >&2
+  echo "✗ tests failed. Fix them, or run 'git push --no-verify' to bypass." >&2
+  exit 1
+fi
+
+echo "✓ tests passed."

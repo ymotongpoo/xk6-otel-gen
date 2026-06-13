@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Pre-commit hook — mirrors the fast jobs of .github/workflows/ci.yml so that
+# work on the `dev` branch does not break `main`'s CI. The heavy race-enabled
+# test suite runs in the pre-push hook instead (see .githooks/pre-push).
+#
+# Enable once per clone:
+#   git config core.hooksPath .githooks
+#
+# Bypass for a single commit (use sparingly):
+#   git commit --no-verify
+#
+# Checks run here (whole module/repo, matching CI scope):
+#   - go build ./...
+#   - golangci-lint run            (its default linters include govet)
+#   - markdownlint-cli2 over **/*.md
+#   - the multiple-choice blank-line check from the Markdown Lint job (#246)
+
+set -uo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root" || exit 1
+
+status=0
+
+echo "==> go build ./..."
+go build ./... || status=1
+
+echo "==> golangci-lint run"
+if command -v golangci-lint >/dev/null 2>&1; then
+  golangci-lint run || status=1
+else
+  echo "✗ golangci-lint not found on PATH (install v2.12.2 to match CI)" >&2
+  status=1
+fi
+
+echo "==> markdownlint-cli2 \"**/*.md\""
+npx --yes markdownlint-cli2 "**/*.md" || status=1
+
+echo "==> markdown multiple-choice blank-line check (issue #246)"
+# Multiple-choice options like "A) ..." on consecutive lines without a
+# blank-line separator collapse into one paragraph in strict CommonMark
+# renderers. Scope mirrors the ci.yml step and .markdownlint-cli2.yaml ignores.
+matches=$(find . -name '*.md' \
+  -not -path './node_modules/*' \
+  -not -path './.claude/*' \
+  -not -path './.git/*' \
+  -not -name 'CHANGELOG.md' \
+  -print | xargs awk '
+    FNR == 1 { prev_is_option = 0 }
+    /^[A-Z]\) / && prev_is_option { print FILENAME ":" FNR ": " $0 }
+    { prev_is_option = /^[A-Z]\) / }
+  ')
+if [ -n "$matches" ]; then
+  echo "Found multiple-choice options on consecutive lines without blank-line separators." >&2
+  echo "Add a blank line between each option so CommonMark renderers display them separately." >&2
+  echo "$matches" >&2
+  status=1
+fi
+
+if [ "$status" -ne 0 ]; then
+  echo "" >&2
+  echo "✗ pre-commit checks failed. Fix the issues above, or run 'git commit --no-verify' to bypass." >&2
+  exit 1
+fi
+
+echo "✓ pre-commit checks passed."
