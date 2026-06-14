@@ -209,6 +209,8 @@ func (m *pbtSynth) RecordMetric(context.Context, synth.MetricInput) {}
 
 func (m *pbtSynth) EmitLog(context.Context, synth.LogInput) {}
 
+func (m *pbtSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}
+
 func (m *pbtSynth) snapshot() []pbtSpan {
 	m.mu.Lock()
 	defer m.mu.Unlock()

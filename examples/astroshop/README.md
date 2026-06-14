@@ -95,3 +95,9 @@ journeys:
 ```
 
 For upstream maintenance, compare this example against `open-telemetry/opentelemetry-demo` release `2.2.0` before changing service names or journey shapes.
+
+`checkout.place_order` declares a counter metric (`orders.settlement.amount.total`)
+that adds 80 on each successful order; with OTLP cumulative temporality this
+becomes a settlement-total time series. `shipping.quote_shipping` declares a
+fault-linked gauge (`shipping.quote.backlog`) that jumps from 5 to 45 while the
+existing `latency_inflation` fault is active on that operation.

@@ -26,6 +26,23 @@ type rawOperation struct {
 	Name      string         `yaml:"name"`
 	Calls     []*rawCallNode `yaml:"calls,omitempty"`
 	LogEvents []*rawLogEvent `yaml:"log_events,omitempty"`
+	Metrics   []*rawMetric   `yaml:"metrics,omitempty"`
+}
+
+type rawMetric struct {
+	Name       string              `yaml:"name"`
+	Type       string              `yaml:"type"`
+	Unit       string              `yaml:"unit,omitempty"`
+	Baseline   *float64            `yaml:"baseline,omitempty"`
+	Condition  string              `yaml:"condition,omitempty"`
+	Attributes map[string]any      `yaml:"attributes,omitempty"`
+	WhenFault  *rawMetricFaultLink `yaml:"when_fault,omitempty"`
+}
+
+type rawMetricFaultLink struct {
+	Kind  string   `yaml:"kind"`
+	Delta *float64 `yaml:"delta,omitempty"`
+	Value *float64 `yaml:"value,omitempty"`
 }
 
 type rawLogEvent struct {

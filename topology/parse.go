@@ -23,6 +23,7 @@ const (
 	invalidExhaustedAction ExhaustedAction = ExhaustedAction(-1)
 	invalidLogCondition    LogCondition    = LogCondition(-1)
 	invalidLogSeverity     LogSeverity     = LogSeverity(-1)
+	invalidMetricType      MetricType      = MetricType(-1)
 )
 
 // Parse reads topology YAML, resolves references, and validates the schema.
@@ -107,6 +108,7 @@ func buildSchema(raw *rawSchema) *Schema {
 				Name:      ro.Name,
 				Service:   svc,
 				LogEvents: resolveLogEvents(ro.LogEvents),
+				Metrics:   resolveMetrics(ro.Metrics),
 			}
 			svc.Operations[ro.Name] = op
 		}
@@ -612,6 +614,55 @@ func parseLogCondition(s string) LogCondition {
 		return ConditionOnError
 	default:
 		return invalidLogCondition
+	}
+}
+
+func resolveMetrics(in []*rawMetric) []MetricSpec {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]MetricSpec, 0, len(in))
+	for _, raw := range in {
+		if raw == nil {
+			continue
+		}
+		spec := MetricSpec{
+			Name:       raw.Name,
+			Type:       parseMetricType(raw.Type),
+			Unit:       raw.Unit,
+			Baseline:   float64Default(raw.Baseline, 0),
+			Condition:  parseLogCondition(raw.Condition),
+			Attributes: raw.Attributes,
+		}
+		if raw.WhenFault != nil {
+			link := &MetricFaultLink{
+				Kind:  parseFaultKind(raw.WhenFault.Kind),
+				Delta: float64Default(raw.WhenFault.Delta, 0),
+				Value: float64Default(raw.WhenFault.Value, 0),
+			}
+			if raw.WhenFault.Value != nil {
+				link.HasValue = true
+			}
+			spec.WhenFault = link
+		}
+		out = append(out, spec)
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func parseMetricType(s string) MetricType {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "counter":
+		return MetricCounter
+	case "gauge":
+		return MetricGauge
+	case "histogram":
+		return MetricHistogram
+	default:
+		return invalidMetricType
 	}
 }
 

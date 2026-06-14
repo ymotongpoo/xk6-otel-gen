@@ -45,6 +45,9 @@ type defaultSynthesizer struct {
 	msgConsumerDur metric.Float64Histogram
 
 	staticSetCache *staticSetCache
+
+	customMu    sync.Mutex
+	customInsts map[string]any
 }
 
 // NewDefault creates the default Synthesizer. Traces and logs are emitted
@@ -67,6 +70,7 @@ func NewDefault(factory ProviderFactory, mp metric.MeterProvider) Synthesizer {
 		tracers:        make(map[string]trace.Tracer),
 		loggers:        make(map[string]log.Logger),
 		staticSetCache: &staticSetCache{},
+		customInsts:    make(map[string]any),
 	}
 
 	s.httpClientDur = mustHistogram(meter, "http.client.request.duration", "s")
@@ -197,6 +201,120 @@ func (s *defaultSynthesizer) EmitLog(ctx context.Context, in LogInput) {
 	})
 
 	s.loggerFor(in.Service, in.InstanceIdx).Emit(ctx, record)
+}
+
+func (s *defaultSynthesizer) RecordCustom(ctx context.Context, in CustomMetricInput) {
+	if in.Service == nil {
+		return
+	}
+
+	attrs := make([]attribute.KeyValue, 0, len(in.Attributes)+1)
+	attrs = append(attrs, semconv.ServiceName(string(in.Service.Name)))
+	for key, value := range in.Attributes {
+		attrs = append(attrs, attribute.Key(key).String(toAttributeString(value)))
+	}
+
+	opts := []metric.AddOption{metric.WithAttributes(attrs...)}
+	recordOpts := []metric.RecordOption{metric.WithAttributes(attrs...)}
+
+	switch in.Type {
+	case topology.MetricCounter:
+		counter, ok := s.customCounter(in.Name, in.Unit)
+		if !ok {
+			return
+		}
+		counter.Add(ctx, in.Value, opts...)
+	case topology.MetricGauge:
+		gauge, ok := s.customGauge(in.Name, in.Unit)
+		if !ok {
+			return
+		}
+		gauge.Record(ctx, in.Value, recordOpts...)
+	case topology.MetricHistogram:
+		histogram, ok := s.customHistogram(in.Name, in.Unit)
+		if !ok {
+			return
+		}
+		histogram.Record(ctx, in.Value, recordOpts...)
+	default:
+		return
+	}
+}
+
+func (s *defaultSynthesizer) customCounter(name, unit string) (metric.Float64Counter, bool) {
+	inst, ok := s.customInstrument("counter", name, unit)
+	if !ok {
+		return nil, false
+	}
+	counter, ok := inst.(metric.Float64Counter)
+	return counter, ok
+}
+
+func (s *defaultSynthesizer) customGauge(name, unit string) (metric.Float64Gauge, bool) {
+	inst, ok := s.customInstrument("gauge", name, unit)
+	if !ok {
+		return nil, false
+	}
+	gauge, ok := inst.(metric.Float64Gauge)
+	return gauge, ok
+}
+
+func (s *defaultSynthesizer) customHistogram(name, unit string) (metric.Float64Histogram, bool) {
+	inst, ok := s.customInstrument("histogram", name, unit)
+	if !ok {
+		return nil, false
+	}
+	histogram, ok := inst.(metric.Float64Histogram)
+	return histogram, ok
+}
+
+func (s *defaultSynthesizer) customInstrument(kind, name, unit string) (any, bool) {
+	key := kind + "/" + name + "/" + unit
+	s.customMu.Lock()
+	defer s.customMu.Unlock()
+	if inst, ok := s.customInsts[key]; ok {
+		return inst, true
+	}
+
+	var (
+		inst any
+		err  error
+	)
+	switch kind {
+	case "counter":
+		inst, err = s.meter.Float64Counter(name, metric.WithUnit(unit))
+	case "gauge":
+		inst, err = s.meter.Float64Gauge(name, metric.WithUnit(unit))
+	case "histogram":
+		inst, err = s.meter.Float64Histogram(name, metric.WithUnit(unit))
+	default:
+		return nil, false
+	}
+	if err != nil {
+		return nil, false
+	}
+	s.customInsts[key] = inst
+	return inst, true
+}
+
+func toAttributeString(value any) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	case int:
+		return strconv.Itoa(v)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case float64:
+		return strconv.FormatFloat(v, 'g', -1, 64)
+	default:
+		return fmt.Sprint(v)
+	}
 }
 
 // svcKey identifies one synthetic service instance for provider/tracer/logger

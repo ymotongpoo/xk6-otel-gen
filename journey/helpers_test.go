@@ -13,10 +13,11 @@ import (
 )
 
 type mockSynth struct {
-	mu      sync.Mutex
-	spans   []spanCall
-	metrics []metricCall
-	logs    []logCall
+	mu            sync.Mutex
+	spans         []spanCall
+	metrics       []metricCall
+	customMetrics []customMetricCall
+	logs          []logCall
 }
 
 type spanCall struct {
@@ -27,6 +28,10 @@ type spanCall struct {
 
 type metricCall struct {
 	Input synth.MetricInput
+}
+
+type customMetricCall struct {
+	Input synth.CustomMetricInput
 }
 
 type logCall struct {
@@ -63,6 +68,12 @@ func (m *mockSynth) EmitLog(_ context.Context, in synth.LogInput) {
 	m.logs = append(m.logs, logCall{Input: in})
 }
 
+func (m *mockSynth) RecordCustom(_ context.Context, in synth.CustomMetricInput) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.customMetrics = append(m.customMetrics, customMetricCall{Input: in})
+}
+
 func (m *mockSynth) snapshotSpans() []spanCall {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -84,6 +95,14 @@ func (m *mockSynth) snapshotLogs() []logCall {
 	defer m.mu.Unlock()
 	out := make([]logCall, len(m.logs))
 	copy(out, m.logs)
+	return out
+}
+
+func (m *mockSynth) snapshotCustomMetrics() []customMetricCall {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]customMetricCall, len(m.customMetrics))
+	copy(out, m.customMetrics)
 	return out
 }
 
@@ -129,3 +148,5 @@ func (panicBeginSynth) BeginSpan(context.Context, synth.SpanInput) (context.Cont
 func (panicBeginSynth) RecordMetric(context.Context, synth.MetricInput) {}
 
 func (panicBeginSynth) EmitLog(context.Context, synth.LogInput) {}
+
+func (panicBeginSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}

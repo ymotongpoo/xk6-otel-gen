@@ -145,3 +145,5 @@ func (noopSynth) BeginSpan(ctx context.Context, _ synth.SpanInput) (context.Cont
 func (noopSynth) RecordMetric(context.Context, synth.MetricInput) {}
 
 func (noopSynth) EmitLog(context.Context, synth.LogInput) {}
+
+func (noopSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}

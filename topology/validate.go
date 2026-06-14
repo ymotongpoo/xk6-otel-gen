@@ -413,6 +413,35 @@ func validateDomainRanges(s *Schema) []error {
 					errs = append(errs, newValidationErrorf(evPath+".condition", "D-ENUM", "unsupported log condition %d", ev.Condition))
 				}
 			}
+			for i, m := range op.Metrics {
+				mPath := fmt.Sprintf("%s.metrics[%d]", opPath, i)
+				if m.Name == "" {
+					errs = append(errs, newValidationError(mPath+".name", "D-METRIC", "metric name must be non-empty"))
+				}
+				if len(m.Name) > 120 {
+					errs = append(errs, newValidationErrorf(mPath+".name", "D-METRIC", "metric name must be <= 120 bytes, got %d", len(m.Name)))
+				}
+				if !validMetricType(m.Type) {
+					errs = append(errs, newValidationErrorf(mPath+".type", "D-ENUM", "unsupported metric type %d", m.Type))
+				}
+				if !validLogCondition(m.Condition) {
+					errs = append(errs, newValidationErrorf(mPath+".condition", "D-ENUM", "unsupported metric condition %d", m.Condition))
+				}
+				if !validFloatMetricValue(m.Baseline) {
+					errs = append(errs, newValidationErrorf(mPath+".baseline", "D-METRIC", "baseline must be finite, got %g", m.Baseline))
+				}
+				if m.WhenFault != nil {
+					if !validFaultKind(m.WhenFault.Kind) {
+						errs = append(errs, newValidationErrorf(mPath+".when_fault.kind", "D-ENUM", "unsupported fault kind %d", m.WhenFault.Kind))
+					}
+					if !validFloatMetricValue(m.WhenFault.Delta) {
+						errs = append(errs, newValidationErrorf(mPath+".when_fault.delta", "D-METRIC", "delta must be finite, got %g", m.WhenFault.Delta))
+					}
+					if m.WhenFault.HasValue && !validFloatMetricValue(m.WhenFault.Value) {
+						errs = append(errs, newValidationErrorf(mPath+".when_fault.value", "D-METRIC", "value must be finite, got %g", m.WhenFault.Value))
+					}
+				}
+			}
 		}
 	}
 
@@ -681,4 +710,12 @@ func validLogCondition(c LogCondition) bool {
 func validLogSeverity(s LogSeverity) bool {
 	return s == SeverityTrace || s == SeverityDebug || s == SeverityInfo ||
 		s == SeverityWarn || s == SeverityError || s == SeverityFatal
+}
+
+func validMetricType(t MetricType) bool {
+	return t == MetricCounter || t == MetricGauge || t == MetricHistogram
+}
+
+func validFloatMetricValue(v float64) bool {
+	return !math.IsNaN(v) && !math.IsInf(v, 0)
 }

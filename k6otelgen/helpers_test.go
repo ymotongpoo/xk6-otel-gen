@@ -192,6 +192,12 @@ func (m *mockSynth) EmitLog(ctx context.Context, in synth.LogInput) {
 	m.mu.Unlock()
 }
 
+func (m *mockSynth) RecordCustom(ctx context.Context, in synth.CustomMetricInput) {
+	m.mu.Lock()
+	m.contexts = append(m.contexts, ctx)
+	m.mu.Unlock()
+}
+
 func (m *mockSynth) spanCount() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()

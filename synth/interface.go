@@ -40,6 +40,11 @@ type Synthesizer interface {
 	// EmitLog emits one structured log record tied to the current journey span
 	// context.
 	EmitLog(ctx context.Context, in LogInput)
+
+	// RecordCustom records one user-declared custom metric data point. It does
+	// not go through the semconv policy path, so it works for any operation
+	// (including those whose spans are INTERNAL).
+	RecordCustom(ctx context.Context, in CustomMetricInput)
 }
 
 // SpanInput describes a journey node span to synthesize from topology and
@@ -81,6 +86,18 @@ type LogInput struct {
 	// zero, EmitLog falls back to time.Now().
 	Timestamp  time.Time
 	Attributes map[string]any
+}
+
+// CustomMetricInput describes one user-declared custom metric data point.
+type CustomMetricInput struct {
+	Service     *topology.Service
+	Operation   string
+	InstanceIdx int
+	Name        string
+	Type        topology.MetricType
+	Unit        string
+	Value       float64
+	Attributes  map[string]any
 }
 
 // Outcome describes the result of one journey operation and supplies dynamic

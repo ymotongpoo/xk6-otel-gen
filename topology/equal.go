@@ -61,7 +61,38 @@ func equalOperation(a, b *Operation) bool {
 	if a == nil || b == nil {
 		return a == b
 	}
-	return identifyOp(a) == identifyOp(b) && equalCalls(a.Calls, b.Calls) && equalLogEvents(a.LogEvents, b.LogEvents)
+	return identifyOp(a) == identifyOp(b) && equalCalls(a.Calls, b.Calls) && equalLogEvents(a.LogEvents, b.LogEvents) && equalMetrics(a.Metrics, b.Metrics)
+}
+
+func equalMetrics(a, b []MetricSpec) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if !equalMetricSpec(a[i], b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func equalMetricSpec(a, b MetricSpec) bool {
+	if a.Name != b.Name || a.Type != b.Type || a.Unit != b.Unit || a.Baseline != b.Baseline || a.Condition != b.Condition {
+		return false
+	}
+	if !reflect.DeepEqual(a.Attributes, b.Attributes) {
+		return false
+	}
+	if (a.WhenFault == nil) != (b.WhenFault == nil) {
+		return false
+	}
+	if a.WhenFault == nil {
+		return true
+	}
+	return a.WhenFault.Kind == b.WhenFault.Kind &&
+		a.WhenFault.Delta == b.WhenFault.Delta &&
+		a.WhenFault.Value == b.WhenFault.Value &&
+		a.WhenFault.HasValue == b.WhenFault.HasValue
 }
 
 func equalLogEvents(a, b []LogEventSpec) bool {
