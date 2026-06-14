@@ -1,0 +1,4 @@
+# Hugo build output and caches — never committed (site is built in CI).
+/public/
+/resources/
+/.hugo_build.lock

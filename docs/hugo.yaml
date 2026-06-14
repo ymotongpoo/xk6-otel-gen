@@ -1,0 +1,53 @@
+# Hugo + Hextra configuration for the xk6-otel-gen documentation site.
+# Source lives under docs/content/; the site is built and deployed by
+# .github/workflows/docs.yml (GitHub Pages "GitHub Actions" source).
+baseURL: "https://ymotongpoo.github.io/xk6-otel-gen/"
+title: xk6-otel-gen
+
+enableRobotsTXT: true
+enableGitInfo: true
+hasCJKLanguage: true
+
+# Hextra theme, pulled in as a Hugo Module (see go.mod). No vendored theme dir.
+module:
+  imports:
+    - path: github.com/imfing/hextra
+
+markup:
+  highlight:
+    noClasses: false
+  goldmark:
+    renderer:
+      # Hextra shortcodes and some embedded HTML require unsafe rendering.
+      unsafe: true
+
+menu:
+  main:
+    - name: Documentation
+      pageRef: /getting-started
+      weight: 1
+    - name: Search
+      weight: 2
+      params:
+        type: search
+    - name: GitHub
+      weight: 3
+      url: "https://github.com/ymotongpoo/xk6-otel-gen"
+      params:
+        icon: github
+
+params:
+  navbar:
+    displayTitle: true
+    displayLogo: false
+  footer:
+    enable: true
+    displayCopyright: true
+  editURL:
+    enable: true
+    base: "https://github.com/ymotongpoo/xk6-otel-gen/edit/main/docs/content"
+  page:
+    width: normal
+  theme:
+    default: system
+    displayToggle: true
