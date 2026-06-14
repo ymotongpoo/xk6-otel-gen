@@ -1,6 +1,9 @@
 ---
 title: xk6-otel-gen
 layout: hextra-home
+# type: docs makes Hextra root the left sidebar at the site home so every
+# top-level section is listed on every docs page (see the English _index.md).
+type: docs
 ---
 
 {{< hextra/hero-badge >}}
