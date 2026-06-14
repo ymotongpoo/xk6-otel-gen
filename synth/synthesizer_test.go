@@ -599,6 +599,47 @@ func TestEmitLog_ServiceNameAuto(t *testing.T) {
 	}
 }
 
+func TestEmitLog_EventName_SetsRecordAndAttribute(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, recorder := newTestProviders(t)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn.EmitLog(context.Background(), LogInput{
+		Service:   makeSpanService("payment", topology.KindApplication),
+		EventName: "provider_call.timeout",
+		Body:      "payment provider call timed out",
+	})
+
+	record := requireSingleLog(t, recorder)
+	if got := record.EventName(); got != "provider_call.timeout" {
+		t.Fatalf("EventName() = %q, want provider_call.timeout", got)
+	}
+	attrs := logAttrs(record)
+	if attrs["event.name"] != "provider_call.timeout" {
+		t.Fatalf("event.name = %q, want provider_call.timeout", attrs["event.name"])
+	}
+}
+
+func TestEmitLog_EmptyEventName_NotSet(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, _, _, recorder := newTestProviders(t)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn.EmitLog(context.Background(), LogInput{
+		Service: makeSpanService("payment", topology.KindApplication),
+		Body:    "generic log",
+	})
+
+	record := requireSingleLog(t, recorder)
+	if got := record.EventName(); got != "" {
+		t.Fatalf("EventName() = %q, want empty", got)
+	}
+	attrs := logAttrs(record)
+	if _, ok := attrs["event.name"]; ok {
+		t.Fatalf("event.name attribute set unexpectedly: %v", attrs)
+	}
+}
+
 func requireSingleSpan(t *testing.T, spans tracetest.SpanStubs) tracetest.SpanStub {
 	t.Helper()
 

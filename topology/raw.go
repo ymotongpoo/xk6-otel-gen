@@ -23,8 +23,17 @@ type rawService struct {
 }
 
 type rawOperation struct {
-	Name  string         `yaml:"name"`
-	Calls []*rawCallNode `yaml:"calls,omitempty"`
+	Name      string         `yaml:"name"`
+	Calls     []*rawCallNode `yaml:"calls,omitempty"`
+	LogEvents []*rawLogEvent `yaml:"log_events,omitempty"`
+}
+
+type rawLogEvent struct {
+	Name       string         `yaml:"name"`
+	Severity   string         `yaml:"severity,omitempty"`
+	Condition  string         `yaml:"condition,omitempty"`
+	Body       string         `yaml:"body,omitempty"`
+	Attributes map[string]any `yaml:"attributes,omitempty"`
 }
 
 type rawCallNode struct {

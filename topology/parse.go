@@ -21,6 +21,8 @@ const (
 	invalidBackoffPolicy   BackoffPolicy   = BackoffPolicy(-1)
 	invalidFaultKind       FaultKind       = FaultKind(-1)
 	invalidExhaustedAction ExhaustedAction = ExhaustedAction(-1)
+	invalidLogCondition    LogCondition    = LogCondition(-1)
+	invalidLogSeverity     LogSeverity     = LogSeverity(-1)
 )
 
 // Parse reads topology YAML, resolves references, and validates the schema.
@@ -102,8 +104,9 @@ func buildSchema(raw *rawSchema) *Schema {
 				ro = &rawOperation{}
 			}
 			op := &Operation{
-				Name:    ro.Name,
-				Service: svc,
+				Name:      ro.Name,
+				Service:   svc,
+				LogEvents: resolveLogEvents(ro.LogEvents),
 			}
 			svc.Operations[ro.Name] = op
 		}
@@ -573,5 +576,60 @@ func parseExhaustedAction(s string) ExhaustedAction {
 		return ExhaustedSucceedSilently
 	default:
 		return invalidExhaustedAction
+	}
+}
+
+func resolveLogEvents(in []*rawLogEvent) []LogEventSpec {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]LogEventSpec, 0, len(in))
+	for _, raw := range in {
+		if raw == nil {
+			continue
+		}
+		out = append(out, LogEventSpec{
+			Name:       raw.Name,
+			Severity:   parseLogSeverity(raw.Severity),
+			Condition:  parseLogCondition(raw.Condition),
+			Body:       raw.Body,
+			Attributes: raw.Attributes,
+		})
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func parseLogCondition(s string) LogCondition {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "", "always":
+		return ConditionAlways
+	case "on_success":
+		return ConditionOnSuccess
+	case "on_error":
+		return ConditionOnError
+	default:
+		return invalidLogCondition
+	}
+}
+
+func parseLogSeverity(s string) LogSeverity {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "", "info":
+		return SeverityInfo
+	case "trace":
+		return SeverityTrace
+	case "debug":
+		return SeverityDebug
+	case "warn", "warning":
+		return SeverityWarn
+	case "error":
+		return SeverityError
+	case "fatal":
+		return SeverityFatal
+	default:
+		return invalidLogSeverity
 	}
 }

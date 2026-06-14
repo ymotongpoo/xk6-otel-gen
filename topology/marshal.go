@@ -86,9 +86,32 @@ func marshalOperations(ops map[string]*Operation) []*rawOperation {
 			continue
 		}
 		out = append(out, &rawOperation{
-			Name:  op.Name,
-			Calls: marshalCallNodes(op.Calls),
+			Name:      op.Name,
+			Calls:     marshalCallNodes(op.Calls),
+			LogEvents: marshalLogEvents(op.LogEvents),
 		})
+	}
+	return out
+}
+
+func marshalLogEvents(events []LogEventSpec) []*rawLogEvent {
+	if len(events) == 0 {
+		return nil
+	}
+	out := make([]*rawLogEvent, 0, len(events))
+	for _, ev := range events {
+		raw := &rawLogEvent{
+			Name:       ev.Name,
+			Body:       ev.Body,
+			Attributes: ev.Attributes,
+		}
+		if ev.Severity != SeverityInfo {
+			raw.Severity = ev.Severity.String()
+		}
+		if ev.Condition != ConditionAlways {
+			raw.Condition = ev.Condition.String()
+		}
+		out = append(out, raw)
 	}
 	return out
 }

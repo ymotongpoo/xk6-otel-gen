@@ -298,6 +298,65 @@ func (e *engineImpl) finishAndEmitAt(ctx context.Context, node *Node, instanceId
 			"error.type": outcome.ErrorType,
 		},
 	})
+	if node.Service != nil {
+		for _, ev := range node.LogEvents {
+			if !logEventMatches(ev.Condition, outcome.Success) {
+				continue
+			}
+			e.synth.EmitLog(ctx, synth.LogInput{
+				Service:     node.Service,
+				Severity:    toLogSeverity(ev.Severity),
+				EventName:   ev.Name,
+				Body:        ev.Body,
+				Timestamp:   end,
+				InstanceIdx: instanceIdx,
+				Attributes:  cloneAttrs(ev.Attributes),
+			})
+		}
+	}
+}
+
+func logEventMatches(c topology.LogCondition, success bool) bool {
+	switch c {
+	case topology.ConditionAlways:
+		return true
+	case topology.ConditionOnSuccess:
+		return success
+	case topology.ConditionOnError:
+		return !success
+	default:
+		return false
+	}
+}
+
+func toLogSeverity(s topology.LogSeverity) log.Severity {
+	switch s {
+	case topology.SeverityTrace:
+		return log.SeverityTrace
+	case topology.SeverityDebug:
+		return log.SeverityDebug
+	case topology.SeverityInfo:
+		return log.SeverityInfo
+	case topology.SeverityWarn:
+		return log.SeverityWarn
+	case topology.SeverityError:
+		return log.SeverityError
+	case topology.SeverityFatal:
+		return log.SeverityFatal
+	default:
+		return log.SeverityInfo
+	}
+}
+
+func cloneAttrs(in map[string]any) map[string]any {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]any, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
 }
 
 func pickStatusCode(failed bool, errorType string) int {

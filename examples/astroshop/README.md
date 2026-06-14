@@ -13,6 +13,8 @@ dependencies -> redis-cache, postgres, kafka, flagd
 
 The topology includes 18 services, 5 weighted journeys, retry backoff on payment authorization, and four subtle faults: payment errors, shipping latency, recommendation crashes, and email disconnects.
 
+Operations may declare `log_events` in the topology YAML to emit structured OTLP logs with `event.name` when the operation completes (for example, `{service_name="payment"} | event_name="provider_call.timeout"` in LogQL).
+
 ## Prerequisites
 
 | Tool | Minimum | Purpose |

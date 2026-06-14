@@ -170,3 +170,67 @@ func (p BackoffPolicy) String() string {
 		return "unknown"
 	}
 }
+
+// LogCondition gates when a declarative log event is emitted.
+type LogCondition int
+
+const (
+	// ConditionAlways emits the event on every operation outcome.
+	ConditionAlways LogCondition = iota
+	// ConditionOnSuccess emits the event only when the operation succeeds.
+	ConditionOnSuccess
+	// ConditionOnError emits the event only when the operation fails.
+	ConditionOnError
+)
+
+// String returns the topology YAML token for c.
+func (c LogCondition) String() string {
+	switch c {
+	case ConditionAlways:
+		return "always"
+	case ConditionOnSuccess:
+		return "on_success"
+	case ConditionOnError:
+		return "on_error"
+	default:
+		return "unknown"
+	}
+}
+
+// LogSeverity identifies the severity of a declarative log event.
+type LogSeverity int
+
+const (
+	// SeverityTrace is the trace log severity.
+	SeverityTrace LogSeverity = iota
+	// SeverityDebug is the debug log severity.
+	SeverityDebug
+	// SeverityInfo is the info log severity.
+	SeverityInfo
+	// SeverityWarn is the warn log severity.
+	SeverityWarn
+	// SeverityError is the error log severity.
+	SeverityError
+	// SeverityFatal is the fatal log severity.
+	SeverityFatal
+)
+
+// String returns the topology YAML token for s.
+func (s LogSeverity) String() string {
+	switch s {
+	case SeverityTrace:
+		return "trace"
+	case SeverityDebug:
+		return "debug"
+	case SeverityInfo:
+		return "info"
+	case SeverityWarn:
+		return "warn"
+	case SeverityError:
+		return "error"
+	case SeverityFatal:
+		return "fatal"
+	default:
+		return "unknown"
+	}
+}
