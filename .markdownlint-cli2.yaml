@@ -31,6 +31,11 @@ ignores:
   - "node_modules/**"
   - ".claude/**"
   - "scripts/aidlc-evaluator/test_cases/**"
+  # Hugo + Hextra documentation source. These pages use Hugo front matter and
+  # Hextra shortcodes (e.g. {{< callout >}}, {{< relref >}}) that are not
+  # CommonMark; they are authored for the docs site, not markdownlint. The
+  # rendered site is built and verified by .github/workflows/docs.yml.
+  - "docs/content/**"
   # AI-DLC process artifacts: rule details, generated stage documents, and the
   # shared agent memory. These are authored to the AI-DLC workflow's own
   # conventions, not CommonMark/markdownlint, and are not user-facing docs.
