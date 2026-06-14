@@ -29,6 +29,15 @@ deployed to GitHub Pages.
   "GitHub Actions" for deployment to work; this cannot be done via code.
 - **baseURL:** `https://ymotongpoo.github.io/xk6-otel-gen/` (project page,
   subpath — internal links use `{{< relref >}}`).
+- **i18n (multilingual):** English + Japanese, directory-based separation.
+  `content/en/` (default, served at `/`) and `content/ja/` (served at `/ja/`)
+  are parallel trees with identical file paths and `weight` values. Configured
+  via `languages.{en,ja}` in `hugo.yaml` with per-language `contentDir`, `menu`,
+  and `editURL`; use Hugo's new `label`/`locale` keys (not the deprecated
+  `languageName`/`languageCode`). Cross-page links use `{{< relref "/path" >}}`
+  with no language prefix so they resolve within the current language. Hextra
+  shows the language switcher automatically. Add a page to BOTH trees and keep
+  `weight` identical so the two navs stay aligned.
 
 Pinned versions chosen at setup: Hugo extended `0.163.1`, Hextra `v0.12.3`.
 
