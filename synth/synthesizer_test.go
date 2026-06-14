@@ -151,6 +151,55 @@ func TestBeginSpan_Server_Failure_500(t *testing.T) {
 	requireExceptionEvent(t, span, "ServerError")
 }
 
+func TestBeginSpan_WithLinks_AttachesSpanLinks(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	linkedSC := trace.NewSpanContext(trace.SpanContextConfig{
+		TraceID:    trace.TraceID{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16},
+		SpanID:     trace.SpanID{1, 2, 3, 4, 5, 6, 7, 8},
+		TraceFlags: trace.FlagsSampled,
+	})
+	start := time.Unix(1_700_000_000, 0)
+	_, finish := syn.BeginSpan(context.Background(), SpanInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /checkout",
+		StartTime:   start,
+		InstanceIdx: 0,
+		Links:       []trace.Link{{SpanContext: linkedSC}},
+	})
+	finish(Outcome{Success: true, StatusCode: 200, EndTime: start.Add(time.Millisecond)})
+
+	span := requireSingleSpan(t, spanExporter.GetSpans())
+	if len(span.Links) != 1 {
+		t.Fatalf("Links = %d, want 1", len(span.Links))
+	}
+	if !span.Links[0].SpanContext.Equal(linkedSC) {
+		t.Fatalf("Links[0].SpanContext = %+v, want %+v", span.Links[0].SpanContext, linkedSC)
+	}
+}
+
+func TestBeginSpan_EmptyLinks_NoSpanLinks(t *testing.T) {
+	t.Parallel()
+
+	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	start := time.Unix(1_700_000_000, 0)
+	_, finish := syn.BeginSpan(context.Background(), SpanInput{
+		Service:     makeSpanService("frontend", topology.KindApplication),
+		Operation:   "GET /checkout",
+		StartTime:   start,
+		InstanceIdx: 0,
+	})
+	finish(Outcome{Success: true, StatusCode: 200, EndTime: start.Add(time.Millisecond)})
+
+	span := requireSingleSpan(t, spanExporter.GetSpans())
+	if len(span.Links) != 0 {
+		t.Fatalf("Links = %d, want 0", len(span.Links))
+	}
+}
+
 func TestFinishFn_CascadedAttribute(t *testing.T) {
 	t.Parallel()
 

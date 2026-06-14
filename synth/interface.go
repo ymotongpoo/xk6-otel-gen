@@ -55,6 +55,9 @@ type SpanInput struct {
 	Operation   string
 	StartTime   time.Time
 	InstanceIdx int
+	// Links attaches OpenTelemetry span links (e.g. a consumer span linking
+	// back to its producer span). Empty means no links.
+	Links []trace.Link
 }
 
 // MetricInput describes one synthetic metric data point to record after a

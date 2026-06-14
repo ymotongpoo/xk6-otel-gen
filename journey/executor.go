@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/log"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
@@ -128,12 +129,19 @@ func (e *engineImpl) executeSingleAttempt(ctx context.Context, node *Node, start
 	instanceIdx := e.randIntN(node.Service.Replicas)
 	baseLatency := e.sampleEdgeLatency(node.Edge)
 	effectiveLatency := baseLatency + ff.latencyInflate
+	var links []trace.Link
+	if node.Edge != nil && node.Edge.Protocol == topology.ProtocolMessaging && node.Edge.From != nil {
+		if sc := e.emitMessagingProducerSpan(ctx, node.Edge, start); sc.IsValid() {
+			links = []trace.Link{{SpanContext: sc}}
+		}
+	}
 	spanCtx, finishFn := e.synth.BeginSpan(ctx, synth.SpanInput{
 		Service:     node.Service,
 		Edge:        node.Edge,
 		Operation:   node.Operation,
 		StartTime:   start,
 		InstanceIdx: instanceIdx,
+		Links:       links,
 	})
 
 	if ff.crashed {
