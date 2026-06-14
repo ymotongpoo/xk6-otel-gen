@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"sync"
+	"time"
 
 	"go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/metric"
@@ -41,6 +42,18 @@ type Pipeline struct {
 
 	shutdownOnce sync.Once
 	shutdownErr  error
+}
+
+// minPeriodicReaderInterval avoids a data race in go.opentelemetry.io/otel/sdk/metric
+// NewPeriodicReader (through v1.44.0): the background export goroutine can tick before
+// reader instrumentation is assigned when the configured interval is very short.
+const minPeriodicReaderInterval = 10 * time.Millisecond
+
+func periodicReaderInterval(interval time.Duration) time.Duration {
+	if interval < minPeriodicReaderInterval {
+		return minPeriodicReaderInterval
+	}
+	return interval
 }
 
 type traceBuilder func(context.Context, Config, *tls.Config, *pipelineStats) (sdktrace.SpanExporter, error)
@@ -132,7 +145,7 @@ func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipe
 	mp := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(res),
 		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExp,
-			sdkmetric.WithInterval(cfg.BatchTimeout),
+			sdkmetric.WithInterval(periodicReaderInterval(cfg.BatchTimeout)),
 		)),
 	)
 	lp := sdklog.NewLoggerProvider(

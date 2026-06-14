@@ -15,9 +15,9 @@ func ExampleNew() {
 	cfg := exporter.Config{
 		Endpoint:     "localhost:4317",
 		Insecure:     true,
-		Timeout:      10 * time.Millisecond,
+		Timeout:      500 * time.Millisecond,
 		BatchSize:    1,
-		BatchTimeout: time.Millisecond,
+		BatchTimeout: 100 * time.Millisecond,
 		MaxQueueSize: 1,
 	}
 	p, err := exporter.New(cfg)
@@ -48,9 +48,9 @@ func ExampleGetShared() {
 		return exporter.New(exporter.Config{
 			Endpoint:     "localhost:4317",
 			Insecure:     true,
-			Timeout:      10 * time.Millisecond,
+			Timeout:      500 * time.Millisecond,
 			BatchSize:    1,
-			BatchTimeout: time.Millisecond,
+			BatchTimeout: 100 * time.Millisecond,
 			MaxQueueSize: 1,
 		})
 	})
