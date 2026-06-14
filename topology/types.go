@@ -39,9 +39,20 @@ type Service struct {
 
 // Operation is a callable unit at a Service.
 type Operation struct {
-	Name    string      `yaml:"name"`
-	Service *Service    `yaml:"service"`
-	Calls   []*CallNode `yaml:"calls"`
+	Name      string         `yaml:"name"`
+	Service   *Service       `yaml:"service"`
+	Calls     []*CallNode    `yaml:"calls"`
+	LogEvents []LogEventSpec `yaml:"log_events,omitempty"`
+}
+
+// LogEventSpec is a declarative structured log event emitted when an operation
+// completes, gated by Condition on the operation outcome.
+type LogEventSpec struct {
+	Name       string         `yaml:"name"`
+	Severity   LogSeverity    `yaml:"severity"`
+	Condition  LogCondition   `yaml:"condition"`
+	Body       string         `yaml:"body,omitempty"`
+	Attributes map[string]any `yaml:"attributes,omitempty"`
 }
 
 // CallNode is either a single outgoing Edge or a Parallel group of CallNodes.

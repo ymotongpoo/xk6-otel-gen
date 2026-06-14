@@ -398,6 +398,21 @@ func validateDomainRanges(s *Schema) []error {
 			if len(op.Name) > 120 {
 				errs = append(errs, newValidationErrorf(opPath+".name", "D-OP", "operation name must be <= 120 bytes, got %d", len(op.Name)))
 			}
+			for i, ev := range op.LogEvents {
+				evPath := fmt.Sprintf("%s.log_events[%d]", opPath, i)
+				if ev.Name == "" {
+					errs = append(errs, newValidationError(evPath+".name", "D-LOG", "log event name must be non-empty"))
+				}
+				if len(ev.Name) > 120 {
+					errs = append(errs, newValidationErrorf(evPath+".name", "D-LOG", "log event name must be <= 120 bytes, got %d", len(ev.Name)))
+				}
+				if !validLogSeverity(ev.Severity) {
+					errs = append(errs, newValidationErrorf(evPath+".severity", "D-ENUM", "unsupported log severity %d", ev.Severity))
+				}
+				if !validLogCondition(ev.Condition) {
+					errs = append(errs, newValidationErrorf(evPath+".condition", "D-ENUM", "unsupported log condition %d", ev.Condition))
+				}
+			}
 		}
 	}
 
@@ -657,4 +672,13 @@ func validLatencyDistribution(d string) bool {
 	default:
 		return false
 	}
+}
+
+func validLogCondition(c LogCondition) bool {
+	return c == ConditionAlways || c == ConditionOnSuccess || c == ConditionOnError
+}
+
+func validLogSeverity(s LogSeverity) bool {
+	return s == SeverityTrace || s == SeverityDebug || s == SeverityInfo ||
+		s == SeverityWarn || s == SeverityError || s == SeverityFatal
 }

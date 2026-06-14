@@ -61,7 +61,27 @@ func equalOperation(a, b *Operation) bool {
 	if a == nil || b == nil {
 		return a == b
 	}
-	return identifyOp(a) == identifyOp(b) && equalCalls(a.Calls, b.Calls)
+	return identifyOp(a) == identifyOp(b) && equalCalls(a.Calls, b.Calls) && equalLogEvents(a.LogEvents, b.LogEvents)
+}
+
+func equalLogEvents(a, b []LogEventSpec) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if !equalLogEventSpec(a[i], b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func equalLogEventSpec(a, b LogEventSpec) bool {
+	return a.Name == b.Name &&
+		a.Severity == b.Severity &&
+		a.Condition == b.Condition &&
+		a.Body == b.Body &&
+		reflect.DeepEqual(a.Attributes, b.Attributes)
 }
 
 func equalCalls(a, b []*CallNode) bool {

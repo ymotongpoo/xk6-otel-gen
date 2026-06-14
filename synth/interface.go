@@ -67,7 +67,10 @@ type MetricInput struct {
 type LogInput struct {
 	Service  *topology.Service
 	Severity log.Severity
-	Body     string
+	// EventName sets the OpenTelemetry log record event.name. When empty it is
+	// not set.
+	EventName string
+	Body      string
 	// InstanceIdx selects which replica of Service emitted the record; it
 	// determines the per-instance logger (and thus the service.instance.id
 	// resource attribute) so logs carry the same service identity as the span.

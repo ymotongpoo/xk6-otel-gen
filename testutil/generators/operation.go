@@ -58,6 +58,13 @@ func ValidOperation(svc *topology.Service, opts ...OperationOption) *rapid.Gener
 			Name:    name,
 			Service: svc,
 		}
+		if rapid.Float64Range(0, 1).Draw(t, "log_events_roll") < 0.5 {
+			count := rapid.IntRange(1, 3).Draw(t, "n_log_events")
+			op.LogEvents = make([]topology.LogEventSpec, 0, count)
+			for i := 0; i < count; i++ {
+				op.LogEvents = append(op.LogEvents, ValidLogEventSpec().Draw(t, fmt.Sprintf("log_event_%d", i)))
+			}
+		}
 		if svc != nil {
 			if svc.Operations == nil {
 				svc.Operations = make(map[string]*topology.Operation)

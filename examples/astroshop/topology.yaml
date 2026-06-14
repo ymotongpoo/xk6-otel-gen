@@ -147,6 +147,14 @@ services:
     version: 2.2.0
     operations:
       - name: authorize_card
+        log_events:
+          - name: provider_call.timeout
+            condition: on_error
+            severity: error
+            body: "payment provider call timed out"
+            attributes:
+              provider: stripe
+              retryable: true
         calls:
           - to: { service: flagd, operation: evaluate_flag }
             protocol: grpc

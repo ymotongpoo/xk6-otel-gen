@@ -172,6 +172,10 @@ func (s *defaultSynthesizer) EmitLog(ctx context.Context, in LogInput) {
 	record.SetObservedTimestamp(eventTime)
 	record.SetSeverity(severity)
 	record.SetBody(log.StringValue(body))
+	if in.EventName != "" {
+		record.SetEventName(in.EventName)
+		record.AddAttributes(log.KeyValue{Key: "event.name", Value: log.StringValue(in.EventName)})
+	}
 	if !logAttrsContain(in.Attributes, string(semconv.ExceptionTypeKey)) {
 		if errType, ok := stringAttr(in.Attributes, string(semconv.ErrorTypeKey)); ok && severity >= log.SeverityError {
 			record.AddAttributes(log.KeyValue{
