@@ -20,7 +20,8 @@ The extension can send OTLP/gRPC and OTLP/HTTP telemetry to collectors and can a
 
 ## 📖 Documentation
 
-Full documentation is published at **<https://ymotongpoo.github.io/xk6-otel-gen/>**:
+Full documentation is published at **<https://ymotongpoo.github.io/xk6-otel-gen/>**
+(日本語版: **<https://ymotongpoo.github.io/xk6-otel-gen/ja/>**):
 
 - [Getting Started](https://ymotongpoo.github.io/xk6-otel-gen/getting-started/) — features and first run
 - [Quick Start](https://ymotongpoo.github.io/xk6-otel-gen/getting-started/quick-start/)
