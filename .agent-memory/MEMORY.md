@@ -12,3 +12,4 @@
 - [Conventional Commits at stage boundaries](feedback-conventional-commits.md) — propose canonical-type commits per AI-DLC stage; don't auto-commit; Co-Authored-By trailer required for Claude
 - [Go 1.25 build flag](build-go125-buildvcs.md) — Go 1.25+ requires `GOFLAGS=-buildvcs=false` for `xk6 build` / `go build` in this repo
 - [Branching & CI policy](project-branching-ci.md) — `dev` is default branch; CI runs only on `main`; `dev`->`main` merge is manual; `.githooks/` reproduce CI locally
+- [Docs site policy](docs-site-policy.md) — docs are Hugo+Hextra under `docs/`, deployed to GitHub Pages via `docs.yml` (Actions source) on `main`; README kept thin and links to the site
