@@ -33,17 +33,6 @@ cascade:
 
 <div class="hx-mt-6"></div>
 
-{{< hextra/feature-grid >}}
-  {{< hextra/feature-card
-    title="宣言的なトポロジ"
-    subtitle="サービス間のエッジ・ジャーニー・障害を YAML で記述。実バックエンドは不要です。"
-  >}}
-  {{< hextra/feature-card
-    title="OTLP エクスポート"
-    subtitle="トレース・メトリクス・ログを OTLP/gRPC または OTLP/HTTP で、任意の Collector や SaaS エンドポイントに送信します。"
-  >}}
-  {{< hextra/feature-card
-    title="k6 ネイティブ"
-    subtitle="k6 スクリプトから合成テレメトリを生成し、otel-gen 出力で k6 の出力メトリクスを転送します。"
-  >}}
-{{< /hextra/feature-grid >}}
+- **宣言的なトポロジ** — サービス間のエッジ・ジャーニー・障害を YAML で記述。実バックエンドは不要です。
+- **OTLP エクスポート** — トレース・メトリクス・ログを OTLP/gRPC または OTLP/HTTP で、任意の Collector や SaaS エンドポイントに送信します。
+- **k6 ネイティブ** — k6 スクリプトから合成テレメトリを生成し、otel-gen 出力で k6 の出力メトリクスを転送します。

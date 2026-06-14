@@ -37,17 +37,6 @@ cascade:
 
 <div class="hx-mt-6"></div>
 
-{{< hextra/feature-grid >}}
-  {{< hextra/feature-card
-    title="Declarative topology"
-    subtitle="Model service edges, journeys, and faults in YAML. No real backends required."
-  >}}
-  {{< hextra/feature-card
-    title="OTLP egress"
-    subtitle="Send traces, metrics, and logs over OTLP/gRPC or OTLP/HTTP to any collector or SaaS endpoint."
-  >}}
-  {{< hextra/feature-card
-    title="k6-native"
-    subtitle="Drive synthetic telemetry from k6 scripts and forward k6 output metrics through the otel-gen output."
-  >}}
-{{< /hextra/feature-grid >}}
+- **Declarative topology** — model service edges, journeys, and faults in YAML. No real backends required.
+- **OTLP egress** — send traces, metrics, and logs over OTLP/gRPC or OTLP/HTTP to any collector or SaaS endpoint.
+- **k6-native** — drive synthetic telemetry from k6 scripts and forward k6 output metrics through the otel-gen output.
