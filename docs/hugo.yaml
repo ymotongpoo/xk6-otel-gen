@@ -1,5 +1,5 @@
 # Hugo + Hextra configuration for the xk6-otel-gen documentation site.
-# Source lives under docs/content/; the site is built and deployed by
+# Source lives under docs/content/<lang>/; the site is built and deployed by
 # .github/workflows/docs.yml (GitHub Pages "GitHub Actions" source).
 baseURL: "https://ymotongpoo.github.io/xk6-otel-gen/"
 title: xk6-otel-gen
@@ -7,6 +7,61 @@ title: xk6-otel-gen
 enableRobotsTXT: true
 enableGitInfo: true
 hasCJKLanguage: true
+
+# English is the default language, served at the site root (/). Japanese is
+# served under /ja/. defaultContentLanguageInSubdir defaults to false, so the
+# default language is not prefixed.
+defaultContentLanguage: en
+
+languages:
+  en:
+    label: English
+    locale: en-US
+    weight: 1
+    contentDir: content/en
+    title: xk6-otel-gen
+    menu:
+      main:
+        - name: Documentation
+          pageRef: /getting-started
+          weight: 1
+        - name: Search
+          weight: 2
+          params:
+            type: search
+        - name: GitHub
+          weight: 3
+          url: "https://github.com/ymotongpoo/xk6-otel-gen"
+          params:
+            icon: github
+    params:
+      editURL:
+        enable: true
+        base: "https://github.com/ymotongpoo/xk6-otel-gen/edit/main/docs/content/en"
+  ja:
+    label: 日本語
+    locale: ja-JP
+    weight: 2
+    contentDir: content/ja
+    title: xk6-otel-gen
+    menu:
+      main:
+        - name: ドキュメント
+          pageRef: /getting-started
+          weight: 1
+        - name: 検索
+          weight: 2
+          params:
+            type: search
+        - name: GitHub
+          weight: 3
+          url: "https://github.com/ymotongpoo/xk6-otel-gen"
+          params:
+            icon: github
+    params:
+      editURL:
+        enable: true
+        base: "https://github.com/ymotongpoo/xk6-otel-gen/edit/main/docs/content/ja"
 
 # Hextra theme, pulled in as a Hugo Module (see go.mod). No vendored theme dir.
 module:
@@ -21,21 +76,8 @@ markup:
       # Hextra shortcodes and some embedded HTML require unsafe rendering.
       unsafe: true
 
-menu:
-  main:
-    - name: Documentation
-      pageRef: /getting-started
-      weight: 1
-    - name: Search
-      weight: 2
-      params:
-        type: search
-    - name: GitHub
-      weight: 3
-      url: "https://github.com/ymotongpoo/xk6-otel-gen"
-      params:
-        icon: github
-
+# Site-wide params shared by all languages. Language-specific overrides (menus,
+# editURL) live under languages.<lang> above.
 params:
   navbar:
     displayTitle: true
@@ -43,9 +85,6 @@ params:
   footer:
     enable: true
     displayCopyright: true
-  editURL:
-    enable: true
-    base: "https://github.com/ymotongpoo/xk6-otel-gen/edit/main/docs/content"
   page:
     width: normal
   theme:
