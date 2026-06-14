@@ -89,6 +89,7 @@ func marshalOperations(ops map[string]*Operation) []*rawOperation {
 			Name:      op.Name,
 			Calls:     marshalCallNodes(op.Calls),
 			LogEvents: marshalLogEvents(op.LogEvents),
+			Metrics:   marshalMetrics(op.Metrics),
 		})
 	}
 	return out
@@ -110,6 +111,38 @@ func marshalLogEvents(events []LogEventSpec) []*rawLogEvent {
 		}
 		if ev.Condition != ConditionAlways {
 			raw.Condition = ev.Condition.String()
+		}
+		out = append(out, raw)
+	}
+	return out
+}
+
+func marshalMetrics(metrics []MetricSpec) []*rawMetric {
+	if len(metrics) == 0 {
+		return nil
+	}
+	out := make([]*rawMetric, 0, len(metrics))
+	for _, m := range metrics {
+		raw := &rawMetric{
+			Name:       m.Name,
+			Type:       m.Type.String(),
+			Unit:       m.Unit,
+			Attributes: m.Attributes,
+		}
+		if m.Baseline != 0 {
+			raw.Baseline = ptrFloat64(m.Baseline)
+		}
+		if m.Condition != ConditionAlways {
+			raw.Condition = m.Condition.String()
+		}
+		if m.WhenFault != nil {
+			link := &rawMetricFaultLink{Kind: m.WhenFault.Kind.String()}
+			if m.WhenFault.HasValue {
+				link.Value = ptrFloat64(m.WhenFault.Value)
+			} else if m.WhenFault.Delta != 0 {
+				link.Delta = ptrFloat64(m.WhenFault.Delta)
+			}
+			raw.WhenFault = link
 		}
 		out = append(out, raw)
 	}

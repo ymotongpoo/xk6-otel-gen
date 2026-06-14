@@ -43,6 +43,31 @@ type Operation struct {
 	Service   *Service       `yaml:"service"`
 	Calls     []*CallNode    `yaml:"calls"`
 	LogEvents []LogEventSpec `yaml:"log_events,omitempty"`
+	Metrics   []MetricSpec   `yaml:"metrics,omitempty"`
+}
+
+// MetricSpec is a declarative synthetic metric emitted when an operation
+// completes (gated by Condition). When WhenFault is set, the value becomes
+// baseline+Delta (or Value) only while a fault of the given kind is active on
+// THIS operation's node. The metric must be declared on the operation that the
+// fault targets; activeness is derived from that node's folded fault, so no
+// additional randomness is drawn (deterministic).
+type MetricSpec struct {
+	Name       string           `yaml:"name"`
+	Type       MetricType       `yaml:"type"`
+	Unit       string           `yaml:"unit,omitempty"`
+	Baseline   float64          `yaml:"baseline"`
+	Condition  LogCondition     `yaml:"condition"`
+	Attributes map[string]any   `yaml:"attributes,omitempty"`
+	WhenFault  *MetricFaultLink `yaml:"when_fault,omitempty"`
+}
+
+// MetricFaultLink adjusts a metric value when a matching fault kind is active.
+type MetricFaultLink struct {
+	Kind     FaultKind `yaml:"kind"`
+	Delta    float64   `yaml:"delta"`
+	Value    float64   `yaml:"value"`
+	HasValue bool      `yaml:"has_value"`
 }
 
 // LogEventSpec is a declarative structured log event emitted when an operation

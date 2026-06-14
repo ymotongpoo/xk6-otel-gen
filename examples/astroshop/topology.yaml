@@ -112,6 +112,12 @@ services:
             protocol: grpc
             latency: { distribution: lognormal, p50: 55ms, p95: 220ms }
       - name: place_order
+        metrics:
+          - name: orders.settlement.amount.total
+            type: counter
+            unit: "{usd}"
+            baseline: 80
+            condition: on_success
         calls:
           - to: { service: cart, operation: get_cart }
             protocol: grpc
@@ -172,6 +178,14 @@ services:
     version: 2.2.0
     operations:
       - name: quote_shipping
+        metrics:
+          - name: shipping.quote.backlog
+            type: gauge
+            unit: "{request}"
+            baseline: 5
+            when_fault:
+              kind: latency_inflation
+              delta: 40
         calls:
           - to: { service: quote, operation: get_quote }
             protocol: grpc

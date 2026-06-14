@@ -171,6 +171,32 @@ func (p BackoffPolicy) String() string {
 	}
 }
 
+// MetricType identifies the instrument kind for a declarative custom metric.
+type MetricType int
+
+const (
+	// MetricCounter is a monotonically increasing counter instrument.
+	MetricCounter MetricType = iota
+	// MetricGauge is a point-in-time gauge instrument.
+	MetricGauge
+	// MetricHistogram is a histogram instrument.
+	MetricHistogram
+)
+
+// String returns the topology YAML token for t.
+func (t MetricType) String() string {
+	switch t {
+	case MetricCounter:
+		return "counter"
+	case MetricGauge:
+		return "gauge"
+	case MetricHistogram:
+		return "histogram"
+	default:
+		return "unknown"
+	}
+}
+
 // LogCondition gates when a declarative log event is emitted.
 type LogCondition int
 

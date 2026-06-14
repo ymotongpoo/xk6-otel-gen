@@ -104,6 +104,8 @@ func (phase2Synth) RecordMetric(context.Context, synth.MetricInput) {}
 
 func (phase2Synth) EmitLog(context.Context, synth.LogInput) {}
 
+func (phase2Synth) RecordCustom(context.Context, synth.CustomMetricInput) {}
+
 type recordingInstanceSynth struct {
 	mu          sync.Mutex
 	instanceIdx []int
@@ -119,6 +121,8 @@ func (s *recordingInstanceSynth) BeginSpan(ctx context.Context, in synth.SpanInp
 func (s *recordingInstanceSynth) RecordMetric(context.Context, synth.MetricInput) {}
 
 func (s *recordingInstanceSynth) EmitLog(context.Context, synth.LogInput) {}
+
+func (s *recordingInstanceSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}
 
 func (s *recordingInstanceSynth) sequence() []int {
 	s.mu.Lock()

@@ -143,7 +143,7 @@ func (e *engineImpl) executeSingleAttempt(ctx context.Context, node *Node, start
 			ErrorType:  "crashed",
 			Latency:    0,
 		}
-		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start)
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start, ff)
 		return outcome
 	}
 
@@ -154,7 +154,7 @@ func (e *engineImpl) executeSingleAttempt(ctx context.Context, node *Node, start
 			ErrorType:  "context_canceled",
 			Latency:    0,
 		}
-		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start)
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start, ff)
 		return outcome
 	}
 
@@ -164,7 +164,7 @@ func (e *engineImpl) executeSingleAttempt(ctx context.Context, node *Node, start
 			Latency: node.Edge.Timeout,
 		}
 		applyTimeoutFailure(node.Edge, &outcome)
-		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency))
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency), ff)
 		return outcome
 	}
 
@@ -175,7 +175,7 @@ func (e *engineImpl) executeSingleAttempt(ctx context.Context, node *Node, start
 			ErrorType:  "connection_refused",
 			Latency:    effectiveLatency,
 		}
-		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency))
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency), ff)
 		return outcome
 	}
 
@@ -200,11 +200,11 @@ func (e *engineImpl) executeSingleAttempt(ctx context.Context, node *Node, start
 		if outcome.ErrorType == "" {
 			outcome.ErrorType = "http.500"
 		}
-		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency))
+		e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency), ff)
 		return outcome
 	}
 
-	e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency))
+	e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start.Add(outcome.Latency), ff)
 	return outcome
 }
 
@@ -236,7 +236,7 @@ func (e *engineImpl) executeCascadeAt(ctx context.Context, node *Node, parent *O
 		Cascaded:   true,
 		Latency:    0,
 	}
-	e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start)
+	e.finishAndEmitAt(spanCtx, node, instanceIdx, finishFn, outcome, start, foldedFault{})
 	return outcome
 }
 
@@ -276,7 +276,7 @@ func (e *engineImpl) executeParallelGroupAt(ctx context.Context, group *Node, pa
 	return aggregateParallelOutcomes(outcomes)
 }
 
-func (e *engineImpl) finishAndEmitAt(ctx context.Context, node *Node, instanceIdx int, finishFn synth.FinishSpanFunc, outcome Outcome, end time.Time) {
+func (e *engineImpl) finishAndEmitAt(ctx context.Context, node *Node, instanceIdx int, finishFn synth.FinishSpanFunc, outcome Outcome, end time.Time, ff foldedFault) {
 	finishFn(toSynthOutcome(outcome, end))
 	synthOutcome := toSynthOutcome(outcome, end)
 	e.synth.RecordMetric(ctx, synth.MetricInput{
@@ -313,6 +313,47 @@ func (e *engineImpl) finishAndEmitAt(ctx context.Context, node *Node, instanceId
 				Attributes:  cloneAttrs(ev.Attributes),
 			})
 		}
+		for _, m := range node.Metrics {
+			if !logEventMatches(m.Condition, outcome.Success) {
+				continue
+			}
+			value := m.Baseline
+			if m.WhenFault != nil && faultActiveForKind(ff, m.WhenFault.Kind) {
+				if m.WhenFault.HasValue {
+					value = m.WhenFault.Value
+				} else {
+					value += m.WhenFault.Delta
+				}
+			}
+			e.synth.RecordCustom(ctx, synth.CustomMetricInput{
+				Service:     node.Service,
+				Operation:   node.Operation,
+				InstanceIdx: instanceIdx,
+				Name:        m.Name,
+				Type:        m.Type,
+				Unit:        m.Unit,
+				Value:       value,
+				Attributes:  cloneAttrs(m.Attributes),
+			})
+		}
+	}
+}
+
+// faultActiveForKind reports whether foldedFault indicates the given fault kind
+// is active on the current operation node. FaultErrorRateOverride may also be
+// true when the edge's native error_rate is non-zero (not only injected faults).
+func faultActiveForKind(ff foldedFault, kind topology.FaultKind) bool {
+	switch kind {
+	case topology.FaultLatencyInflation:
+		return ff.latencyInflate > 0
+	case topology.FaultCrash:
+		return ff.crashed
+	case topology.FaultDisconnect:
+		return ff.disconnected
+	case topology.FaultErrorRateOverride:
+		return ff.errorRate > 0
+	default:
+		return false
 	}
 }
 

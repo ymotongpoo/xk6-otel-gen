@@ -94,9 +94,94 @@
           "type": "array",
           "items": { "$ref": "#/$defs/LogEvent" },
           "default": []
+        },
+        "metrics": {
+          "description": "Declarative custom metrics emitted when this operation completes.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/Metric" },
+          "default": []
         }
       },
       "examples": [{ "name": "GetProduct", "calls": [] }]
+    },
+    "Metric": {
+      "description": "A custom metric gated by operation outcome and optional fault linkage.",
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": true,
+      "properties": {
+        "name": {
+          "description": "Custom metric instrument name.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "type": {
+          "description": "Instrument type.",
+          "type": "string",
+          "enum": ["counter", "gauge", "histogram"]
+        },
+        "unit": {
+          "description": "Optional UCUM-style unit string.",
+          "type": "string"
+        },
+        "baseline": {
+          "description": "Default value recorded when the metric fires.",
+          "type": "number",
+          "default": 0
+        },
+        "condition": {
+          "description": "When to emit this metric relative to operation outcome.",
+          "type": "string",
+          "enum": ["always", "on_success", "on_error"],
+          "default": "always"
+        },
+        "attributes": {
+          "description": "Additional structured attributes for the metric data point.",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "when_fault": {
+          "description": "Adjust the metric value while a matching fault kind is active on this operation.",
+          "$ref": "#/$defs/MetricFaultLink"
+        }
+      },
+      "examples": [
+        {
+          "name": "orders.settlement.amount.total",
+          "type": "counter",
+          "unit": "{usd}",
+          "baseline": 80,
+          "condition": "on_success"
+        }
+      ]
+    },
+    "MetricFaultLink": {
+      "description": "Fault-driven adjustment for a declarative metric value.",
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Fault kind that activates the adjustment.",
+          "type": "string",
+          "enum": ["latency_inflation", "error_rate_override", "disconnect", "crash"]
+        },
+        "delta": {
+          "description": "Amount added to baseline while the fault is active.",
+          "type": "number"
+        },
+        "value": {
+          "description": "Value that overrides baseline while the fault is active.",
+          "type": "number"
+        }
+      },
+      "examples": [
+        {
+          "kind": "latency_inflation",
+          "delta": 40
+        }
+      ]
     },
     "LogEvent": {
       "description": "A structured log event gated by operation outcome.",
