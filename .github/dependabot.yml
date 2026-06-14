@@ -14,8 +14,8 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "chore(deps)"
-      prefix-development: "chore(deps-dev)"
+      prefix: "chore"
+      prefix-development: "chore"
       include: "scope"
     groups:
       otel:
@@ -33,7 +33,7 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: "scope"
     groups:
       github-actions:
@@ -46,7 +46,7 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: "scope"
 
   # Docker — minimal example observability images
@@ -55,7 +55,7 @@ updates:
     schedule:
       interval: "monthly"
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: "scope"
 
   # Docker — astroshop example observability images
@@ -64,5 +64,5 @@ updates:
     schedule:
       interval: "monthly"
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: "scope"
