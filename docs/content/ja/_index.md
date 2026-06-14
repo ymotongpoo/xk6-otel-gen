@@ -4,6 +4,10 @@ layout: hextra-home
 # type: docs makes Hextra root the left sidebar at the site home so every
 # top-level section is listed on every docs page (see the English _index.md).
 type: docs
+# cascade type:docs to descendants so leaf pages use docs/single.html (with the
+# sidebar) instead of the default single.html (see the English _index.md).
+cascade:
+  type: docs
 ---
 
 {{< hextra/hero-badge >}}

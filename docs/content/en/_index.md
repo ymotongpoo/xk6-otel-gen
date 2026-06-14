@@ -6,6 +6,12 @@ layout: hextra-home
 # listed on every docs page. Without it, the sidebar only shows the current
 # page's own section. The hextra-home layout still renders the landing hero.
 type: docs
+# cascade type:docs to every descendant page so leaf pages (e.g.
+# reference/configuration) use Hextra's layouts/docs/single.html — which renders
+# the left sidebar — instead of the default layouts/single.html, which disables
+# it. This is what kept the sidebar from appearing on individual article pages.
+cascade:
+  type: docs
 ---
 
 {{< hextra/hero-badge >}}
