@@ -5,9 +5,11 @@ package journey
 
 import (
 	"fmt"
+	"math"
 	"math/rand/v2"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
@@ -21,13 +23,14 @@ type Engine struct {
 }
 
 type engineImpl struct {
-	schema      *topology.Schema
-	overlay     *topology.FaultOverlay
-	synth       synth.Synthesizer
-	plans       map[string]*Plan
-	journeyKeys []string
-	rand        *rand.Rand
-	rmu         sync.Mutex
+	schema         *topology.Schema
+	overlay        *topology.FaultOverlay
+	synth          synth.Synthesizer
+	plans          map[string]*Plan
+	journeyKeys    []string
+	rand           *rand.Rand
+	rmu            sync.Mutex
+	faultIntensity atomic.Uint64
 }
 
 // NewEngine constructs an Engine and eagerly builds all journey plans.
@@ -55,6 +58,7 @@ func NewEngineWithSeed(schema *topology.Schema, overlay *topology.FaultOverlay, 
 		plans:   make(map[string]*Plan, len(schema.Journeys)),
 		rand:    newRandWithSeed(seed),
 	}
+	impl.faultIntensity.Store(math.Float64bits(1.0))
 	for name := range schema.Journeys {
 		plan, err := impl.buildPlan(name)
 		if err != nil {
@@ -120,4 +124,23 @@ func (e *Engine) PickJourney() string {
 		}
 	}
 	return ""
+}
+
+func (e *engineImpl) setFaultIntensity(x float64) {
+	if x < 0 {
+		x = 0
+	}
+	e.faultIntensity.Store(math.Float64bits(x))
+}
+
+func (e *engineImpl) faultIntensityValue() float64 {
+	return math.Float64frombits(e.faultIntensity.Load())
+}
+
+// SetFaultIntensity scales injected-fault probability and error-rate overrides
+// for this VU's engine. 0 disables injected faults, 1 is full intensity. Drive
+// it from k6 stages to script a burn->recover timeline. Safe for concurrent
+// use from parallel goroutines.
+func (e *Engine) SetFaultIntensity(x float64) {
+	e.impl.setFaultIntensity(x)
 }
