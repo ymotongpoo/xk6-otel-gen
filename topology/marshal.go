@@ -90,6 +90,7 @@ func marshalOperations(ops map[string]*Operation) []*rawOperation {
 			Calls:     marshalCallNodes(op.Calls),
 			LogEvents: marshalLogEvents(op.LogEvents),
 			Metrics:   marshalMetrics(op.Metrics),
+			Profile:   marshalProfile(op.Profile),
 		})
 	}
 	return out
@@ -113,6 +114,38 @@ func marshalLogEvents(events []LogEventSpec) []*rawLogEvent {
 			raw.Condition = ev.Condition.String()
 		}
 		out = append(out, raw)
+	}
+	return out
+}
+
+func marshalProfile(spec *ProfileSpec) *rawProfile {
+	if spec == nil {
+		return nil
+	}
+	raw := &rawProfile{
+		Enabled:  spec.Enabled,
+		Baseline: marshalStacks(spec.Baseline),
+		Incident: marshalStacks(spec.Incident),
+	}
+	if spec.SampleRate != 0 && spec.SampleRate != 100 {
+		raw.SampleRate = ptrInt(spec.SampleRate)
+	}
+	if spec.WhenFault != nil {
+		raw.WhenFault = &rawProfileFault{Kind: spec.WhenFault.Kind.String()}
+	}
+	return raw
+}
+
+func marshalStacks(stacks []StackSample) []*rawStack {
+	if len(stacks) == 0 {
+		return nil
+	}
+	out := make([]*rawStack, 0, len(stacks))
+	for _, stack := range stacks {
+		out = append(out, &rawStack{
+			Frames: append([]string(nil), stack.Frames...),
+			Weight: stack.Weight,
+		})
 	}
 	return out
 }

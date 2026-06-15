@@ -108,3 +108,8 @@ the receiver within the same journey trace; the consumer span carries a span
 link back to the producer span so Grafana can follow publish↔receive hops.
 Histogram metrics include exemplars (trace_id / span_id) when spans are sampled,
 enabling Grafana metrics→traces drill-down.
+
+Synthetic flamegraphs declared in the topology are pushed to Pyroscope when
+`profilesEndpoint` is configured (Pyroscope or Grafana Cloud Profiles). The
+linked fault kind selects an incident stack variant for diff flamegraphs, and
+spans carry `pyroscope.profile.id` (= span_id) so Grafana can link Span→Profiles.

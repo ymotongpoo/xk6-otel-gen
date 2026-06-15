@@ -54,6 +54,8 @@ func (exampleSynth) EmitLog(context.Context, synth.LogInput) {}
 
 func (exampleSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}
 
+func (exampleSynth) EmitProfile(context.Context, synth.ProfileInput) {}
+
 func exampleSchema() *topology.Schema {
 	svc := &topology.Service{
 		Name:       "frontend",

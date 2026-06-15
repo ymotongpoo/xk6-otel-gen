@@ -72,6 +72,9 @@ func ValidOperation(svc *topology.Service, opts ...OperationOption) *rapid.Gener
 				op.Metrics = append(op.Metrics, ValidMetricSpec().Draw(t, fmt.Sprintf("metric_%d", i)))
 			}
 		}
+		if rapid.Float64Range(0, 1).Draw(t, "profile_roll") < 0.3 {
+			op.Profile = ValidProfileSpec().Draw(t, "profile")
+		}
 		if svc != nil {
 			if svc.Operations == nil {
 				svc.Operations = make(map[string]*topology.Operation)

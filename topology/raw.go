@@ -27,6 +27,24 @@ type rawOperation struct {
 	Calls     []*rawCallNode `yaml:"calls,omitempty"`
 	LogEvents []*rawLogEvent `yaml:"log_events,omitempty"`
 	Metrics   []*rawMetric   `yaml:"metrics,omitempty"`
+	Profile   *rawProfile    `yaml:"profile,omitempty"`
+}
+
+type rawProfile struct {
+	Enabled    bool             `yaml:"enabled"`
+	SampleRate *int             `yaml:"sample_rate,omitempty"`
+	Baseline   []*rawStack      `yaml:"baseline"`
+	Incident   []*rawStack      `yaml:"incident,omitempty"`
+	WhenFault  *rawProfileFault `yaml:"when_fault,omitempty"`
+}
+
+type rawStack struct {
+	Frames []string `yaml:"frames"`
+	Weight float64  `yaml:"weight"`
+}
+
+type rawProfileFault struct {
+	Kind string `yaml:"kind"`
 }
 
 type rawMetric struct {

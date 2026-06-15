@@ -29,8 +29,8 @@ func TestNewDefault_NilProvider_Panics(t *testing.T) {
 		name string
 		run  func()
 	}{
-		{name: "factory", run: func() { NewDefault(nil, mp) }},
-		{name: "meter provider", run: func() { NewDefault(factory, nil) }},
+		{name: "factory", run: func() { NewDefault(nil, mp, nil) }},
+		{name: "meter provider", run: func() { NewDefault(factory, nil, nil) }},
 	}
 
 	for _, tt := range tests {
@@ -46,7 +46,7 @@ func TestNewDefault_BuildsAllInstruments(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	s, ok := syn.(*defaultSynthesizer)
 	if !ok {
 		t.Fatalf("NewDefault returned %T, want *defaultSynthesizer", syn)
@@ -97,7 +97,7 @@ func TestBeginSpan_Server_Success(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	start := time.Unix(1_700_000_000, 0)
 	ctx, finish := syn.BeginSpan(context.Background(), SpanInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
@@ -131,7 +131,7 @@ func TestBeginSpan_Server_Failure_500(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	start := time.Unix(1_700_000_000, 0)
 	_, finish := syn.BeginSpan(context.Background(), SpanInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
@@ -155,7 +155,7 @@ func TestBeginSpan_WithLinks_AttachesSpanLinks(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	linkedSC := trace.NewSpanContext(trace.SpanContextConfig{
 		TraceID:    trace.TraceID{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16},
 		SpanID:     trace.SpanID{1, 2, 3, 4, 5, 6, 7, 8},
@@ -184,7 +184,7 @@ func TestBeginSpan_EmptyLinks_NoSpanLinks(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	start := time.Unix(1_700_000_000, 0)
 	_, finish := syn.BeginSpan(context.Background(), SpanInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
@@ -204,7 +204,7 @@ func TestFinishFn_CascadedAttribute(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	start := time.Unix(1_700_000_000, 0)
 	_, finish := syn.BeginSpan(context.Background(), SpanInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
@@ -230,7 +230,7 @@ func TestBeginSpan_4xx_NoErrorStatus(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	start := time.Unix(1_700_000_000, 0)
 	_, finish := syn.BeginSpan(context.Background(), SpanInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
@@ -250,7 +250,7 @@ func TestBeginSpan_Client_HTTP(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	source, edge := makeSpanEdge(topology.KindApplication, topology.KindExternalAPI, topology.ProtocolHTTP)
 	start := time.Unix(1_700_000_000, 0)
 	_, finish := syn.BeginSpan(context.Background(), SpanInput{
@@ -278,7 +278,7 @@ func TestBeginSpan_InvalidInput_Panics(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	tests := []struct {
 		name string
 		in   SpanInput
@@ -306,7 +306,7 @@ func TestFinishSpanFunc_DoubleCall_NoOp(t *testing.T) {
 	}
 
 	tp, mp, lp, spanExporter, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	start := time.Unix(1_700_000_000, 0)
 	_, finish := syn.BeginSpan(context.Background(), SpanInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
@@ -330,7 +330,7 @@ func TestFinishSpanFunc_DoubleCall_RacePanic(t *testing.T) {
 	}
 
 	tp, mp, lp, _, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	start := time.Unix(1_700_000_000, 0)
 	_, finish := syn.BeginSpan(context.Background(), SpanInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
@@ -349,7 +349,7 @@ func TestActiveRequests_BalancedAfterFinish(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	start := time.Unix(1_700_000_000, 0)
 	var finishes []FinishSpanFunc
 	for i := 0; i < 5; i++ {
@@ -374,7 +374,7 @@ func TestRecordMetric_HTTP_Server(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.RecordMetric(context.Background(), MetricInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
 		Operation:   "GET /checkout",
@@ -397,7 +397,7 @@ func TestRecordMetric_RPC_Client(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	source, edge := makeSpanEdge(topology.KindApplication, topology.KindApplication, topology.ProtocolGRPC)
 	syn.RecordMetric(context.Background(), MetricInput{
 		Service:     source,
@@ -420,7 +420,7 @@ func TestRecordMetric_DB_Client(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.RecordMetric(context.Background(), MetricInput{
 		Service:     &topology.Service{Name: "postgres", Kind: topology.KindDatabase, Replicas: 1, Framework: "postgresql"},
 		Operation:   "SELECT users",
@@ -439,7 +439,7 @@ func TestRecordMetric_Messaging_Producer(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	source, edge := makeSpanEdge(topology.KindQueue, topology.KindQueue, topology.ProtocolMessaging)
 	syn.RecordMetric(context.Background(), MetricInput{
 		Service:     source,
@@ -461,7 +461,7 @@ func TestRecordMetric_ZeroLatency_StillRecords(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.RecordMetric(context.Background(), MetricInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
 		Operation:   "GET /health",
@@ -483,7 +483,7 @@ func TestRecordMetric_StaticSetCached(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	s := syn.(*defaultSynthesizer)
 	in := MetricInput{
 		Service:     makeSpanService("frontend", topology.KindApplication),
@@ -517,7 +517,7 @@ func TestEmitLog_Success(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, recorder := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.EmitLog(context.Background(), LogInput{
 		Service:  makeSpanService("frontend", topology.KindApplication),
 		Severity: otellog.SeverityInfo,
@@ -543,7 +543,7 @@ func TestEmitLog_NilService_Panics(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	requirePanic(t, func() {
 		syn.EmitLog(context.Background(), LogInput{Body: "missing service"})
 	})
@@ -553,7 +553,7 @@ func TestEmitLog_EmptyBody_DefaultFallback(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, recorder := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.EmitLog(context.Background(), LogInput{Service: makeSpanService("frontend", topology.KindApplication)})
 
 	record := requireSingleLog(t, recorder)
@@ -569,7 +569,7 @@ func TestEmitLog_AttributesPropagated(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, recorder := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.EmitLog(context.Background(), LogInput{
 		Service: makeSpanService("frontend", topology.KindApplication),
 		Body:    "with attrs",
@@ -596,7 +596,7 @@ func TestEmitLog_ErrorAddsExceptionAttributes(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, recorder := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.EmitLog(context.Background(), LogInput{
 		Service:  makeSpanService("frontend", topology.KindApplication),
 		Severity: otellog.SeverityError,
@@ -636,7 +636,7 @@ func TestEmitLog_ServiceNameAuto(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, recorder := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.EmitLog(context.Background(), LogInput{
 		Service: makeSpanService("frontend", topology.KindApplication),
 		Body:    "service attr",
@@ -652,7 +652,7 @@ func TestEmitLog_EventName_SetsRecordAndAttribute(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, recorder := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.EmitLog(context.Background(), LogInput{
 		Service:   makeSpanService("payment", topology.KindApplication),
 		EventName: "provider_call.timeout",
@@ -673,7 +673,7 @@ func TestEmitLog_EmptyEventName_NotSet(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, _, recorder := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.EmitLog(context.Background(), LogInput{
 		Service: makeSpanService("payment", topology.KindApplication),
 		Body:    "generic log",

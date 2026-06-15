@@ -49,7 +49,7 @@ func TestPipeline_SamplerTraceIDRatioZero_DropsTracesOnly(t *testing.T) {
 	cfg.Sampler = "traceidratio"
 	cfg.SamplerArg = 0
 	cfg.SamplerArgSet = true
-	p := newPipelineFromExporters(cfg, sdkresource.Empty(), &pipelineStats{}, traceExp, metricExp, logExp)
+	p := newPipelineFromExporters(cfg, sdkresource.Empty(), &pipelineStats{}, traceExp, metricExp, logExp, nil)
 
 	ctx := context.Background()
 	_, span := p.TracerProvider().Tracer("test").Start(ctx, "dropped")
@@ -94,7 +94,7 @@ func TestPipeline_MetricExporter_SameAsInternal(t *testing.T) {
 	t.Parallel()
 
 	metricInner := &fakeMetricExporter{}
-	p := newPipelineFromExporters(validPipelineConfig(), sdkresource.Empty(), &pipelineStats{}, &fakeSpanExporter{}, metricInner, &fakeLogExporter{})
+	p := newPipelineFromExporters(validPipelineConfig(), sdkresource.Empty(), &pipelineStats{}, &fakeSpanExporter{}, metricInner, &fakeLogExporter{}, nil)
 
 	got := p.MetricExporter()
 	if got != p.metricExp {
@@ -180,7 +180,7 @@ func TestPipeline_Shutdown_Idempotent(t *testing.T) {
 	traceInner := &fakeSpanExporter{}
 	metricInner := &fakeMetricExporter{}
 	logInner := &fakeLogExporter{}
-	p := newPipelineFromExporters(validPipelineConfig(), sdkresource.Empty(), &pipelineStats{}, traceInner, metricInner, logInner)
+	p := newPipelineFromExporters(validPipelineConfig(), sdkresource.Empty(), &pipelineStats{}, traceInner, metricInner, logInner, nil)
 
 	first := p.Shutdown(context.Background())
 	second := p.Shutdown(context.Background())
@@ -198,7 +198,7 @@ func TestPipeline_ForceFlush_DeliversSpansWithoutClosing(t *testing.T) {
 	traceInner := &fakeSpanExporter{}
 	metricInner := &fakeMetricExporter{}
 	logInner := &fakeLogExporter{}
-	p := newPipelineFromExporters(validPipelineConfig(), sdkresource.Empty(), &pipelineStats{}, traceInner, metricInner, logInner)
+	p := newPipelineFromExporters(validPipelineConfig(), sdkresource.Empty(), &pipelineStats{}, traceInner, metricInner, logInner, nil)
 	t.Cleanup(func() { _ = p.Shutdown(context.Background()) })
 
 	// A span that has ended sits in the batch processor's queue until the

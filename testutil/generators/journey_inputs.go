@@ -147,3 +147,5 @@ func (noopSynth) RecordMetric(context.Context, synth.MetricInput) {}
 func (noopSynth) EmitLog(context.Context, synth.LogInput) {}
 
 func (noopSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}
+
+func (noopSynth) EmitProfile(context.Context, synth.ProfileInput) {}

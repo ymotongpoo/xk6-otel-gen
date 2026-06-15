@@ -17,7 +17,7 @@ func TestRecordCustom_Counter(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	svc := makeSpanService("checkout", topology.KindApplication)
 	syn.RecordCustom(context.Background(), CustomMetricInput{
 		Service:     svc,
@@ -43,7 +43,7 @@ func TestRecordCustom_Gauge(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	svc := makeSpanService("shipping", topology.KindApplication)
 	syn.RecordCustom(context.Background(), CustomMetricInput{
 		Service:     svc,
@@ -67,7 +67,7 @@ func TestRecordCustom_Histogram(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	svc := makeSpanService("api", topology.KindApplication)
 	syn.RecordCustom(context.Background(), CustomMetricInput{
 		Service:     svc,
@@ -89,7 +89,7 @@ func TestRecordCustom_NilService_NoOp(t *testing.T) {
 	t.Parallel()
 
 	tp, mp, lp, _, reader, _ := newTestProviders(t)
-	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp)
+	syn := NewDefault(singleProviderFactory{tp: tp, lp: lp}, mp, nil)
 	syn.RecordCustom(context.Background(), CustomMetricInput{
 		Name:  "ignored",
 		Type:  topology.MetricCounter,

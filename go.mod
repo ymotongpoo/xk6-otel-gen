@@ -5,6 +5,7 @@ go 1.25.0
 toolchain go1.25.11
 
 require (
+	github.com/google/pprof v0.0.0-20260604005048-7023385849c0
 	github.com/google/uuid v1.6.0
 	github.com/grafana/sobek v0.0.0-20260609103628-24345224533c
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
@@ -41,7 +42,6 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
-	github.com/google/pprof v0.0.0-20230728192033-2ba5b33183c6 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect

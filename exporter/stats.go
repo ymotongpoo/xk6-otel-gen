@@ -19,8 +19,10 @@ type Stats struct {
 	TracesFailed    int64
 	MetricsExported int64
 	MetricsFailed   int64
-	LogsExported    int64
-	LogsFailed      int64
+	LogsExported      int64
+	LogsFailed        int64
+	ProfilesExported  int64
+	ProfilesFailed    int64
 }
 
 // pipelineStats stores per-signal counters updated by exporter wrappers.
@@ -31,6 +33,8 @@ type pipelineStats struct {
 	metricsFailed   atomic.Int64
 	logsExported    atomic.Int64
 	logsFailed      atomic.Int64
+	profilesExported atomic.Int64
+	profilesFailed   atomic.Int64
 }
 
 func (s *pipelineStats) snapshot() Stats {
@@ -39,8 +43,10 @@ func (s *pipelineStats) snapshot() Stats {
 		TracesFailed:    s.tracesFailed.Load(),
 		MetricsExported: s.metricsExported.Load(),
 		MetricsFailed:   s.metricsFailed.Load(),
-		LogsExported:    s.logsExported.Load(),
-		LogsFailed:      s.logsFailed.Load(),
+		LogsExported:     s.logsExported.Load(),
+		LogsFailed:       s.logsFailed.Load(),
+		ProfilesExported: s.profilesExported.Load(),
+		ProfilesFailed:   s.profilesFailed.Load(),
 	}
 }
 

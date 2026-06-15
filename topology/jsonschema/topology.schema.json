@@ -100,6 +100,10 @@
           "type": "array",
           "items": { "$ref": "#/$defs/Metric" },
           "default": []
+        },
+        "profile": {
+          "description": "Synthetic flamegraph emitted when this operation completes.",
+          "$ref": "#/$defs/Profile"
         }
       },
       "examples": [{ "name": "GetProduct", "calls": [] }]
@@ -182,6 +186,71 @@
           "delta": 40
         }
       ]
+    },
+    "Profile": {
+      "description": "Synthetic flamegraph with baseline and optional incident variant.",
+      "type": "object",
+      "required": ["enabled", "baseline"],
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "description": "Whether profile emission is enabled for this operation.",
+          "type": "boolean"
+        },
+        "sample_rate": {
+          "description": "Sampling rate in Hz.",
+          "type": "integer",
+          "minimum": 1,
+          "default": 100
+        },
+        "baseline": {
+          "description": "Baseline stack samples (root to leaf).",
+          "type": "array",
+          "items": { "$ref": "#/$defs/Stack" },
+          "minItems": 1
+        },
+        "incident": {
+          "description": "Incident stack samples emitted while when_fault is active.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/Stack" }
+        },
+        "when_fault": {
+          "description": "Select incident stacks while this fault kind is active.",
+          "$ref": "#/$defs/ProfileFaultLink"
+        }
+      }
+    },
+    "Stack": {
+      "description": "One weighted stack trace in a synthetic profile.",
+      "type": "object",
+      "required": ["frames", "weight"],
+      "additionalProperties": true,
+      "properties": {
+        "frames": {
+          "description": "Function names from root to leaf.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "weight": {
+          "description": "Self weight for this stack sample.",
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "ProfileFaultLink": {
+      "description": "Fault kind that selects incident profile stacks.",
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Fault kind that activates incident stacks.",
+          "type": "string",
+          "enum": ["latency_inflation", "error_rate_override", "disconnect", "crash"]
+        }
+      }
     },
     "LogEvent": {
       "description": "A structured log event gated by operation outcome.",

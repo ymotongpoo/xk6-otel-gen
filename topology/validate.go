@@ -442,6 +442,29 @@ func validateDomainRanges(s *Schema) []error {
 					}
 				}
 			}
+			if op.Profile != nil && op.Profile.Enabled {
+				pPath := opPath + ".profile"
+				if len(op.Profile.Baseline) == 0 {
+					errs = append(errs, newValidationError(pPath+".baseline", "D-PROFILE", "baseline must be non-empty when profile is enabled"))
+				}
+				if op.Profile.SampleRate <= 0 {
+					errs = append(errs, newValidationErrorf(pPath+".sample_rate", "D-PROFILE", "sample_rate must be > 0, got %d", op.Profile.SampleRate))
+				}
+				for i, stack := range op.Profile.Baseline {
+					errs = append(errs, validateStackSample(stack, fmt.Sprintf("%s.baseline[%d]", pPath, i))...)
+				}
+				for i, stack := range op.Profile.Incident {
+					errs = append(errs, validateStackSample(stack, fmt.Sprintf("%s.incident[%d]", pPath, i))...)
+				}
+				if op.Profile.WhenFault != nil {
+					if !validFaultKind(op.Profile.WhenFault.Kind) {
+						errs = append(errs, newValidationErrorf(pPath+".when_fault.kind", "D-ENUM", "unsupported fault kind %d", op.Profile.WhenFault.Kind))
+					}
+					if len(op.Profile.Incident) == 0 {
+						errs = append(errs, newValidationError(pPath+".incident", "D-PROFILE", "incident stacks required when when_fault is set"))
+					}
+				}
+			}
 		}
 	}
 
@@ -718,4 +741,15 @@ func validMetricType(t MetricType) bool {
 
 func validFloatMetricValue(v float64) bool {
 	return !math.IsNaN(v) && !math.IsInf(v, 0)
+}
+
+func validateStackSample(stack StackSample, path string) []error {
+	var errs []error
+	if len(stack.Frames) == 0 {
+		errs = append(errs, newValidationError(path+".frames", "D-PROFILE", "frames must be non-empty"))
+	}
+	if !validFloatMetricValue(stack.Weight) || stack.Weight < 0 {
+		errs = append(errs, newValidationErrorf(path+".weight", "D-PROFILE", "weight must be finite and >= 0, got %g", stack.Weight))
+	}
+	return errs
 }

@@ -45,6 +45,10 @@ type Synthesizer interface {
 	// not go through the semconv policy path, so it works for any operation
 	// (including those whose spans are INTERNAL).
 	RecordCustom(ctx context.Context, in CustomMetricInput)
+
+	// EmitProfile pushes one synthetic pprof profile for a journey operation.
+	// No-op when the Synthesizer was built without a ProfileExporter.
+	EmitProfile(ctx context.Context, in ProfileInput)
 }
 
 // SpanInput describes a journey node span to synthesize from topology and
@@ -101,6 +105,34 @@ type CustomMetricInput struct {
 	Unit        string
 	Value       float64
 	Attributes  map[string]any
+}
+
+// ProfileInput describes one synthetic pprof profile to push for a journey operation.
+type ProfileInput struct {
+	Service      *topology.Service
+	Operation    string
+	InstanceIdx  int
+	SampleRateHz int
+	Stacks       []topology.StackSample
+	StartTime    time.Time
+	EndTime      time.Time
+	ProfileID    string
+}
+
+// ProfileExporter transports pprof bytes to a profiling backend (e.g. Pyroscope).
+// May be nil (profiles disabled).
+type ProfileExporter interface {
+	PushProfile(ctx context.Context, p ProfilePush) error
+}
+
+// ProfilePush is one profile upload request.
+type ProfilePush struct {
+	AppName    string
+	Labels     map[string]string
+	FromNanos  int64
+	UntilNanos int64
+	SampleRate int
+	Pprof      []byte
 }
 
 // Outcome describes the result of one journey operation and supplies dynamic

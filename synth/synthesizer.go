@@ -48,6 +48,8 @@ type defaultSynthesizer struct {
 
 	customMu    sync.Mutex
 	customInsts map[string]any
+
+	profiles ProfileExporter
 }
 
 // NewDefault creates the default Synthesizer. Traces and logs are emitted
@@ -55,7 +57,7 @@ type defaultSynthesizer struct {
 // synthetic service carries its own service.name resource), while metrics share
 // the single MeterProvider mp with service.name as a data-point attribute. All
 // U3 instruments are created eagerly.
-func NewDefault(factory ProviderFactory, mp metric.MeterProvider) Synthesizer {
+func NewDefault(factory ProviderFactory, mp metric.MeterProvider, profiles ProfileExporter) Synthesizer {
 	if factory == nil {
 		panic("synth: NewDefault: factory must not be nil")
 	}
@@ -71,6 +73,7 @@ func NewDefault(factory ProviderFactory, mp metric.MeterProvider) Synthesizer {
 		loggers:        make(map[string]log.Logger),
 		staticSetCache: &staticSetCache{},
 		customInsts:    make(map[string]any),
+		profiles:       profiles,
 	}
 
 	s.httpClientDur = mustHistogram(meter, "http.client.request.duration", "s")

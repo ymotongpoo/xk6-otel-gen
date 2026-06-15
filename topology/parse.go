@@ -109,6 +109,7 @@ func buildSchema(raw *rawSchema) *Schema {
 				Service:   svc,
 				LogEvents: resolveLogEvents(ro.LogEvents),
 				Metrics:   resolveMetrics(ro.Metrics),
+				Profile:   resolveProfile(ro.Profile),
 			}
 			svc.Operations[ro.Name] = op
 		}
@@ -615,6 +616,42 @@ func parseLogCondition(s string) LogCondition {
 	default:
 		return invalidLogCondition
 	}
+}
+
+func resolveProfile(in *rawProfile) *ProfileSpec {
+	if in == nil {
+		return nil
+	}
+	spec := &ProfileSpec{
+		Enabled:    in.Enabled,
+		SampleRate: intDefault(in.SampleRate, 100),
+		Baseline:   resolveStacks(in.Baseline),
+		Incident:   resolveStacks(in.Incident),
+	}
+	if in.WhenFault != nil {
+		spec.WhenFault = &ProfileFaultLink{Kind: parseFaultKind(in.WhenFault.Kind)}
+	}
+	return spec
+}
+
+func resolveStacks(in []*rawStack) []StackSample {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]StackSample, 0, len(in))
+	for _, raw := range in {
+		if raw == nil {
+			continue
+		}
+		out = append(out, StackSample{
+			Frames: append([]string(nil), raw.Frames...),
+			Weight: raw.Weight,
+		})
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 func resolveMetrics(in []*rawMetric) []MetricSpec {

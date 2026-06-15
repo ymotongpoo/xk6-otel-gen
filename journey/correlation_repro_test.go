@@ -100,7 +100,7 @@ func TestExecute_LogsAlignWithSpanTimeline(t *testing.T) {
 		_ = mp.Shutdown(context.Background())
 	})
 
-	syn := synth.NewDefault(&reproFactory{spanExp: spanExp, logRec: rec}, mp)
+	syn := synth.NewDefault(&reproFactory{spanExp: spanExp, logRec: rec}, mp, nil)
 	schema := reproLatencySchema()
 	eng := NewEngineWithSeed(schema, schema.ApplyFaults(), syn, 42)
 

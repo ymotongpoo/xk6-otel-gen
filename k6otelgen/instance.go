@@ -246,7 +246,7 @@ func (i *ModuleInstance) lateInit() error {
 	if err != nil {
 		return err
 	}
-	syn := synth.NewDefault(pipeline, pipeline.MeterProvider())
+	syn := synth.NewDefault(pipeline, pipeline.MeterProvider(), pipeline.ProfileExporter())
 	engine := journey.NewEngineWithSeed(i.root.schema, i.root.overlay, syn, seedForVU(i.vu))
 	i.synth = syn
 	i.engine = engine

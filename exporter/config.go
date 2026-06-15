@@ -73,6 +73,7 @@ type Config struct {
 	TracesEndpoint    string
 	MetricsEndpoint   string
 	LogsEndpoint      string
+	ProfilesEndpoint  string
 	Headers           map[string]string
 	Insecure          bool
 	InsecureSet       bool
@@ -128,9 +129,10 @@ func (c Config) Validate() error {
 		errs = append(errs, &ConfigError{Field: "Endpoint", Value: c.Endpoint, Message: "must be host:port or scheme://host[:port]"})
 	}
 	for field, value := range map[string]string{
-		"TracesEndpoint":  c.TracesEndpoint,
-		"MetricsEndpoint": c.MetricsEndpoint,
-		"LogsEndpoint":    c.LogsEndpoint,
+		"TracesEndpoint":   c.TracesEndpoint,
+		"MetricsEndpoint":  c.MetricsEndpoint,
+		"LogsEndpoint":     c.LogsEndpoint,
+		"ProfilesEndpoint": c.ProfilesEndpoint,
 	} {
 		if value != "" && !validEndpoint(value) {
 			errs = append(errs, &ConfigError{Field: field, Value: value, Message: "must be host:port or scheme://host[:port]"})
@@ -183,6 +185,9 @@ func (c Config) MergeWith(override Config) Config {
 	}
 	if override.LogsEndpoint != "" {
 		c.LogsEndpoint = override.LogsEndpoint
+	}
+	if override.ProfilesEndpoint != "" {
+		c.ProfilesEndpoint = override.ProfilesEndpoint
 	}
 	if override.Headers != nil {
 		c.Headers = override.Headers

@@ -31,7 +31,7 @@ func TestExecute_MessagingSpanLink_Property(t *testing.T) {
 		mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(sdkmetric.NewManualReader()))
 		defer func() { _ = mp.Shutdown(context.Background()) }()
 
-		syn := synth.NewDefault(&messagingReproFactory{spanExp: spanExp}, mp)
+		syn := synth.NewDefault(&messagingReproFactory{spanExp: spanExp}, mp, nil)
 		engine := journey.NewEngineWithSeed(schema, schema.ApplyFaults(), syn, rapid.Uint64().Draw(rt, "seed"))
 		plan, err := engine.BuildPlan("place-order")
 		if err != nil {
