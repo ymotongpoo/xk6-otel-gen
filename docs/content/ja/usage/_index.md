@@ -45,11 +45,43 @@ export function teardown() {
 | `otelgen.load(path)` | 1 つのトポロジ YAML ファイルをパース・検証 |
 | `handle.runJourney(name)` | 名前付きジャーニーを実行 |
 | `handle.runRandomJourney()` | YAML の weight に従ってジャーニーを選んで実行し、その名前を返す |
+| `handle.setFaultIntensity(x)` | この VU の注入 fault 強度をスケール（`0` で無効、`1` で full）。k6 のステージから駆動してバーン→回復を台本化 |
 | `handle.journeyWeights()` | カスタム JS 選択用に `{ name: weight }` を返す |
 | `otelgen.flush()` | キュー済みテレメトリを強制フラッシュ(`teardown()` で呼びルートスパンを確実に送信) |
 | `otelgen.stats()` | エクスポーターの成功/失敗カウンタを返す |
 | `otelgen.journeys()` | 読み込み後にジャーニー名の一覧を返す |
 | `handle.journeys()` | ハンドルからジャーニー名の一覧を返す |
+
+## 時間変化 fault
+
+`handle.setFaultIntensity(x)` はこの VU の注入 fault 確率と
+`error_rate_override` の値をスケールします（`0` で注入 fault 無効、`1` で
+full intensity）。`default()` 内で各ジャーニー実行の前に設定し、経過時間や
+k6 のステージ情報からバーン→回復タイムラインを台本化できます。
+
+```javascript
+import otelgen from "k6/x/otel-gen";
+
+export function setup() {
+  otelgen.configure({
+    endpoint: "localhost:4317",
+    protocol: "grpc",
+    insecure: true,
+  });
+}
+
+export default function () {
+  const h = otelgen.load("./topology.yaml");
+  const t = (Date.now() - Number(__ENV.START_MS)) / 1000;
+  const intensity = t < 60 ? 0 : t < 180 ? 1 : 0; // healthy → incident → recovered
+  h.setFaultIntensity(intensity);
+  h.runRandomJourney();
+}
+
+export function teardown() {
+  otelgen.flush();
+}
+```
 
 ## シグナルと機能
 

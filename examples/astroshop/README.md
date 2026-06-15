@@ -96,6 +96,19 @@ journeys:
 
 For upstream maintenance, compare this example against `open-telemetry/opentelemetry-demo` release `2.2.0` before changing service names or journey shapes.
 
+Drive a burn→recover timeline from elapsed time by scaling injected fault
+intensity before each journey (astroshop faults use `probability: 1.0`, so
+intensity ramps them directly):
+
+```javascript
+export default function () {
+  const t = (Date.now() - Number(__ENV.START_MS)) / 1000;
+  const intensity = t < 60 ? 0 : t < 180 ? 1 : 0; // healthy → incident → recovered
+  h.setFaultIntensity(intensity);
+  h.runRandomJourney();
+}
+```
+
 `checkout.place_order` declares a counter metric (`orders.settlement.amount.total`)
 that adds 80 on each successful order; with OTLP cumulative temporality this
 becomes a settlement-total time series. `shipping.quote_shipping` declares a

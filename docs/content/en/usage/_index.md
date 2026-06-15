@@ -46,11 +46,43 @@ performs the final pipeline shutdown).
 | `otelgen.load(path)` | Parse and validate one topology YAML file |
 | `handle.runJourney(name)` | Execute a named journey |
 | `handle.runRandomJourney()` | Pick a journey by YAML weight, execute it, and return its name |
+| `handle.setFaultIntensity(x)` | Scale injected-fault intensity for this VU (`0` disables faults, `1` is full); drive from k6 stages for burn→recover |
 | `handle.journeyWeights()` | Return `{ name: weight }` for custom JS selection |
 | `otelgen.flush()` | Force-flush queued telemetry (call in `teardown()` so root spans are delivered) |
 | `otelgen.stats()` | Return exporter success/failure counters |
 | `otelgen.journeys()` | List journey names after loading |
 | `handle.journeys()` | List journey names from a handle |
+
+## Time-varying faults
+
+`handle.setFaultIntensity(x)` scales injected-fault probability and
+`error_rate_override` values for this VU (`0` disables injected faults, `1`
+is full intensity). Set it from `default()` before each journey call to script
+a burn→recover timeline from elapsed time or k6 stage metadata:
+
+```javascript
+import otelgen from "k6/x/otel-gen";
+
+export function setup() {
+  otelgen.configure({
+    endpoint: "localhost:4317",
+    protocol: "grpc",
+    insecure: true,
+  });
+}
+
+export default function () {
+  const h = otelgen.load("./topology.yaml");
+  const t = (Date.now() - Number(__ENV.START_MS)) / 1000;
+  const intensity = t < 60 ? 0 : t < 180 ? 1 : 0; // healthy → incident → recovered
+  h.setFaultIntensity(intensity);
+  h.runRandomJourney();
+}
+
+export function teardown() {
+  otelgen.flush();
+}
+```
 
 ## Signals and features
 
