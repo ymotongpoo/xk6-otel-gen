@@ -56,11 +56,12 @@ export function teardown() {
 
 `handle.setFaultIntensity(x)` はこの VU の注入 fault 確率と
 `error_rate_override` の値をスケールします（`0` で注入 fault 無効、`1` で
-full intensity）。`default()` 内で各ジャーニー実行の前に設定し、経過時間や
-k6 のステージ情報からバーン→回復タイムラインを台本化できます。
+full intensity）。`default()` 内で各ジャーニー実行の前に設定し、テスト開始からの
+経過時間に応じてバーン→回復タイムラインを台本化できます。
 
 ```javascript
 import otelgen from "k6/x/otel-gen";
+import exec from "k6/execution";
 
 export function setup() {
   otelgen.configure({
@@ -71,11 +72,11 @@ export function setup() {
 }
 
 export default function () {
-  const h = otelgen.load("./topology.yaml");
-  const t = (Date.now() - Number(__ENV.START_MS)) / 1000;
+  const topology = otelgen.load("./topology.yaml");
+  const t = exec.instance.currentTestRunDuration / 1000; // テスト開始からの秒数
   const intensity = t < 60 ? 0 : t < 180 ? 1 : 0; // healthy → incident → recovered
-  h.setFaultIntensity(intensity);
-  h.runRandomJourney();
+  topology.setFaultIntensity(intensity);
+  topology.runRandomJourney();
 }
 
 export function teardown() {

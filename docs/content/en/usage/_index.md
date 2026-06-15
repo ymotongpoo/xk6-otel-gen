@@ -58,10 +58,11 @@ performs the final pipeline shutdown).
 `handle.setFaultIntensity(x)` scales injected-fault probability and
 `error_rate_override` values for this VU (`0` disables injected faults, `1`
 is full intensity). Set it from `default()` before each journey call to script
-a burn→recover timeline from elapsed time or k6 stage metadata:
+a burn→recover timeline from the elapsed test time:
 
 ```javascript
 import otelgen from "k6/x/otel-gen";
+import exec from "k6/execution";
 
 export function setup() {
   otelgen.configure({
@@ -72,11 +73,11 @@ export function setup() {
 }
 
 export default function () {
-  const h = otelgen.load("./topology.yaml");
-  const t = (Date.now() - Number(__ENV.START_MS)) / 1000;
+  const topology = otelgen.load("./topology.yaml");
+  const t = exec.instance.currentTestRunDuration / 1000; // seconds since test start
   const intensity = t < 60 ? 0 : t < 180 ? 1 : 0; // healthy → incident → recovered
-  h.setFaultIntensity(intensity);
-  h.runRandomJourney();
+  topology.setFaultIntensity(intensity);
+  topology.runRandomJourney();
 }
 
 export function teardown() {
