@@ -156,7 +156,7 @@ func newGeneratorSynthesizer(t *testing.T) synth.Synthesizer {
 		_ = mp.Shutdown(context.Background())
 		_ = lp.Shutdown(context.Background())
 	})
-	return synth.NewDefault(fixedFactory{tp: tp, lp: lp}, mp)
+	return synth.NewDefault(fixedFactory{tp: tp, lp: lp}, mp, nil)
 }
 
 // fixedFactory routes every service to one shared tracer/logger provider,

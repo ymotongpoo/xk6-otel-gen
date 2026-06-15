@@ -129,7 +129,7 @@ func newAstroshopBenchEngine(tb testing.TB) (*Engine, func()) {
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(tracetest.NewNoopExporter()))
 	mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(sdkmetric.NewManualReader()))
 	lp := sdklog.NewLoggerProvider(sdklog.WithProcessor(sdklog.NewSimpleProcessor(noopLogExporter{})))
-	engine := NewEngineWithSeed(schema, schema.ApplyFaults(), synth.NewDefault(fixedFactory{tp: tp, lp: lp}, mp), 42)
+	engine := NewEngineWithSeed(schema, schema.ApplyFaults(), synth.NewDefault(fixedFactory{tp: tp, lp: lp}, mp, nil), 42)
 	cleanup := func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()

@@ -61,7 +61,35 @@ func equalOperation(a, b *Operation) bool {
 	if a == nil || b == nil {
 		return a == b
 	}
-	return identifyOp(a) == identifyOp(b) && equalCalls(a.Calls, b.Calls) && equalLogEvents(a.LogEvents, b.LogEvents) && equalMetrics(a.Metrics, b.Metrics)
+	return identifyOp(a) == identifyOp(b) && equalCalls(a.Calls, b.Calls) && equalLogEvents(a.LogEvents, b.LogEvents) && equalMetrics(a.Metrics, b.Metrics) && equalProfile(a.Profile, b.Profile)
+}
+
+func equalProfile(a, b *ProfileSpec) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	if a.Enabled != b.Enabled || a.SampleRate != b.SampleRate {
+		return false
+	}
+	if !equalStackSamples(a.Baseline, b.Baseline) || !equalStackSamples(a.Incident, b.Incident) {
+		return false
+	}
+	if a.WhenFault == nil || b.WhenFault == nil {
+		return a.WhenFault == b.WhenFault
+	}
+	return a.WhenFault.Kind == b.WhenFault.Kind
+}
+
+func equalStackSamples(a, b []StackSample) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].Weight != b[i].Weight || !reflect.DeepEqual(a[i].Frames, b[i].Frames) {
+			return false
+		}
+	}
+	return true
 }
 
 func equalMetrics(a, b []MetricSpec) bool {

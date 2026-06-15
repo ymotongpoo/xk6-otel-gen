@@ -22,7 +22,7 @@ func ExampleNewDefault() {
 	mp := sdkmetric.NewMeterProvider()
 	lp := sdklog.NewLoggerProvider()
 
-	syn := synth.NewDefault(fixedProviderFactory{tp: tp, lp: lp}, mp)
+	syn := synth.NewDefault(fixedProviderFactory{tp: tp, lp: lp}, mp, nil)
 	if syn != nil {
 		fmt.Println("synthesizer ready")
 	}
@@ -62,7 +62,7 @@ func ExampleSynthesizer_BeginSpan() {
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
 	mp := sdkmetric.NewMeterProvider()
 	lp := sdklog.NewLoggerProvider()
-	syn := synth.NewDefault(fixedProviderFactory{tp: tp, lp: lp}, mp)
+	syn := synth.NewDefault(fixedProviderFactory{tp: tp, lp: lp}, mp, nil)
 
 	start := time.Unix(1_700_000_000, 0)
 	ctx, finish := syn.BeginSpan(context.Background(), synth.SpanInput{

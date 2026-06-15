@@ -23,7 +23,7 @@ func TestExecute_Messaging_EmitsProducerConsumerWithLink(t *testing.T) {
 	mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(sdkmetric.NewManualReader()))
 	t.Cleanup(func() { _ = mp.Shutdown(context.Background()) })
 
-	syn := synth.NewDefault(&reproFactory{spanExp: spanExp, logRec: &reproLogRecorder{}}, mp)
+	syn := synth.NewDefault(&reproFactory{spanExp: spanExp, logRec: &reproLogRecorder{}}, mp, nil)
 	engine := NewEngineWithSeed(newMessagingJourneySchema(), newMessagingJourneySchema().ApplyFaults(), syn, 42)
 	plan := engine.impl.plans["place-order"]
 	if plan == nil {

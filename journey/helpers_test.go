@@ -20,6 +20,7 @@ type mockSynth struct {
 	metrics       []metricCall
 	customMetrics []customMetricCall
 	logs          []logCall
+	profiles      []profileCall
 }
 
 type spanCall struct {
@@ -38,6 +39,10 @@ type customMetricCall struct {
 
 type logCall struct {
 	Input synth.LogInput
+}
+
+type profileCall struct {
+	Input synth.ProfileInput
 }
 
 func newMockSynth() *mockSynth {
@@ -89,6 +94,12 @@ func (m *mockSynth) RecordCustom(_ context.Context, in synth.CustomMetricInput) 
 	m.customMetrics = append(m.customMetrics, customMetricCall{Input: in})
 }
 
+func (m *mockSynth) EmitProfile(_ context.Context, in synth.ProfileInput) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.profiles = append(m.profiles, profileCall{Input: in})
+}
+
 func (m *mockSynth) snapshotSpans() []spanCall {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -118,6 +129,14 @@ func (m *mockSynth) snapshotCustomMetrics() []customMetricCall {
 	defer m.mu.Unlock()
 	out := make([]customMetricCall, len(m.customMetrics))
 	copy(out, m.customMetrics)
+	return out
+}
+
+func (m *mockSynth) snapshotProfiles() []profileCall {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]profileCall, len(m.profiles))
+	copy(out, m.profiles)
 	return out
 }
 
@@ -165,3 +184,5 @@ func (panicBeginSynth) RecordMetric(context.Context, synth.MetricInput) {}
 func (panicBeginSynth) EmitLog(context.Context, synth.LogInput) {}
 
 func (panicBeginSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}
+
+func (panicBeginSynth) EmitProfile(context.Context, synth.ProfileInput) {}

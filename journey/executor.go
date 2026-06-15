@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
 
@@ -285,6 +286,19 @@ func (e *engineImpl) executeParallelGroupAt(ctx context.Context, group *Node, pa
 }
 
 func (e *engineImpl) finishAndEmitAt(ctx context.Context, node *Node, instanceIdx int, finishFn synth.FinishSpanFunc, outcome Outcome, end time.Time, ff foldedFault) {
+	var profStacks []topology.StackSample
+	var profileID string
+	if node.Service != nil && node.Profile != nil && node.Profile.Enabled {
+		if sp := trace.SpanFromContext(ctx); sp.SpanContext().IsValid() {
+			profileID = sp.SpanContext().SpanID().String()
+			sp.SetAttributes(attribute.String("pyroscope.profile.id", profileID))
+			profStacks = node.Profile.Baseline
+			if node.Profile.WhenFault != nil && faultActiveForKind(ff, node.Profile.WhenFault.Kind) && len(node.Profile.Incident) > 0 {
+				profStacks = node.Profile.Incident
+			}
+		}
+	}
+
 	finishFn(toSynthOutcome(outcome, end))
 	synthOutcome := toSynthOutcome(outcome, end)
 	e.synth.RecordMetric(ctx, synth.MetricInput{
@@ -344,6 +358,18 @@ func (e *engineImpl) finishAndEmitAt(ctx context.Context, node *Node, instanceId
 				Attributes:  cloneAttrs(m.Attributes),
 			})
 		}
+	}
+	if profileID != "" {
+		e.synth.EmitProfile(ctx, synth.ProfileInput{
+			Service:      node.Service,
+			Operation:    node.Operation,
+			InstanceIdx:  instanceIdx,
+			SampleRateHz: node.Profile.SampleRate,
+			Stacks:       profStacks,
+			StartTime:    end.Add(-outcome.Latency),
+			EndTime:      end,
+			ProfileID:    profileID,
+		})
 	}
 }
 

@@ -33,7 +33,7 @@ func TestIntegration_SynthToCollector_ThreeSignals_Correlated(t *testing.T) {
 		MaxQueueSize: 8,
 	})
 
-	syn := synth.NewDefault(p, p.MeterProvider())
+	syn := synth.NewDefault(p, p.MeterProvider(), p.ProfileExporter())
 	svc := &topology.Service{Name: "frontend", Kind: topology.KindApplication, Replicas: 1}
 	start := time.Now()
 	ctx, finish := syn.BeginSpan(context.Background(), synth.SpanInput{

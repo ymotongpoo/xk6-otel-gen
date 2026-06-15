@@ -186,6 +186,21 @@ services:
             when_fault:
               kind: latency_inflation
               delta: 40
+        profile:
+          enabled: true
+          sample_rate: 100
+          baseline:
+            - frames: ["handleQuoteShipping", "calcBaseRate"]
+              weight: 120
+            - frames: ["handleQuoteShipping", "serializeResponse"]
+              weight: 30
+          incident:
+            - frames: ["handleQuoteShipping", "calcBaseRate", "geoLookup", "matrixSolve"]
+              weight: 900
+            - frames: ["handleQuoteShipping", "serializeResponse"]
+              weight: 30
+          when_fault:
+            kind: latency_inflation
         calls:
           - to: { service: quote, operation: get_quote }
             protocol: grpc

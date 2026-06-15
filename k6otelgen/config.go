@@ -40,6 +40,12 @@ func optsToConfig(opts map[string]any) (exporter.Config, error) {
 				return cfg, typeMismatch(key, value, "string")
 			}
 			cfg.LogsEndpoint = s
+		case "profilesEndpoint":
+			s, ok := value.(string)
+			if !ok {
+				return cfg, typeMismatch(key, value, "string")
+			}
+			cfg.ProfilesEndpoint = s
 		case "protocol":
 			s, ok := value.(string)
 			if !ok {

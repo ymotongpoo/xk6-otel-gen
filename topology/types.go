@@ -44,6 +44,30 @@ type Operation struct {
 	Calls     []*CallNode    `yaml:"calls"`
 	LogEvents []LogEventSpec `yaml:"log_events,omitempty"`
 	Metrics   []MetricSpec   `yaml:"metrics,omitempty"`
+	Profile   *ProfileSpec   `yaml:"profile,omitempty"`
+}
+
+// ProfileSpec declares a synthetic flamegraph emitted when the operation
+// completes. When WhenFault is set and that fault kind is active on this
+// operation's node, the Incident stacks are emitted instead of Baseline,
+// producing a diff flamegraph between normal and incident runs.
+type ProfileSpec struct {
+	Enabled    bool
+	SampleRate int
+	Baseline   []StackSample
+	Incident   []StackSample
+	WhenFault  *ProfileFaultLink
+}
+
+// StackSample is one weighted stack trace in a synthetic profile.
+type StackSample struct {
+	Frames []string
+	Weight float64
+}
+
+// ProfileFaultLink selects the incident profile variant while a fault is active.
+type ProfileFaultLink struct {
+	Kind FaultKind
 }
 
 // MetricSpec is a declarative synthetic metric emitted when an operation

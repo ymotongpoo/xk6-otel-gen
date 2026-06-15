@@ -18,6 +18,8 @@ import (
 	sdkresource "go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ymotongpoo/xk6-otel-gen/synth"
 )
 
 // Pipeline owns the trace, metric, and log providers for one OTLP destination.
@@ -32,6 +34,7 @@ type Pipeline struct {
 	metricExp sdkmetric.Exporter
 	traceExp  sdktrace.SpanExporter
 	logExp    sdklog.Exporter
+	profileExp *pyroscopeClient
 
 	// Per-virtual-service trace and log providers, each carrying that service's
 	// own service.name resource attribute while sharing this Pipeline's single
@@ -98,8 +101,15 @@ func newWithExporterBuilders(cfg Config, buildTrace traceBuilder, buildMetric me
 		_ = metricExp.Shutdown(context.Background())
 		return nil, &PipelineError{Stage: "log_exporter", Inner: err}
 	}
+	profileExp, err := newPyroscopeClient(cfg, tlsConfig, stats)
+	if err != nil {
+		_ = traceExp.Shutdown(context.Background())
+		_ = metricExp.Shutdown(context.Background())
+		_ = logExp.Shutdown(context.Background())
+		return nil, &PipelineError{Stage: "profile_exporter", Inner: err}
+	}
 
-	return newPipelineFromExporters(cfg, res, stats, traceExp, metricExp, logExp), nil
+	return newPipelineFromExporters(cfg, res, stats, traceExp, metricExp, logExp, profileExp), nil
 }
 
 // onceShutdownSpanExporter guards Shutdown with sync.Once so the span exporter
@@ -128,7 +138,7 @@ func (e *onceShutdownLogExporter) Shutdown(ctx context.Context) error {
 	return e.err
 }
 
-func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipelineStats, traceExp sdktrace.SpanExporter, metricExp sdkmetric.Exporter, logExp sdklog.Exporter) *Pipeline {
+func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipelineStats, traceExp sdktrace.SpanExporter, metricExp sdkmetric.Exporter, logExp sdklog.Exporter, profileExp *pyroscopeClient) *Pipeline {
 	// Wrap the span and log exporters so the default and per-service providers
 	// can each own a batch processor over the SAME exporter without closing it
 	// more than once on Shutdown.
@@ -172,6 +182,7 @@ func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipe
 		metricExp:  metricExp,
 		traceExp:   traceExp,
 		logExp:     logExp,
+		profileExp: profileExp,
 		svcTracers: make(map[string]*sdktrace.TracerProvider),
 		svcLoggers: make(map[string]*sdklog.LoggerProvider),
 	}
@@ -212,6 +223,15 @@ func (p *Pipeline) MetricExporter() sdkmetric.Exporter {
 // LoggerProvider returns the Pipeline's shared log provider.
 func (p *Pipeline) LoggerProvider() log.LoggerProvider {
 	return p.lp
+}
+
+// ProfileExporter returns the Pyroscope profile exporter when ProfilesEndpoint
+// is configured, otherwise nil (profiles disabled).
+func (p *Pipeline) ProfileExporter() synth.ProfileExporter {
+	if p == nil || p.profileExp == nil {
+		return nil
+	}
+	return p.profileExp
 }
 
 // TracerProviderForService returns a TracerProvider whose resource is res

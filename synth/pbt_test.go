@@ -185,7 +185,7 @@ func newPBTSynthesizer(t *testing.T) (synth.Synthesizer, *tracetest.InMemoryExpo
 		_ = mp.Shutdown(context.Background())
 		_ = lp.Shutdown(context.Background())
 	})
-	return synth.NewDefault(fixedProviderFactory{tp: tp, lp: lp}, mp), spanExporter, reader
+	return synth.NewDefault(fixedProviderFactory{tp: tp, lp: lp}, mp, nil), spanExporter, reader
 }
 
 // fixedProviderFactory routes every synthetic service to one shared

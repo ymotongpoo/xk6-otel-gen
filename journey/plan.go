@@ -27,6 +27,7 @@ type Node struct {
 	Children  []*Node
 	LogEvents []topology.LogEventSpec
 	Metrics   []topology.MetricSpec
+	Profile   *topology.ProfileSpec
 }
 
 // BuildPlan returns the cached immutable Plan for journeyName.
@@ -98,6 +99,7 @@ func (e *engineImpl) buildOperationNode(op *topology.Operation, edge *topology.E
 		Edge:      edge,
 		LogEvents: op.LogEvents,
 		Metrics:   op.Metrics,
+		Profile:   op.Profile,
 	}
 	for i, call := range op.Calls {
 		child, err := e.buildCallNode(call, visiting, appendPath(path, fmt.Sprintf("call[%d]", i)))
