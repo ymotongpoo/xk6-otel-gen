@@ -101,3 +101,10 @@ that adds 80 on each successful order; with OTLP cumulative temporality this
 becomes a settlement-total time series. `shipping.quote_shipping` declares a
 fault-linked gauge (`shipping.quote.backlog`) that jumps from 5 to 45 while the
 existing `latency_inflation` fault is active on that operation.
+
+Messaging edges (for example `checkout.place_order` → `kafka.publish_order`)
+emit a PRODUCER (publish) span on the sender and a CONSUMER (receive) span on
+the receiver within the same journey trace; the consumer span carries a span
+link back to the producer span so Grafana can follow publish↔receive hops.
+Histogram metrics include exemplars (trace_id / span_id) when spans are sampled,
+enabling Grafana metrics→traces drill-down.

@@ -136,6 +136,42 @@ func TestPeerAddress_DeterministicDottedQuad_Property(t *testing.T) {
 	})
 }
 
+func TestBeginSpan_LinksCount_Property(t *testing.T) {
+	t.Parallel()
+
+	syn, spanExporter, _ := newPBTSynthesizer(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		spanExporter.Reset()
+		in := generators.ValidSpanInput().Draw(rt, "in")
+		linkCount := rapid.IntRange(0, 3).Draw(rt, "link_count")
+		if linkCount > 0 {
+			in.Links = make([]oteltrace.Link, linkCount)
+			for i := range in.Links {
+				in.Links[i] = oteltrace.Link{SpanContext: oteltrace.NewSpanContext(oteltrace.SpanContextConfig{
+					TraceID:    oteltrace.TraceID{byte(i + 1)},
+					SpanID:     oteltrace.SpanID{byte(i + 1)},
+					TraceFlags: oteltrace.FlagsSampled,
+				})}
+			}
+		}
+		_, finish := syn.BeginSpan(context.Background(), in)
+		finish(synth.Outcome{
+			Success:    true,
+			StatusCode: 200,
+			EndTime:    in.StartTime.Add(time.Millisecond),
+		})
+
+		spans := spanExporter.GetSpans()
+		if len(spans) != 1 {
+			rt.Fatalf("spans = %d, want 1", len(spans))
+		}
+		if len(spans[0].Links) != linkCount {
+			rt.Fatalf("Links = %d, want %d", len(spans[0].Links), linkCount)
+		}
+	})
+}
+
 func newPBTSynthesizer(t *testing.T) (synth.Synthesizer, *tracetest.InMemoryExporter, *sdkmetric.ManualReader) {
 	t.Helper()
 

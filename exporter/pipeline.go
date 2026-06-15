@@ -14,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/exemplar"
 	sdkresource "go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -142,8 +143,13 @@ func newPipelineFromExporters(cfg Config, res *sdkresource.Resource, stats *pipe
 			sdktrace.WithBatchTimeout(cfg.BatchTimeout),
 		),
 	)
+	// TraceBasedFilter is the SDK default; made explicit so metric exemplars
+	// carry trace_id/span_id when the recording context holds a sampled span.
+	// When samplerForConfig selects always_off, spans are not sampled and
+	// exemplars are not attached to metric data points.
 	mp := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(res),
+		sdkmetric.WithExemplarFilter(exemplar.TraceBasedFilter),
 		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExp,
 			sdkmetric.WithInterval(periodicReaderInterval(cfg.BatchTimeout)),
 		)),

@@ -8,6 +8,8 @@ import (
 	"sync"
 	"testing"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 )
@@ -47,6 +49,19 @@ func (m *mockSynth) BeginSpan(ctx context.Context, in synth.SpanInput) (context.
 	idx := len(m.spans)
 	m.spans = append(m.spans, spanCall{Input: in})
 	m.mu.Unlock()
+
+	parentSC := trace.SpanContextFromContext(ctx)
+	traceID := parentSC.TraceID()
+	if !parentSC.IsValid() {
+		traceID = trace.TraceID{1}
+	}
+	spanID := trace.SpanID{}
+	spanID[7] = byte(idx + 1)
+	ctx = trace.ContextWithSpanContext(ctx, trace.NewSpanContext(trace.SpanContextConfig{
+		TraceID:    traceID,
+		SpanID:     spanID,
+		TraceFlags: trace.FlagsSampled,
+	}))
 
 	return ctx, func(out synth.Outcome) {
 		m.mu.Lock()

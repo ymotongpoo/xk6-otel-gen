@@ -97,11 +97,15 @@ func (s *defaultSynthesizer) BeginSpan(ctx context.Context, in SpanInput) (conte
 	spanAttrs = append(spanAttrs, staticAttrs.ToSlice()...)
 	spanAttrs = append(spanAttrs, networkPeerAddressAttr(in.Edge, in.InstanceIdx, policy.Direction)...)
 
-	ctx, span := s.tracerFor(in.Service, in.InstanceIdx).Start(ctx, spanName(in.Service, in.Operation),
+	opts := []trace.SpanStartOption{
 		trace.WithTimestamp(in.StartTime),
 		trace.WithSpanKind(policy.SpanKind),
 		trace.WithAttributes(spanAttrs...),
-	)
+	}
+	if len(in.Links) > 0 {
+		opts = append(opts, trace.WithLinks(in.Links...))
+	}
+	ctx, span := s.tracerFor(in.Service, in.InstanceIdx).Start(ctx, spanName(in.Service, in.Operation), opts...)
 	s.maybeIncActive(ctx, in, policy, 1)
 
 	var finished atomic.Bool
