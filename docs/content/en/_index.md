@@ -29,7 +29,8 @@ correlated traces, metrics, and logs — no real services needed.
 ## Highlights
 
 - **Declarative topology** — model service edges, journeys, and faults in YAML. No real backends required.
-- **Correlated signals** — emit traces, metrics, and logs that share trace context.
+- **Correlated signals** — emit traces, metrics, logs, and profiles that share trace context, with metric exemplars (`trace_id` / `span_id`) and producer↔consumer span links for messaging.
+- **Per-operation telemetry** — declare structured `log_events`, custom `metrics`, and Pyroscope `profile` flamegraphs directly on operations, with fault-linked values for realistic incidents.
 - **Fault injection** — reproduce latency inflation, error-rate overrides, disconnects, and crashes probabilistically.
 - **OTLP egress** — send over OTLP/gRPC or OTLP/HTTP to any collector or SaaS endpoint (e.g. Grafana Cloud).
 - **k6-native** — control generation rate and scale with k6 executors, and forward k6 output metrics too.

@@ -28,7 +28,10 @@ journeys:
 | トポロジ DSL | `services.frontend.operations[].calls[]` でサービス間のエッジを表現 |
 | ジャーニー実行 | `runJourney("checkout")` が 1 本の合成トレースを生成 |
 | 障害注入 | `error_rate_override`、`latency_inflation`、`disconnect`、`crash` |
-| OTLP 送信 | `localhost:4317`(gRPC) または `localhost:4318`(HTTP) |
+| オペレーション単位のシグナル | `log_events`・`metrics`・`profile` で構造化ログ・カスタムメトリクス・フレームグラフを出力 |
+| スパンリンクとエグゼンプラー | `messaging` エッジで producer↔consumer スパンを連結。メトリクスに `trace_id` / `span_id` |
+| Pyroscope プロファイル | fault 連動の incident 変種を持つ合成フレームグラフで diff プロファイリング |
+| OTLP 送信 | `localhost:4317`(gRPC) または `localhost:4318`(HTTP)。プロファイルは `profilesEndpoint` 経由 |
 | k6 出力連携 | `--out otel-gen=endpoint=localhost:4317` で k6 出力を転送 |
 | JSON Schema 出力 | `go run ./cmd/xk6-otel-gen-schema > topology.schema.json` |
 

@@ -28,6 +28,7 @@ option is not configurable on that surface.
 | Traces endpoint | `tracesEndpoint` | — | `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | string | — | Traces-only override |
 | Metrics endpoint | `metricsEndpoint` | `metricsEndpoint` | `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` | string | — | Metrics-only override |
 | Logs endpoint | `logsEndpoint` | — | `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | string | — | Logs-only override |
+| Profiles endpoint | `profilesEndpoint` | — | — | string | — | Pyroscope profiles ingest endpoint (enables profile export) |
 | Protocol | `protocol` | `protocol` | `OTEL_EXPORTER_OTLP_PROTOCOL` | enum | `grpc` | `grpc` / `http` (env also accepts `http/protobuf`) |
 | insecure (disable TLS) | `insecure` | `insecure` | `OTEL_EXPORTER_OTLP_INSECURE` | bool | `false` | Disable TLS |
 | CA certificate | `caCert` | `caCert` | `OTEL_EXPORTER_OTLP_CERTIFICATE` | string (path) | — | CA certificate for server verification |
@@ -121,6 +122,28 @@ path was sent as-is. If you relied on the old behavior — e.g. setting
 `endpoint: "https://host:4318/v1/traces"` — move that value to the matching
 per-signal key (`tracesEndpoint`), which is used as-is.
 {{< /callout >}}
+
+### Profiles endpoint
+
+**`profilesEndpoint`** enables continuous-profiling export. Set it to a
+[Pyroscope](https://grafana.com/oss/pyroscope/) (or Grafana Cloud Profiles)
+ingest base URL and operations that declare a [`profile`]({{< relref "/reference/topology" >}})
+push synthetic pprof flamegraphs there. When unset, profile generation is a no-op.
+
+This is a **separate, profiles-only HTTP endpoint** — not an OTLP per-signal
+endpoint. It does not follow the `OTEL_EXPORTER_OTLP_*` rules (no `v1/profiles`
+path is appended and there is no environment variable); it is configured from the
+JS API only. The value must be `host:port` or `scheme://host[:port]`. The
+`headers`, TLS (`caCert` / `clientCert` / `clientKey`), `compression`, and
+`timeout` settings below are shared with the profiles client, so Grafana Cloud
+Profiles works with the same `Authorization` header.
+
+```javascript
+otelgen.configure({
+  endpoint: "localhost:4317",       // OTLP for traces/metrics/logs
+  profilesEndpoint: "http://localhost:4040",  // Pyroscope ingest
+});
+```
 
 ### Authentication and TLS
 
@@ -227,6 +250,15 @@ Invalid sampler environment values fail pipeline validation with the original
 
 Sampling applies to traces only. Metrics and logs are still emitted; logs keep
 the active trace context even when the trace sampler drops spans.
+
+### Exemplars
+
+Histogram metrics carry **exemplars** (`trace_id` / `span_id`) so backends like
+Grafana can jump from a metric data point to the corresponding trace. The
+meter provider uses the OTel SDK default `TraceBasedFilter`, so exemplars are
+attached automatically whenever a measurement is recorded inside a sampled span
+context — no configuration is required. Because attachment depends on sampling,
+setting `sampler: "always_off"` produces no exemplars.
 
 ### Resource attributes
 

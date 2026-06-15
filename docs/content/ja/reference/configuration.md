@@ -26,6 +26,7 @@ weight: 2
 | トレース用エンドポイント | `tracesEndpoint` | — | `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | string | — | トレース専用の上書き |
 | メトリクス用エンドポイント | `metricsEndpoint` | `metricsEndpoint` | `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` | string | — | メトリクス専用の上書き |
 | ログ用エンドポイント | `logsEndpoint` | — | `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | string | — | ログ専用の上書き |
+| プロファイル用エンドポイント | `profilesEndpoint` | — | — | string | — | Pyroscope のプロファイル取り込みエンドポイント（profile エクスポートを有効化） |
 | プロトコル | `protocol` | `protocol` | `OTEL_EXPORTER_OTLP_PROTOCOL` | enum | `grpc` | `grpc` / `http`（環境変数では `http/protobuf` も可） |
 | insecure（TLS 無効） | `insecure` | `insecure` | `OTEL_EXPORTER_OTLP_INSECURE` | bool | `false` | TLS を無効にする |
 | CA 証明書 | `caCert` | `caCert` | `OTEL_EXPORTER_OTLP_CERTIFICATE` | string（パス） | — | サーバ検証用 CA 証明書 |
@@ -119,6 +120,27 @@ otelgen.configure({
 （例: `endpoint: "https://host:4318/v1/traces"` の設定）は、その値を該当する
 シグナルごとのキー（`tracesEndpoint`、こちらはそのまま使われます）へ移してください。
 {{< /callout >}}
+
+### プロファイル用エンドポイント
+
+**`profilesEndpoint`** は継続的プロファイリングのエクスポートを有効にします。
+[Pyroscope](https://grafana.com/oss/pyroscope/)（または Grafana Cloud Profiles）の
+取り込みベース URL を設定すると、[`profile`]({{< relref "/reference/topology" >}}) を宣言した
+オペレーションが合成 pprof フレームグラフをそこへ送ります。未設定の場合、profile 生成は no-op です。
+
+これは **profile 専用の独立した HTTP エンドポイント** であり、OTLP のシグナル別エンドポイント
+ではありません。`OTEL_EXPORTER_OTLP_*` の規則には従わず（`v1/profiles` の付加や環境変数は
+ありません）、JS API からのみ設定します。値は `host:port` または `scheme://host[:port]` で
+ある必要があります。後述の `headers`・TLS（`caCert` / `clientCert` / `clientKey`）・
+`compression`・`timeout` は profile クライアントと共有されるため、Grafana Cloud Profiles でも
+同じ `Authorization` ヘッダーで動作します。
+
+```javascript
+otelgen.configure({
+  endpoint: "localhost:4317",       // トレース/メトリクス/ログ用 OTLP
+  profilesEndpoint: "http://localhost:4040",  // Pyroscope 取り込み
+});
+```
 
 ### 認証と TLS
 
@@ -223,6 +245,14 @@ export const options = {
 
 サンプリングはトレースにのみ適用されます。メトリクスとログは引き続き発行され、ログは
 トレースサンプラーがスパンを破棄した場合でもアクティブなトレースコンテキストを保持します。
+
+### エグゼンプラー
+
+ヒストグラムメトリクスには **エグゼンプラー**（`trace_id` / `span_id`）が付与され、Grafana
+などのバックエンドからメトリクスのデータポイントを対応するトレースへたどれます。メーター
+プロバイダーは OTel SDK 既定の `TraceBasedFilter` を使うため、測定がサンプリング済みの
+スパンコンテキスト内で記録されると自動的にエグゼンプラーが付きます（設定は不要）。付与は
+サンプリングに依存するため、`sampler: "always_off"` ではエグゼンプラーは付きません。
 
 ### リソース属性
 

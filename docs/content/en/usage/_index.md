@@ -52,6 +52,34 @@ performs the final pipeline shutdown).
 | `otelgen.journeys()` | List journey names after loading |
 | `handle.journeys()` | List journey names from a handle |
 
+## Signals and features
+
+Every journey execution produces correlated OpenTelemetry signals that share a
+trace context:
+
+- **Traces** — one trace per journey, with a span per operation and call.
+  `messaging` edges additionally emit a PRODUCER (publish) and a CONSUMER
+  (receive) span connected by a span link.
+- **Metrics** — built-in request/duration instruments plus per-operation custom
+  metrics (counter / gauge / histogram). Histogram metrics carry exemplars
+  (`trace_id` / `span_id`) for metrics→traces drill-down.
+- **Logs** — a per-operation log plus declarative structured log events with an
+  `event.name`.
+- **Profiles** — synthetic pprof flamegraphs pushed to Pyroscope when
+  [`profilesEndpoint`]({{< relref "/reference/configuration" >}}) is set.
+
+These are driven entirely from the topology. Each operation can declare:
+
+| Field | Emits |
+|---|---|
+| `log_events` | structured logs (name, severity, condition, body, attributes) |
+| `metrics` | custom counters / gauges / histograms, optionally fault-linked |
+| `profile` | a baseline / incident flamegraph for diff profiling, fault-linked |
+
+See the [Topology YAML Reference]({{< relref "/reference/topology" >}}) for the
+full syntax. Custom metrics and profiles can react to active faults, so an
+incident changes the emitted values and stacks deterministically.
+
 See the [minimal](https://github.com/ymotongpoo/xk6-otel-gen/tree/main/examples/minimal)
 and [astroshop](https://github.com/ymotongpoo/xk6-otel-gen/tree/main/examples/astroshop)
 examples for complete scripts.

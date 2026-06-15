@@ -8,6 +8,11 @@ weight: 4
 | [minimal](https://github.com/ymotongpoo/xk6-otel-gen/tree/main/examples/minimal) | 3 services | First run, topology basics, local smoke test |
 | [astroshop](https://github.com/ymotongpoo/xk6-otel-gen/tree/main/examples/astroshop) | 18 services | Larger commerce graph modeled after OTel Demo v2.2.0 |
 
+The **astroshop** example also exercises the per-operation signals and
+correlation features: `log_events` (structured logs), `metrics` (a settlement
+counter and a fault-linked gauge), `profile` (baseline/incident flamegraphs),
+messaging producer/consumer span links, and metric exemplars.
+
 Run only the topology validation tests:
 
 ```bash

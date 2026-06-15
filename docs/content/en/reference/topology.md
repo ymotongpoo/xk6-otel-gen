@@ -65,6 +65,9 @@ calls (edges) to other services.
 |---|---|---|---|---|
 | `name` | string | **yes** | — | Name unique within the service (1–120 bytes) |
 | `calls` | list | no | `[]` | Ordered outgoing calls made by this operation (CallNode) |
+| `log_events` | list | no | `[]` | Structured log events emitted when this operation completes (LogEvent) |
+| `metrics` | list | no | `[]` | Custom metric data points recorded when this operation completes (Metric) |
+| `profile` | object | no | — | Synthetic flamegraph pushed to Pyroscope (Profile) |
 
 **Call (CallNode — items of `calls[]` / `parallel[]`)**
 
@@ -154,7 +157,10 @@ calls:
 ```
 
 - **`to`** — the target `{ service, operation }`. Both required; must point to an existing operation.
-- **`protocol`** — one of `http` / `grpc` / `messaging`. Must be specified.
+- **`protocol`** — one of `http` / `grpc` / `messaging`. Must be specified. For
+  `messaging`, the sender emits a PRODUCER (publish) span and the receiver a
+  CONSUMER (receive) span that is linked back to it with a span link, within the
+  same journey trace.
 - **`latency`** — latency distribution (see below).
 - **`error_rate`** — failure probability of this call. `[0,1]`. Default `0.0`.
 - **`timeout`** — upper bound for one attempt; if simulated latency exceeds it, the
@@ -210,6 +216,116 @@ calls:
           protocol: grpc
       on_exhausted: return_default
       default_response: { status: "queued" }
+```
+
+#### `operations[].log_events`
+
+Structured log events emitted when the operation completes, in addition to the
+generic per-operation log. Each item becomes one OTLP log record whose
+`event.name` is set (and also attached as an `event.name` attribute).
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `name` | string | **yes** | — | Event name; emitted as `event.name` |
+| `severity` | enum | no | `info` | `trace` / `debug` / `info` / `warn` / `error` / `fatal` |
+| `condition` | enum | no | `always` | When to emit. `always` / `on_success` / `on_error` |
+| `body` | string | no | — | Log record body |
+| `attributes` | map | no | — | Extra structured attributes (arbitrary keys) |
+
+```yaml
+operations:
+  - name: authorize_card
+    log_events:
+      - name: provider_call.timeout
+        severity: error
+        condition: on_error
+        body: "payment provider call timed out"
+        attributes: { provider: stripe, retryable: true }
+```
+
+This powers LogQL such as
+`{service_name="payment"} | event_name="provider_call.timeout"`.
+
+#### `operations[].metrics`
+
+Custom metric data points recorded when the operation completes. Optionally
+**fault-linked**: while the referenced fault kind is active on this operation,
+the recorded value becomes `baseline + delta` (or is overridden by `value`).
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `name` | string | **yes** | — | Instrument name |
+| `type` | enum | **yes** | — | `counter` / `gauge` / `histogram` |
+| `unit` | string | no | — | UCUM-style unit (e.g. `{request}`) |
+| `baseline` | number | no | `0` | Value recorded (counter: amount added; gauge/histogram: value) |
+| `condition` | enum | no | `always` | When to record. `always` / `on_success` / `on_error` |
+| `attributes` | map | no | — | Extra data-point attributes |
+| `when_fault` | object | no | — | Fault linkage (below) |
+
+**when_fault**
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `kind` | enum | **yes** | — | Fault kind to react to. `latency_inflation` / `error_rate_override` / `disconnect` / `crash` |
+| `delta` | number | no | `0` | Added to `baseline` while the fault is active on this operation |
+| `value` | number | no | — | Overrides the value (instead of `delta`) while the fault is active |
+
+```yaml
+operations:
+  - name: quote_shipping
+    metrics:
+      - name: shipping.quote.backlog
+        type: gauge
+        unit: "{request}"
+        baseline: 5
+        when_fault:
+          kind: latency_inflation
+          delta: 40
+```
+
+The fault linkage is evaluated against the same fault state applied to the
+operation, so the value moves deterministically when the fault fires. A counter
+fed on `condition: on_success` plus OTLP cumulative temporality yields a
+continuously growing total (e.g. a settlement amount).
+
+#### `operations[].profile`
+
+A synthetic flamegraph for the operation, pushed to Pyroscope as pprof when
+[`profilesEndpoint`]({{< relref "/reference/configuration" >}}) is set (otherwise
+it is a no-op). Two stack-set variants enable **diff flamegraphs**: while the
+linked fault kind is active, the `incident` stacks are emitted instead of
+`baseline`. The operation span carries a `pyroscope.profile.id` attribute (equal
+to its span id) for Span→Profiles correlation.
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `enabled` | bool | no | `false` | Whether to emit a profile for this operation |
+| `sample_rate` | int | no | `100` | Sample rate in Hz |
+| `baseline` | list | **yes** when enabled | — | Stack samples for normal runs (StackSample) |
+| `incident` | list | required with `when_fault` | — | Stack samples emitted while the linked fault is active |
+| `when_fault` | object | no | — | `{ kind }` — fault kind that selects the `incident` variant |
+
+**StackSample (`baseline[]` / `incident[]` items)**
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `frames` | list of string | **yes** | — | Call stack frames, ordered root → leaf |
+| `weight` | number | no | `0` | Self weight of the stack (e.g. sample count) |
+
+```yaml
+operations:
+  - name: quote_shipping
+    profile:
+      enabled: true
+      sample_rate: 100
+      baseline:
+        - frames: ["handleQuoteShipping", "calcBaseRate"]
+          weight: 120
+      incident:
+        - frames: ["handleQuoteShipping", "calcBaseRate", "geoLookup", "matrixSolve"]
+          weight: 900
+      when_fault:
+        kind: latency_inflation
 ```
 
 ---

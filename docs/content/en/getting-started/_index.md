@@ -28,7 +28,10 @@ also forward k6 output metrics through the `otel-gen` output.
 | Topology DSL | `services.frontend.operations[].calls[]` models service edges |
 | Journey execution | `runJourney("checkout")` creates one synthetic trace |
 | Fault injection | `error_rate_override`, `latency_inflation`, `disconnect`, `crash` |
-| OTLP egress | gRPC on `localhost:4317` or HTTP on `localhost:4318` |
+| Per-operation signals | `log_events`, `metrics`, `profile` emit structured logs, custom metrics, and flamegraphs |
+| Span links & exemplars | `messaging` edges link producer↔consumer spans; metrics carry `trace_id` / `span_id` |
+| Pyroscope profiles | synthetic flamegraphs with fault-linked incident variants for diff profiling |
+| OTLP egress | gRPC on `localhost:4317` or HTTP on `localhost:4318`; profiles via `profilesEndpoint` |
 | k6 output integration | `--out otel-gen=endpoint=localhost:4317` forwards k6 output |
 | JSON Schema export | `go run ./cmd/xk6-otel-gen-schema > topology.schema.json` |
 

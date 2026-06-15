@@ -63,6 +63,9 @@ go run ./cmd/xk6-otel-gen-schema -output topology.schema.json
 |---|---|---|---|---|
 | `name` | string | **はい** | — | サービス内で一意な名前（1〜120 バイト） |
 | `calls` | list | いいえ | `[]` | このオペレーションが行う送信呼び出し（順序付き、CallNode） |
+| `log_events` | list | いいえ | `[]` | オペレーション完了時に出力する構造化ログイベント（LogEvent） |
+| `metrics` | list | いいえ | `[]` | オペレーション完了時に記録するカスタムメトリクス（Metric） |
+| `profile` | object | いいえ | — | Pyroscope へ送る合成フレームグラフ（Profile） |
 
 **呼び出し（CallNode = `calls[]` / `parallel[]` の各要素）**
 
@@ -148,7 +151,9 @@ calls:
 ```
 
 - **`to`** — 呼び出し先の `{ service, operation }`。両方必須で、実在するオペレーションを指す必要があります。
-- **`protocol`** — `http` / `grpc` / `messaging` のいずれか。指定が必要です。
+- **`protocol`** — `http` / `grpc` / `messaging` のいずれか。指定が必要です。`messaging`
+  の場合、送信側は PRODUCER（publish）スパンを、受信側は CONSUMER（receive）スパンを出し、
+  同一ジャーニートレース内で consumer から producer へスパンリンクが張られます。
 - **`latency`** — レイテンシ分布（下記）。
 - **`error_rate`** — この呼び出しの失敗確率。`[0,1]`。既定 `0.0`。
 - **`timeout`** — 1 回の試行に対する上限。シミュレートされたレイテンシがこれを超えると
@@ -203,6 +208,114 @@ calls:
           protocol: grpc
       on_exhausted: return_default
       default_response: { status: "queued" }
+```
+
+#### `operations[].log_events`
+
+オペレーション完了時に、汎用のオペレーションログに加えて出力する構造化ログイベントです。
+各要素は 1 件の OTLP ログレコードになり、`event.name` が設定されます（同名の `event.name`
+属性も付与されます）。
+
+| フィールド | 型 | 必須 | 既定値 | 説明 |
+|---|---|---|---|---|
+| `name` | string | **はい** | — | イベント名。`event.name` として出力 |
+| `severity` | enum | いいえ | `info` | `trace` / `debug` / `info` / `warn` / `error` / `fatal` |
+| `condition` | enum | いいえ | `always` | 出力条件。`always` / `on_success` / `on_error` |
+| `body` | string | いいえ | — | ログレコード本文 |
+| `attributes` | map | いいえ | — | 追加の構造化属性（任意のキー） |
+
+```yaml
+operations:
+  - name: authorize_card
+    log_events:
+      - name: provider_call.timeout
+        severity: error
+        condition: on_error
+        body: "payment provider call timed out"
+        attributes: { provider: stripe, retryable: true }
+```
+
+これにより `{service_name="payment"} | event_name="provider_call.timeout"` のような
+LogQL がヒットします。
+
+#### `operations[].metrics`
+
+オペレーション完了時に記録するカスタムメトリクスのデータポイントです。任意で
+**fault 連動**にでき、参照する fault 種別がそのオペレーションで active な間は、記録値が
+`baseline + delta`（または `value` で上書き）になります。
+
+| フィールド | 型 | 必須 | 既定値 | 説明 |
+|---|---|---|---|---|
+| `name` | string | **はい** | — | インストルメント名 |
+| `type` | enum | **はい** | — | `counter` / `gauge` / `histogram` |
+| `unit` | string | いいえ | — | UCUM 形式の単位（例: `{request}`） |
+| `baseline` | number | いいえ | `0` | 記録値（counter は加算量、gauge/histogram は値） |
+| `condition` | enum | いいえ | `always` | 記録条件。`always` / `on_success` / `on_error` |
+| `attributes` | map | いいえ | — | データポイントへの追加属性 |
+| `when_fault` | object | いいえ | — | fault 連動（下記） |
+
+**when_fault**
+
+| フィールド | 型 | 必須 | 既定値 | 説明 |
+|---|---|---|---|---|
+| `kind` | enum | **はい** | — | 反応する fault 種別。`latency_inflation` / `error_rate_override` / `disconnect` / `crash` |
+| `delta` | number | いいえ | `0` | その fault が active な間 `baseline` に加算 |
+| `value` | number | いいえ | — | active な間、値を上書き（`delta` の代わり） |
+
+```yaml
+operations:
+  - name: quote_shipping
+    metrics:
+      - name: shipping.quote.backlog
+        type: gauge
+        unit: "{request}"
+        baseline: 5
+        when_fault:
+          kind: latency_inflation
+          delta: 40
+```
+
+fault 連動はオペレーションに適用された fault 状態と同じものに基づいて評価されるため、
+fault 発動時に値が決定的に動きます。`condition: on_success` で供給する counter は、OTLP の
+累積（cumulative）temporality と組み合わさって増え続ける合計（例: 決済合計金額）になります。
+
+#### `operations[].profile`
+
+オペレーションの合成フレームグラフです。[`profilesEndpoint`]({{< relref "/reference/configuration" >}})
+が設定されている場合に pprof として Pyroscope へ送られます（未設定なら no-op）。2 つの
+スタックセット変種により **diff フレームグラフ**が成立します。連動する fault 種別が active な間は
+`baseline` の代わりに `incident` のスタックが出力されます。オペレーションのスパンには
+Span→Profiles 連携用に `pyroscope.profile.id` 属性（スパン ID と同値）が付与されます。
+
+| フィールド | 型 | 必須 | 既定値 | 説明 |
+|---|---|---|---|---|
+| `enabled` | bool | いいえ | `false` | このオペレーションで profile を出すか |
+| `sample_rate` | int | いいえ | `100` | サンプルレート（Hz） |
+| `baseline` | list | enabled 時は**はい** | — | 通常時のスタックサンプル（StackSample） |
+| `incident` | list | `when_fault` 指定時は必須 | — | 連動 fault が active な間に出すスタックサンプル |
+| `when_fault` | object | いいえ | — | `{ kind }` — `incident` 変種を選ぶ fault 種別 |
+
+**StackSample（`baseline[]` / `incident[]` の各要素）**
+
+| フィールド | 型 | 必須 | 既定値 | 説明 |
+|---|---|---|---|---|
+| `frames` | list of string | **はい** | — | コールスタックのフレーム（root → leaf の順） |
+| `weight` | number | いいえ | `0` | スタックの自重み（例: サンプル数） |
+
+```yaml
+operations:
+  - name: quote_shipping
+    profile:
+      enabled: true
+      sample_rate: 100
+      baseline:
+        - frames: ["handleQuoteShipping", "calcBaseRate"]
+          weight: 120
+      incident:
+        - frames: ["handleQuoteShipping", "calcBaseRate", "geoLookup", "matrixSolve"]
+          weight: 900
+      when_fault:
+        kind: latency_inflation
 ```
 
 ---

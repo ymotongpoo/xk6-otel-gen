@@ -8,6 +8,10 @@ weight: 4
 | [minimal](https://github.com/ymotongpoo/xk6-otel-gen/tree/main/examples/minimal) | 3 サービス | 初回実行、トポロジの基本、ローカルのスモークテスト |
 | [astroshop](https://github.com/ymotongpoo/xk6-otel-gen/tree/main/examples/astroshop) | 18 サービス | OTel Demo v2.2.0 を模した大規模なコマースグラフ |
 
+**astroshop** はオペレーション単位のシグナルと相関機能も実演します。`log_events`（構造化ログ）、
+`metrics`（決済合計カウンタと fault 連動 gauge）、`profile`（baseline/incident フレームグラフ）、
+messaging の producer/consumer スパンリンク、メトリクスのエグゼンプラーです。
+
 トポロジ検証のテストのみを実行します。
 
 ```bash
