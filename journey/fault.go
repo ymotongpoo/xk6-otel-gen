@@ -65,7 +65,7 @@ func (e *engineImpl) foldFaults(node *Node) foldedFault {
 		for _, spec := range e.overlay.OperationFaults(op) {
 			switch spec.Kind {
 			case topology.FaultErrorRateOverride:
-				ff.errorRate = clampProbability(spec.Severity.Value)
+				ff.errorRate = clampProbability(spec.Severity.Value * e.faultIntensityValue())
 				ff.errorType = defaultFaultErrorType(node)
 			case topology.FaultLatencyInflation:
 				if e.faultActive(spec) {
@@ -133,14 +133,14 @@ func (e *engineImpl) sampleUniform(p50, p95 time.Duration) time.Duration {
 }
 
 func (e *engineImpl) faultActive(spec topology.FaultSpec) bool {
-	p := spec.Severity.Probability
+	eff := clampProbability(spec.Severity.Probability * e.faultIntensityValue())
 	switch {
-	case p <= 0:
+	case eff <= 0:
 		return false
-	case p >= 1:
+	case eff >= 1:
 		return true
 	default:
-		return e.randFloat64() < p
+		return e.randFloat64() < eff
 	}
 }
 

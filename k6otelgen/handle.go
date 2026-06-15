@@ -62,3 +62,13 @@ func (h *TopologyHandle) JourneyWeights() map[string]float64 {
 	}
 	return h.engine.JourneyWeights()
 }
+
+// SetFaultIntensity scales injected-fault probability and error-rate overrides
+// for this VU's engine. 0 disables injected faults, 1 is full intensity. Drive
+// it from k6 stages to script a burn->recover timeline.
+func (h *TopologyHandle) SetFaultIntensity(x float64) {
+	if h.engine == nil {
+		throwJSException(h.runtime, &ConfigError{Kind: "not_loaded"})
+	}
+	h.engine.SetFaultIntensity(x)
+}

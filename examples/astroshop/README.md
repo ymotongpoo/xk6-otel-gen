@@ -96,6 +96,20 @@ journeys:
 
 For upstream maintenance, compare this example against `open-telemetry/opentelemetry-demo` release `2.2.0` before changing service names or journey shapes.
 
+Drive a burn→recover timeline from the elapsed test time by scaling injected
+fault intensity before each journey (astroshop faults use `probability: 1.0`,
+so intensity ramps them directly). Add `import exec from "k6/execution";` and
+set the intensity inside the scenario's exec function:
+
+```javascript
+export function browse() {
+  const topology = otelgen.load("./topology.yaml");
+  const t = exec.instance.currentTestRunDuration / 1000; // seconds since test start
+  topology.setFaultIntensity(t < 60 ? 0 : t < 180 ? 1 : 0); // healthy → incident → recovered
+  topology.runRandomJourney();
+}
+```
+
 `checkout.place_order` declares a counter metric (`orders.settlement.amount.total`)
 that adds 80 on each successful order; with OTLP cumulative temporality this
 becomes a settlement-total time series. `shipping.quote_shipping` declares a
