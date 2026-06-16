@@ -29,11 +29,15 @@ import (
 const (
 	instrumentationName = "github.com/ymotongpoo/xk6-otel-gen/k6output"
 	runnerServiceName   = "xk6-otel-gen-runner"
-	buildVersion        = ""
 	maxFlushBatchSize   = 1024
 	flushStopTimeout    = 5 * time.Second
 	shutdownTimeout     = 30 * time.Second
 )
+
+// buildVersion is empty by default and can be stamped at build time via
+// -ldflags "-X github.com/ymotongpoo/xk6-otel-gen/k6output.buildVersion=<version>".
+// It is a var (not a const) so it can be overridden by the linker.
+var buildVersion = ""
 
 type sharedPipeline interface {
 	MetricExporter() sdkmetric.Exporter
