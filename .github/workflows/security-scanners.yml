@@ -174,7 +174,11 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/grype/dee8de483dfba5b4e0bc0aa8e4ab2ce52137e490/install.sh | sh -s -- -b /usr/local/bin v0.110.0
+          # Download the installer (pinned to an immutable commit SHA) to a file
+          # and execute it as a separate step rather than piping curl into a shell.
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/dee8de483dfba5b4e0bc0aa8e4ab2ce52137e490/install.sh -o install-grype.sh
+          sh install-grype.sh -b /usr/local/bin v0.110.0
+          rm -f install-grype.sh
           grype --version
       - name: Run grype
         id: grype
