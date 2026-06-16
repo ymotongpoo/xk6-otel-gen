@@ -18,3 +18,17 @@ scripts/aidlc-evaluator/test_cases/
 # from findings (the "Secret" and "Match" fields), so treat it as sensitive.
 # Current entries are all synthetic test credentials from test_credential_scrubber.py.
 .gitleaks-baseline.json
+
+# Example manifests and docs — illustrative demo infrastructure (k8s manifests,
+# docker-compose, saas-endpoints walkthrough), intentionally minimal and not
+# hardened production config. Secret-shaped strings here are placeholders.
+examples/
+
+# Test fixtures (sample inputs, golden files, docker-compose stacks for tests).
+**/testdata/
+
+# Integration test harnesses and Go test files — exercise the binary with
+# controlled inputs (exec, file reads, insecure local gRPC) and are not shipped.
+**/integration/
+**/*_test.go
+testutil/

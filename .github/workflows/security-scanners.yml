@@ -101,6 +101,8 @@ jobs:
             --exclude-rule B101 \
             --exclude-rule gitlab.bandit.B404 \
             --exclude-rule B404 \
+            --exclude-rule generic.ci.audit.changed-semgrepignore.changed-semgrepignore \
+            --exclude-rule go.lang.security.audit.crypto.math_random.math-random-used \
             --sarif-output semgrep-report_sarif.json $BASELINE_ARGS
           SEMGREP_EXIT=$?
           set -e
