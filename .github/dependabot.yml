@@ -13,6 +13,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore"
       prefix-development: "chore"
@@ -32,6 +34,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -45,6 +49,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -54,6 +60,8 @@ updates:
     directory: "/examples/minimal/k8s"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -63,6 +71,8 @@ updates:
     directory: "/examples/astroshop/k8s"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: "chore"
       include: "scope"
