@@ -3,7 +3,13 @@
 
 package k6otelgen
 
-import "testing"
+import (
+	"context"
+	"testing"
+
+	"github.com/ymotongpoo/xk6-otel-gen/synth"
+	"github.com/ymotongpoo/xk6-otel-gen/topology"
+)
 
 func TestNew_ReturnsZeroState(t *testing.T) {
 	t.Parallel()
@@ -51,5 +57,42 @@ func TestNewModuleInstance_AfterLoad_BuildsEngine(t *testing.T) {
 	}
 	if instance.handle.instance != instance || instance.handle.module != root || instance.handle.name != "topology.yaml" {
 		t.Fatalf("handle not wired to instance/root/path: %#v", instance.handle)
+	}
+}
+
+func TestNewModuleInstance_ServiceMetricsShareObservableState(t *testing.T) {
+	root := newTestRootModule(t)
+	root.schema = testModuleSchema()
+	svc := root.schema.Services["api"]
+	svc.Metrics = []topology.ObservableMetricSpec{{
+		Name: "api.requests.inflight",
+		Type: topology.MetricObservableGauge,
+		Source: &topology.MetricSourceSpec{
+			Accumulator: "api.inflight",
+		},
+	}}
+	root.overlay = root.schema.ApplyFaults()
+	root.loadedPath = "topology.yaml"
+
+	first := root.NewModuleInstance(newFakeVU(t, 7)).(*ModuleInstance)
+	second := root.NewModuleInstance(newFakeVU(t, 8)).(*ModuleInstance)
+	if first.initErr != nil || second.initErr != nil {
+		t.Fatalf("initErr = first:%v second:%v", first.initErr, second.initErr)
+	}
+	if root.observableState == nil || root.observableReg == nil {
+		t.Fatalf("observable registration not initialized: state=%v reg=%v", root.observableState, root.observableReg)
+	}
+	first.synth.UpdateState(context.Background(), synthStateUpdate(svc, 2))
+	second.synth.UpdateState(context.Background(), synthStateUpdate(svc, 3))
+	if got := root.observableState.Load("api.inflight"); got != 5 {
+		t.Fatalf("shared observable state = %g, want 5", got)
+	}
+}
+
+func synthStateUpdate(svc *topology.Service, delta float64) synth.StateUpdateInput {
+	return synth.StateUpdateInput{
+		Service: svc,
+		Key:     "api.inflight",
+		Delta:   delta,
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"go.k6.io/k6/js/modules"
 
 	"github.com/ymotongpoo/xk6-otel-gen/exporter"
+	"github.com/ymotongpoo/xk6-otel-gen/synth"
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 )
 
@@ -28,6 +29,11 @@ type RootModule struct {
 	configureErr  error
 	config        exporter.Config
 	configured    bool
+
+	observableOnce  sync.Once
+	observableErr   error
+	observableState *synth.ObservableState
+	observableReg   synth.ServiceMetricRegistration
 
 	handle *TopologyHandle
 }

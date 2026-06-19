@@ -72,6 +72,13 @@ func ValidOperation(svc *topology.Service, opts ...OperationOption) *rapid.Gener
 				op.Metrics = append(op.Metrics, ValidMetricSpec().Draw(t, fmt.Sprintf("metric_%d", i)))
 			}
 		}
+		if rapid.Float64Range(0, 1).Draw(t, "state_updates_roll") < 0.5 {
+			count := rapid.IntRange(1, 3).Draw(t, "n_state_updates")
+			op.StateUpdates = make([]topology.MetricStateUpdateSpec, 0, count)
+			for i := 0; i < count; i++ {
+				op.StateUpdates = append(op.StateUpdates, ValidMetricStateUpdateSpec().Draw(t, fmt.Sprintf("state_update_%d", i)))
+			}
+		}
 		if rapid.Float64Range(0, 1).Draw(t, "profile_roll") < 0.3 {
 			op.Profile = ValidProfileSpec().Draw(t, "profile")
 		}

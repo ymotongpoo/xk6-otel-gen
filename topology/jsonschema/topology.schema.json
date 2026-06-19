@@ -66,6 +66,12 @@
           "type": "array",
           "minItems": 1,
           "items": { "$ref": "#/$defs/Operation" }
+        },
+        "metrics": {
+          "description": "Service-scoped asynchronous custom metrics observed during OTel collection.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/ObservableMetric" },
+          "default": []
         }
       },
       "examples": [
@@ -99,6 +105,12 @@
           "description": "Declarative custom metrics emitted when this operation completes.",
           "type": "array",
           "items": { "$ref": "#/$defs/Metric" },
+          "default": []
+        },
+        "state_updates": {
+          "description": "Accumulator updates applied when this operation completes.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/MetricStateUpdate" },
           "default": []
         },
         "profile": {
@@ -159,6 +171,101 @@
           "condition": "on_success"
         }
       ]
+    },
+    "ObservableMetric": {
+      "description": "A service-scoped asynchronous custom metric observed during collection.",
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": true,
+      "properties": {
+        "name": {
+          "description": "Custom metric instrument name.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "type": {
+          "description": "Observable instrument type.",
+          "type": "string",
+          "enum": ["observable_gauge", "observable_counter"]
+        },
+        "unit": {
+          "description": "Optional UCUM-style unit string.",
+          "type": "string"
+        },
+        "baseline": {
+          "description": "Default value observed when no accumulator source is configured.",
+          "type": "number",
+          "default": 0
+        },
+        "attributes": {
+          "description": "Additional structured attributes for the metric data point.",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "when_fault": {
+          "description": "Adjust the observed value while a deterministic service fault is active.",
+          "$ref": "#/$defs/MetricFaultLink"
+        },
+        "source": {
+          "description": "Optional accumulator source for this observed value.",
+          "$ref": "#/$defs/MetricSource"
+        }
+      },
+      "examples": [
+        {
+          "name": "kafka.consumer.lag",
+          "type": "observable_gauge",
+          "unit": "{message}",
+          "source": { "accumulator": "kafka.produced", "minus": "kafka.consumed" }
+        }
+      ]
+    },
+    "MetricSource": {
+      "description": "Accumulator expression used by an observable service metric.",
+      "type": "object",
+      "required": ["accumulator"],
+      "additionalProperties": true,
+      "properties": {
+        "accumulator": {
+          "description": "Primary accumulator key.",
+          "type": "string",
+          "minLength": 1
+        },
+        "minus": {
+          "description": "Optional accumulator key subtracted from the primary value. Only valid for observable_gauge.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "MetricStateUpdate": {
+      "description": "Accumulator update applied when an operation completes.",
+      "type": "object",
+      "required": ["key"],
+      "additionalProperties": true,
+      "properties": {
+        "key": {
+          "description": "Accumulator key to update.",
+          "type": "string",
+          "minLength": 1
+        },
+        "delta": {
+          "description": "Amount added to the accumulator.",
+          "type": "number",
+          "default": 0
+        },
+        "condition": {
+          "description": "When to apply this update relative to operation outcome.",
+          "type": "string",
+          "enum": ["always", "on_success", "on_error"],
+          "default": "always"
+        },
+        "when_fault": {
+          "description": "Adjust the update delta while a matching fault kind is active on this operation.",
+          "$ref": "#/$defs/MetricFaultLink"
+        }
+      }
     },
     "MetricFaultLink": {
       "description": "Fault-driven adjustment for a declarative metric value.",

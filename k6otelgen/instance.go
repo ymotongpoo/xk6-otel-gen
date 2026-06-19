@@ -246,7 +246,11 @@ func (i *ModuleInstance) lateInit() error {
 	if err != nil {
 		return err
 	}
-	syn := synth.NewDefault(pipeline, pipeline.MeterProvider(), pipeline.ProfileExporter())
+	state, err := i.root.ensureObservableRegistration(pipeline)
+	if err != nil {
+		return err
+	}
+	syn := synth.NewDefaultWithObservableState(pipeline, pipeline.MeterProvider(), pipeline.ProfileExporter(), state)
 	engine := journey.NewEngineWithSeed(i.root.schema, i.root.overlay, syn, seedForVU(i.vu))
 	i.synth = syn
 	i.engine = engine
@@ -259,6 +263,20 @@ func (i *ModuleInstance) lateInit() error {
 	}
 	i.root.handle = i.handle
 	return nil
+}
+
+func (r *RootModule) ensureObservableRegistration(pipeline *exporter.Pipeline) (*synth.ObservableState, error) {
+	if r == nil {
+		return nil, &ConfigError{Kind: "not_loaded"}
+	}
+	if pipeline == nil {
+		return nil, &ConfigError{Kind: "pipeline_error"}
+	}
+	r.observableOnce.Do(func() {
+		r.observableState = synth.NewObservableState()
+		r.observableReg, r.observableErr = synth.RegisterServiceMetrics(pipeline.MeterProvider(), r.schema, r.overlay, r.observableState)
+	})
+	return r.observableState, r.observableErr
 }
 
 func (i *ModuleInstance) vuContext() context.Context {

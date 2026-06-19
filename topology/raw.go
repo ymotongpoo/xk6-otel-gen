@@ -19,15 +19,17 @@ type rawService struct {
 	Language   string          `yaml:"language,omitempty"`
 	Framework  string          `yaml:"framework,omitempty"`
 	Version    string          `yaml:"version,omitempty"`
+	Metrics    []*rawMetric    `yaml:"metrics,omitempty"`
 	Operations []*rawOperation `yaml:"operations"`
 }
 
 type rawOperation struct {
-	Name      string         `yaml:"name"`
-	Calls     []*rawCallNode `yaml:"calls,omitempty"`
-	LogEvents []*rawLogEvent `yaml:"log_events,omitempty"`
-	Metrics   []*rawMetric   `yaml:"metrics,omitempty"`
-	Profile   *rawProfile    `yaml:"profile,omitempty"`
+	Name         string            `yaml:"name"`
+	Calls        []*rawCallNode    `yaml:"calls,omitempty"`
+	LogEvents    []*rawLogEvent    `yaml:"log_events,omitempty"`
+	Metrics      []*rawMetric      `yaml:"metrics,omitempty"`
+	StateUpdates []*rawStateUpdate `yaml:"state_updates,omitempty"`
+	Profile      *rawProfile       `yaml:"profile,omitempty"`
 }
 
 type rawProfile struct {
@@ -55,12 +57,25 @@ type rawMetric struct {
 	Condition  string              `yaml:"condition,omitempty"`
 	Attributes map[string]any      `yaml:"attributes,omitempty"`
 	WhenFault  *rawMetricFaultLink `yaml:"when_fault,omitempty"`
+	Source     *rawMetricSource    `yaml:"source,omitempty"`
 }
 
 type rawMetricFaultLink struct {
 	Kind  string   `yaml:"kind"`
 	Delta *float64 `yaml:"delta,omitempty"`
 	Value *float64 `yaml:"value,omitempty"`
+}
+
+type rawMetricSource struct {
+	Accumulator string `yaml:"accumulator"`
+	Minus       string `yaml:"minus,omitempty"`
+}
+
+type rawStateUpdate struct {
+	Key       string              `yaml:"key"`
+	Delta     *float64            `yaml:"delta,omitempty"`
+	Condition string              `yaml:"condition,omitempty"`
+	WhenFault *rawMetricFaultLink `yaml:"when_fault,omitempty"`
 }
 
 type rawLogEvent struct {

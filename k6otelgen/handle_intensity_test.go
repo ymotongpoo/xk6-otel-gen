@@ -114,6 +114,8 @@ func (s *outcomeRecordingSynth) EmitLog(context.Context, synth.LogInput) {}
 
 func (s *outcomeRecordingSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}
 
+func (s *outcomeRecordingSynth) UpdateState(context.Context, synth.StateUpdateInput) {}
+
 func (s *outcomeRecordingSynth) EmitProfile(context.Context, synth.ProfileInput) {}
 
 func (s *outcomeRecordingSynth) hasErrorOutcome() bool {

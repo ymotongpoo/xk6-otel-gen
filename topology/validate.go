@@ -387,6 +387,9 @@ func validateDomainRanges(s *Schema) []error {
 		if len(svc.Operations) == 0 {
 			errs = append(errs, newValidationError(path+".operations", "D-12", "must contain at least one operation"))
 		}
+		for i, m := range svc.Metrics {
+			errs = append(errs, validateObservableMetricSpec(m, fmt.Sprintf("%s.metrics[%d]", path, i))...)
+		}
 		for name, op := range svc.Operations {
 			if op == nil {
 				continue
@@ -421,8 +424,8 @@ func validateDomainRanges(s *Schema) []error {
 				if len(m.Name) > 120 {
 					errs = append(errs, newValidationErrorf(mPath+".name", "D-METRIC", "metric name must be <= 120 bytes, got %d", len(m.Name)))
 				}
-				if !validMetricType(m.Type) {
-					errs = append(errs, newValidationErrorf(mPath+".type", "D-ENUM", "unsupported metric type %d", m.Type))
+				if !validSyncMetricType(m.Type) {
+					errs = append(errs, newValidationErrorf(mPath+".type", "D-ENUM", "unsupported operation metric type %d", m.Type))
 				}
 				if !validLogCondition(m.Condition) {
 					errs = append(errs, newValidationErrorf(mPath+".condition", "D-ENUM", "unsupported metric condition %d", m.Condition))
@@ -430,17 +433,20 @@ func validateDomainRanges(s *Schema) []error {
 				if !validFloatMetricValue(m.Baseline) {
 					errs = append(errs, newValidationErrorf(mPath+".baseline", "D-METRIC", "baseline must be finite, got %g", m.Baseline))
 				}
-				if m.WhenFault != nil {
-					if !validFaultKind(m.WhenFault.Kind) {
-						errs = append(errs, newValidationErrorf(mPath+".when_fault.kind", "D-ENUM", "unsupported fault kind %d", m.WhenFault.Kind))
-					}
-					if !validFloatMetricValue(m.WhenFault.Delta) {
-						errs = append(errs, newValidationErrorf(mPath+".when_fault.delta", "D-METRIC", "delta must be finite, got %g", m.WhenFault.Delta))
-					}
-					if m.WhenFault.HasValue && !validFloatMetricValue(m.WhenFault.Value) {
-						errs = append(errs, newValidationErrorf(mPath+".when_fault.value", "D-METRIC", "value must be finite, got %g", m.WhenFault.Value))
-					}
+				errs = append(errs, validateMetricFaultLink(m.WhenFault, mPath+".when_fault")...)
+			}
+			for i, update := range op.StateUpdates {
+				updatePath := fmt.Sprintf("%s.state_updates[%d]", opPath, i)
+				if update.Key == "" {
+					errs = append(errs, newValidationError(updatePath+".key", "D-METRIC", "state update key must be non-empty"))
 				}
+				if !validFloatMetricValue(update.Delta) {
+					errs = append(errs, newValidationErrorf(updatePath+".delta", "D-METRIC", "delta must be finite, got %g", update.Delta))
+				}
+				if !validLogCondition(update.Condition) {
+					errs = append(errs, newValidationErrorf(updatePath+".condition", "D-ENUM", "unsupported state update condition %d", update.Condition))
+				}
+				errs = append(errs, validateMetricFaultLink(update.WhenFault, updatePath+".when_fault")...)
 			}
 			if op.Profile != nil && op.Profile.Enabled {
 				pPath := opPath + ".profile"
@@ -501,6 +507,49 @@ func validateDomainRanges(s *Schema) []error {
 		}
 	}
 
+	return errs
+}
+
+func validateObservableMetricSpec(m ObservableMetricSpec, path string) []error {
+	errs := make([]error, 0)
+	if m.Name == "" {
+		errs = append(errs, newValidationError(path+".name", "D-METRIC", "metric name must be non-empty"))
+	}
+	if len(m.Name) > 120 {
+		errs = append(errs, newValidationErrorf(path+".name", "D-METRIC", "metric name must be <= 120 bytes, got %d", len(m.Name)))
+	}
+	if !validObservableMetricType(m.Type) {
+		errs = append(errs, newValidationErrorf(path+".type", "D-ENUM", "unsupported service metric type %d", m.Type))
+	}
+	if !validFloatMetricValue(m.Baseline) {
+		errs = append(errs, newValidationErrorf(path+".baseline", "D-METRIC", "baseline must be finite, got %g", m.Baseline))
+	}
+	errs = append(errs, validateMetricFaultLink(m.WhenFault, path+".when_fault")...)
+	if m.Source != nil {
+		if m.Source.Accumulator == "" {
+			errs = append(errs, newValidationError(path+".source.accumulator", "D-METRIC", "accumulator key must be non-empty"))
+		}
+		if m.Source.Minus != "" && m.Type != MetricObservableGauge {
+			errs = append(errs, newValidationError(path+".source.minus", "D-METRIC", "minus is only supported for observable_gauge"))
+		}
+	}
+	return errs
+}
+
+func validateMetricFaultLink(link *MetricFaultLink, path string) []error {
+	if link == nil {
+		return nil
+	}
+	errs := make([]error, 0)
+	if !validFaultKind(link.Kind) {
+		errs = append(errs, newValidationErrorf(path+".kind", "D-ENUM", "unsupported fault kind %d", link.Kind))
+	}
+	if !validFloatMetricValue(link.Delta) {
+		errs = append(errs, newValidationErrorf(path+".delta", "D-METRIC", "delta must be finite, got %g", link.Delta))
+	}
+	if link.HasValue && !validFloatMetricValue(link.Value) {
+		errs = append(errs, newValidationErrorf(path+".value", "D-METRIC", "value must be finite, got %g", link.Value))
+	}
 	return errs
 }
 
@@ -735,8 +784,12 @@ func validLogSeverity(s LogSeverity) bool {
 		s == SeverityWarn || s == SeverityError || s == SeverityFatal
 }
 
-func validMetricType(t MetricType) bool {
+func validSyncMetricType(t MetricType) bool {
 	return t == MetricCounter || t == MetricGauge || t == MetricHistogram
+}
+
+func validObservableMetricType(t MetricType) bool {
+	return t == MetricObservableGauge || t == MetricObservableCounter
 }
 
 func validFloatMetricValue(v float64) bool {

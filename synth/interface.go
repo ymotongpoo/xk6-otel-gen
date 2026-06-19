@@ -46,6 +46,10 @@ type Synthesizer interface {
 	// (including those whose spans are INTERNAL).
 	RecordCustom(ctx context.Context, in CustomMetricInput)
 
+	// UpdateState applies one operation-scoped accumulator update used by
+	// service-scoped observable custom metrics.
+	UpdateState(ctx context.Context, in StateUpdateInput)
+
 	// EmitProfile pushes one synthetic pprof profile for a journey operation.
 	// No-op when the Synthesizer was built without a ProfileExporter.
 	EmitProfile(ctx context.Context, in ProfileInput)
@@ -105,6 +109,16 @@ type CustomMetricInput struct {
 	Unit        string
 	Value       float64
 	Attributes  map[string]any
+}
+
+// StateUpdateInput describes one accumulator delta produced after a journey
+// operation completes.
+type StateUpdateInput struct {
+	Service     *topology.Service
+	Operation   string
+	InstanceIdx int
+	Key         string
+	Delta       float64
 }
 
 // ProfileInput describes one synthetic pprof profile to push for a journey operation.

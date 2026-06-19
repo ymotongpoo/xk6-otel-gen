@@ -24,6 +24,14 @@ func ValidMetricType() *rapid.Generator[topology.MetricType] {
 	})
 }
 
+// ValidObservableMetricType returns a supported service-scoped observable metric type.
+func ValidObservableMetricType() *rapid.Generator[topology.MetricType] {
+	return rapid.SampledFrom([]topology.MetricType{
+		topology.MetricObservableGauge,
+		topology.MetricObservableCounter,
+	})
+}
+
 // ValidMetricFaultKind returns a supported fault kind for metric linkage.
 func ValidMetricFaultKind() *rapid.Generator[topology.FaultKind] {
 	return rapid.SampledFrom([]topology.FaultKind{
@@ -51,7 +59,7 @@ func ValidMetricSpec() *rapid.Generator[topology.MetricSpec] {
 			spec.Attributes = make(map[string]any, count)
 			for i := 0; i < count; i++ {
 				key := fmt.Sprintf("attr_%d", i)
-				spec.Attributes[key] = rapid.StringN(1, 8, 16).Draw(t, fmt.Sprintf("attr_%d", i))
+				spec.Attributes[key] = validMetricAttributeValue().Draw(t, fmt.Sprintf("attr_%d", i))
 			}
 		}
 		if rapid.Bool().Draw(t, "has_when_fault") {
@@ -68,4 +76,74 @@ func ValidMetricSpec() *rapid.Generator[topology.MetricSpec] {
 		}
 		return spec
 	})
+}
+
+// ValidObservableMetricSpec returns a topology-valid service-scoped observable metric.
+func ValidObservableMetricSpec() *rapid.Generator[topology.ObservableMetricSpec] {
+	return rapid.Custom(func(t *rapid.T) topology.ObservableMetricSpec {
+		spec := topology.ObservableMetricSpec{
+			Name:     ValidMetricName().Draw(t, "name"),
+			Type:     ValidObservableMetricType().Draw(t, "type"),
+			Baseline: rapid.Float64Range(-1000, 1000).Draw(t, "baseline"),
+		}
+		if rapid.Bool().Draw(t, "has_unit") {
+			spec.Unit = rapid.SampledFrom([]string{"{request}", "{message}", "{usd}", "s", "1"}).Draw(t, "unit")
+		}
+		if rapid.Bool().Draw(t, "has_attributes") {
+			count := rapid.IntRange(1, 3).Draw(t, "attr_count")
+			spec.Attributes = make(map[string]any, count)
+			for i := 0; i < count; i++ {
+				key := fmt.Sprintf("attr_%d", i)
+				spec.Attributes[key] = validMetricAttributeValue().Draw(t, fmt.Sprintf("attr_%d", i))
+			}
+		}
+		if rapid.Bool().Draw(t, "has_source") {
+			spec.Source = &topology.MetricSourceSpec{
+				Accumulator: validAccumulatorKey(t, "accumulator"),
+			}
+			if spec.Type == topology.MetricObservableGauge && rapid.Bool().Draw(t, "has_minus") {
+				spec.Source.Minus = validAccumulatorKey(t, "minus")
+			}
+		}
+		if rapid.Bool().Draw(t, "has_when_fault") {
+			spec.WhenFault = validMetricFaultLink(t)
+		}
+		return spec
+	})
+}
+
+// ValidMetricStateUpdateSpec returns a topology-valid operation accumulator update.
+func ValidMetricStateUpdateSpec() *rapid.Generator[topology.MetricStateUpdateSpec] {
+	return rapid.Custom(func(t *rapid.T) topology.MetricStateUpdateSpec {
+		spec := topology.MetricStateUpdateSpec{
+			Key:       validAccumulatorKey(t, "key"),
+			Delta:     rapid.Float64Range(-1000, 1000).Draw(t, "delta"),
+			Condition: ValidLogCondition().Draw(t, "condition"),
+		}
+		if rapid.Bool().Draw(t, "has_when_fault") {
+			spec.WhenFault = validMetricFaultLink(t)
+		}
+		return spec
+	})
+}
+
+func validMetricFaultLink(t *rapid.T) *topology.MetricFaultLink {
+	link := &topology.MetricFaultLink{
+		Kind: ValidMetricFaultKind().Draw(t, "fault_kind"),
+	}
+	if rapid.Bool().Draw(t, "use_value_override") {
+		link.HasValue = true
+		link.Value = rapid.Float64Range(-1000, 1000).Draw(t, "fault_value")
+	} else {
+		link.Delta = rapid.Float64Range(-1000, 1000).Draw(t, "fault_delta")
+	}
+	return link
+}
+
+func validAccumulatorKey(t *rapid.T, label string) string {
+	return rapid.StringMatching(`[a-z][a-z0-9_.]{0,39}`).Draw(t, label)
+}
+
+func validMetricAttributeValue() *rapid.Generator[string] {
+	return rapid.StringMatching(`[a-z0-9_]{1,16}`)
 }

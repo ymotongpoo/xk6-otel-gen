@@ -198,6 +198,12 @@ func (m *mockSynth) RecordCustom(ctx context.Context, in synth.CustomMetricInput
 	m.mu.Unlock()
 }
 
+func (m *mockSynth) UpdateState(ctx context.Context, in synth.StateUpdateInput) {
+	m.mu.Lock()
+	m.contexts = append(m.contexts, ctx)
+	m.mu.Unlock()
+}
+
 func (m *mockSynth) EmitProfile(ctx context.Context, in synth.ProfileInput) {
 	m.mu.Lock()
 	m.contexts = append(m.contexts, ctx)

@@ -4,6 +4,8 @@
 package generators
 
 import (
+	"fmt"
+
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 	"pgregory.net/rapid"
 )
@@ -25,6 +27,13 @@ func ValidService(opts ...ServiceOption) *rapid.Generator[*topology.Service] {
 			Kind:       kind,
 			Replicas:   ValidReplicaCount().Draw(t, "replicas"),
 			Operations: make(map[string]*topology.Operation),
+		}
+		if rapid.Float64Range(0, 1).Draw(t, "metrics_roll") < 0.35 {
+			count := rapid.IntRange(1, 3).Draw(t, "n_metrics")
+			svc.Metrics = make([]topology.ObservableMetricSpec, 0, count)
+			for i := 0; i < count; i++ {
+				svc.Metrics = append(svc.Metrics, ValidObservableMetricSpec().Draw(t, fmt.Sprintf("metric_%d", i)))
+			}
 		}
 
 		opCount := rapid.IntRange(1, o.maxOpsPerService).Draw(t, "n_ops")

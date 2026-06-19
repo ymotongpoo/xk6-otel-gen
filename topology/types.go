@@ -27,24 +27,26 @@ type Schema struct {
 
 // Service describes a microservice or dependency node in a topology.
 type Service struct {
-	Name       ServiceID             `yaml:"name"`
-	Namespace  string                `yaml:"namespace"`
-	Kind       ServiceKind           `yaml:"kind"`
-	Replicas   int                   `yaml:"replicas"`
-	Language   string                `yaml:"language"`
-	Framework  string                `yaml:"framework"`
-	Version    string                `yaml:"version"`
-	Operations map[string]*Operation `yaml:"operations"`
+	Name       ServiceID              `yaml:"name"`
+	Namespace  string                 `yaml:"namespace"`
+	Kind       ServiceKind            `yaml:"kind"`
+	Replicas   int                    `yaml:"replicas"`
+	Language   string                 `yaml:"language"`
+	Framework  string                 `yaml:"framework"`
+	Version    string                 `yaml:"version"`
+	Operations map[string]*Operation  `yaml:"operations"`
+	Metrics    []ObservableMetricSpec `yaml:"metrics,omitempty"`
 }
 
 // Operation is a callable unit at a Service.
 type Operation struct {
-	Name      string         `yaml:"name"`
-	Service   *Service       `yaml:"service"`
-	Calls     []*CallNode    `yaml:"calls"`
-	LogEvents []LogEventSpec `yaml:"log_events,omitempty"`
-	Metrics   []MetricSpec   `yaml:"metrics,omitempty"`
-	Profile   *ProfileSpec   `yaml:"profile,omitempty"`
+	Name         string                  `yaml:"name"`
+	Service      *Service                `yaml:"service"`
+	Calls        []*CallNode             `yaml:"calls"`
+	LogEvents    []LogEventSpec          `yaml:"log_events,omitempty"`
+	Metrics      []MetricSpec            `yaml:"metrics,omitempty"`
+	StateUpdates []MetricStateUpdateSpec `yaml:"state_updates,omitempty"`
+	Profile      *ProfileSpec            `yaml:"profile,omitempty"`
 }
 
 // ProfileSpec declares a synthetic flamegraph emitted when the operation
@@ -92,6 +94,34 @@ type MetricFaultLink struct {
 	Delta    float64   `yaml:"delta"`
 	Value    float64   `yaml:"value"`
 	HasValue bool      `yaml:"has_value"`
+}
+
+// ObservableMetricSpec is a service-scoped asynchronous custom metric observed
+// during OTel metric collection, independently of any operation execution.
+type ObservableMetricSpec struct {
+	Name       string            `yaml:"name"`
+	Type       MetricType        `yaml:"type"`
+	Unit       string            `yaml:"unit,omitempty"`
+	Baseline   float64           `yaml:"baseline"`
+	Attributes map[string]any    `yaml:"attributes,omitempty"`
+	WhenFault  *MetricFaultLink  `yaml:"when_fault,omitempty"`
+	Source     *MetricSourceSpec `yaml:"source,omitempty"`
+}
+
+// MetricSourceSpec reads an observable metric value from process-wide
+// accumulators updated by operation state_updates.
+type MetricSourceSpec struct {
+	Accumulator string `yaml:"accumulator"`
+	Minus       string `yaml:"minus,omitempty"`
+}
+
+// MetricStateUpdateSpec updates a process-wide accumulator when an operation
+// completes and its condition/fault gates match.
+type MetricStateUpdateSpec struct {
+	Key       string           `yaml:"key"`
+	Delta     float64          `yaml:"delta"`
+	Condition LogCondition     `yaml:"condition"`
+	WhenFault *MetricFaultLink `yaml:"when_fault,omitempty"`
 }
 
 // LogEventSpec is a declarative structured log event emitted when an operation

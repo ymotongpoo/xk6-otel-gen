@@ -49,7 +49,8 @@ type defaultSynthesizer struct {
 	customMu    sync.Mutex
 	customInsts map[string]any
 
-	profiles ProfileExporter
+	profiles        ProfileExporter
+	observableState *ObservableState
 }
 
 // NewDefault creates the default Synthesizer. Traces and logs are emitted
@@ -58,22 +59,33 @@ type defaultSynthesizer struct {
 // the single MeterProvider mp with service.name as a data-point attribute. All
 // U3 instruments are created eagerly.
 func NewDefault(factory ProviderFactory, mp metric.MeterProvider, profiles ProfileExporter) Synthesizer {
+	return NewDefaultWithObservableState(factory, mp, profiles, NewObservableState())
+}
+
+// NewDefaultWithObservableState creates the default Synthesizer using state for
+// operation-scoped accumulator updates consumed by service-scoped observable
+// metrics.
+func NewDefaultWithObservableState(factory ProviderFactory, mp metric.MeterProvider, profiles ProfileExporter, state *ObservableState) Synthesizer {
 	if factory == nil {
 		panic("synth: NewDefault: factory must not be nil")
 	}
 	if mp == nil {
 		panic("synth: NewDefault: mp must not be nil")
 	}
+	if state == nil {
+		panic("synth: NewDefault: observable state must not be nil")
+	}
 
 	meter := mp.Meter(instrumentationName)
 	s := &defaultSynthesizer{
-		factory:        factory,
-		meter:          meter,
-		tracers:        make(map[string]trace.Tracer),
-		loggers:        make(map[string]log.Logger),
-		staticSetCache: &staticSetCache{},
-		customInsts:    make(map[string]any),
-		profiles:       profiles,
+		factory:         factory,
+		meter:           meter,
+		tracers:         make(map[string]trace.Tracer),
+		loggers:         make(map[string]log.Logger),
+		staticSetCache:  &staticSetCache{},
+		customInsts:     make(map[string]any),
+		profiles:        profiles,
+		observableState: state,
 	}
 
 	s.httpClientDur = mustHistogram(meter, "http.client.request.duration", "s")
@@ -246,6 +258,13 @@ func (s *defaultSynthesizer) RecordCustom(ctx context.Context, in CustomMetricIn
 	default:
 		return
 	}
+}
+
+func (s *defaultSynthesizer) UpdateState(_ context.Context, in StateUpdateInput) {
+	if s == nil || s.observableState == nil || in.Service == nil {
+		return
+	}
+	s.observableState.Add(in.Key, in.Delta)
 }
 
 func (s *defaultSynthesizer) customCounter(name, unit string) (metric.Float64Counter, bool) {

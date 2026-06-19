@@ -157,6 +157,90 @@ journeys:
 	}
 }
 
+func TestParse_ServiceObservableMetrics_FieldsResolved(t *testing.T) {
+	t.Parallel()
+
+	const src = `
+services:
+  kafka:
+    kind: queue
+    metrics:
+      - name: kafka.consumer.lag
+        type: observable_gauge
+        unit: "{message}"
+        baseline: 2
+        attributes:
+          topic: orders
+        source:
+          accumulator: kafka.produced
+          minus: kafka.consumed
+        when_fault:
+          kind: latency_inflation
+          delta: 40
+    operations:
+      - name: consume
+journeys:
+  lag:
+    steps:
+      - service: kafka
+        operation: consume
+`
+	s := mustParse(t, src)
+	metrics := s.Services["kafka"].Metrics
+	if len(metrics) != 1 {
+		t.Fatalf("len(Service.Metrics) = %d, want 1", len(metrics))
+	}
+	m := metrics[0]
+	if m.Name != "kafka.consumer.lag" || m.Type != topology.MetricObservableGauge || m.Unit != "{message}" || m.Baseline != 2 {
+		t.Fatalf("observable metric fields = %#v", m)
+	}
+	if m.Attributes["topic"] != "orders" {
+		t.Fatalf("Attributes = %#v", m.Attributes)
+	}
+	if m.Source == nil || m.Source.Accumulator != "kafka.produced" || m.Source.Minus != "kafka.consumed" {
+		t.Fatalf("Source = %#v", m.Source)
+	}
+	if m.WhenFault == nil || m.WhenFault.Kind != topology.FaultLatencyInflation || m.WhenFault.Delta != 40 {
+		t.Fatalf("WhenFault = %#v", m.WhenFault)
+	}
+}
+
+func TestParse_StateUpdates_FieldsResolved(t *testing.T) {
+	t.Parallel()
+
+	const src = `
+services:
+  kafka:
+    kind: queue
+    operations:
+      - name: produce
+        state_updates:
+          - key: kafka.produced
+            delta: 3
+            condition: on_success
+            when_fault:
+              kind: crash
+              value: 0
+journeys:
+  produce:
+    steps:
+      - service: kafka
+        operation: produce
+`
+	s := mustParse(t, src)
+	updates := s.Services["kafka"].Operations["produce"].StateUpdates
+	if len(updates) != 1 {
+		t.Fatalf("len(StateUpdates) = %d, want 1", len(updates))
+	}
+	update := updates[0]
+	if update.Key != "kafka.produced" || update.Delta != 3 || update.Condition != topology.ConditionOnSuccess {
+		t.Fatalf("StateUpdate = %#v", update)
+	}
+	if update.WhenFault == nil || !update.WhenFault.HasValue || update.WhenFault.Value != 0 || update.WhenFault.Kind != topology.FaultCrash {
+		t.Fatalf("WhenFault = %#v", update.WhenFault)
+	}
+}
+
 func TestValidate_Metrics_InvalidFields(t *testing.T) {
 	t.Parallel()
 
@@ -256,6 +340,87 @@ journeys:
 			}
 			if !strings.Contains(err.Error(), tt.rule) {
 				t.Fatalf("Parse() error = %v, want rule %s", err, tt.rule)
+			}
+		})
+	}
+}
+
+func TestValidate_ServiceObservableMetrics_InvalidScope(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		src  string
+	}{
+		{
+			name: "sync metric under service",
+			src: `
+services:
+  api:
+    kind: application
+    metrics:
+      - name: api.bad
+        type: counter
+    operations:
+      - name: ping
+journeys:
+  home:
+    steps:
+      - service: api
+        operation: ping
+`,
+		},
+		{
+			name: "observable metric under operation",
+			src: `
+services:
+  api:
+    kind: application
+    operations:
+      - name: ping
+        metrics:
+          - name: api.bad
+            type: observable_gauge
+journeys:
+  home:
+    steps:
+      - service: api
+        operation: ping
+`,
+		},
+		{
+			name: "counter minus source",
+			src: `
+services:
+  api:
+    kind: application
+    metrics:
+      - name: api.bad
+        type: observable_counter
+        source:
+          accumulator: api.total
+          minus: api.failed
+    operations:
+      - name: ping
+journeys:
+  home:
+    steps:
+      - service: api
+        operation: ping
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			_, err := topology.Parse(strings.NewReader(tt.src))
+			if err == nil {
+				t.Fatal("Parse() error = nil, want validation error")
+			}
+			if !strings.Contains(err.Error(), "D-METRIC") && !strings.Contains(err.Error(), "D-ENUM") {
+				t.Fatalf("Parse() error = %v, want metric validation", err)
 			}
 		})
 	}

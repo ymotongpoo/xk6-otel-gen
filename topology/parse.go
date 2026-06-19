@@ -99,17 +99,19 @@ func buildSchema(raw *rawSchema) *Schema {
 			Framework:  rs.Framework,
 			Version:    rs.Version,
 			Operations: make(map[string]*Operation, len(rs.Operations)),
+			Metrics:    resolveObservableMetrics(rs.Metrics),
 		}
 		for _, ro := range rs.Operations {
 			if ro == nil {
 				ro = &rawOperation{}
 			}
 			op := &Operation{
-				Name:      ro.Name,
-				Service:   svc,
-				LogEvents: resolveLogEvents(ro.LogEvents),
-				Metrics:   resolveMetrics(ro.Metrics),
-				Profile:   resolveProfile(ro.Profile),
+				Name:         ro.Name,
+				Service:      svc,
+				LogEvents:    resolveLogEvents(ro.LogEvents),
+				Metrics:      resolveMetrics(ro.Metrics),
+				StateUpdates: resolveStateUpdates(ro.StateUpdates),
+				Profile:      resolveProfile(ro.Profile),
 			}
 			svc.Operations[ro.Name] = op
 		}
@@ -690,6 +692,79 @@ func resolveMetrics(in []*rawMetric) []MetricSpec {
 	return out
 }
 
+func resolveObservableMetrics(in []*rawMetric) []ObservableMetricSpec {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]ObservableMetricSpec, 0, len(in))
+	for _, raw := range in {
+		if raw == nil {
+			continue
+		}
+		spec := ObservableMetricSpec{
+			Name:       raw.Name,
+			Type:       parseMetricType(raw.Type),
+			Unit:       raw.Unit,
+			Baseline:   float64Default(raw.Baseline, 0),
+			Attributes: raw.Attributes,
+		}
+		if raw.WhenFault != nil {
+			spec.WhenFault = resolveMetricFaultLink(raw.WhenFault)
+		}
+		if raw.Source != nil {
+			spec.Source = &MetricSourceSpec{
+				Accumulator: raw.Source.Accumulator,
+				Minus:       raw.Source.Minus,
+			}
+		}
+		out = append(out, spec)
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func resolveStateUpdates(in []*rawStateUpdate) []MetricStateUpdateSpec {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]MetricStateUpdateSpec, 0, len(in))
+	for _, raw := range in {
+		if raw == nil {
+			continue
+		}
+		spec := MetricStateUpdateSpec{
+			Key:       raw.Key,
+			Delta:     float64Default(raw.Delta, 0),
+			Condition: parseLogCondition(raw.Condition),
+		}
+		if raw.WhenFault != nil {
+			spec.WhenFault = resolveMetricFaultLink(raw.WhenFault)
+		}
+		out = append(out, spec)
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func resolveMetricFaultLink(raw *rawMetricFaultLink) *MetricFaultLink {
+	if raw == nil {
+		return nil
+	}
+	link := &MetricFaultLink{
+		Kind:  parseFaultKind(raw.Kind),
+		Delta: float64Default(raw.Delta, 0),
+		Value: float64Default(raw.Value, 0),
+	}
+	if raw.Value != nil {
+		link.HasValue = true
+	}
+	return link
+}
+
 func parseMetricType(s string) MetricType {
 	switch strings.ToLower(strings.TrimSpace(s)) {
 	case "counter":
@@ -698,6 +773,10 @@ func parseMetricType(s string) MetricType {
 		return MetricGauge
 	case "histogram":
 		return MetricHistogram
+	case "observable_gauge":
+		return MetricObservableGauge
+	case "observable_counter":
+		return MetricObservableCounter
 	default:
 		return invalidMetricType
 	}

@@ -56,6 +56,7 @@ go run ./cmd/xk6-otel-gen-schema -output topology.schema.json
 | `language` | string | いいえ | — | 実装言語のメタデータ |
 | `framework` | string | いいえ | — | フレームワークのメタデータ |
 | `version` | string | いいえ | — | バージョンのメタデータ |
+| `metrics` | list | いいえ | `[]` | サービス単位の observable カスタムメトリクス（ObservableMetric） |
 
 **オペレーション（`operations[]`）**
 
@@ -65,6 +66,7 @@ go run ./cmd/xk6-otel-gen-schema -output topology.schema.json
 | `calls` | list | いいえ | `[]` | このオペレーションが行う送信呼び出し（順序付き、CallNode） |
 | `log_events` | list | いいえ | `[]` | オペレーション完了時に出力する構造化ログイベント（LogEvent） |
 | `metrics` | list | いいえ | `[]` | オペレーション完了時に記録するカスタムメトリクス（Metric） |
+| `state_updates` | list | いいえ | `[]` | サービス単位 observable メトリクス用の accumulator 更新 |
 | `profile` | object | いいえ | — | Pyroscope へ送る合成フレームグラフ（Profile） |
 
 **呼び出し（CallNode = `calls[]` / `parallel[]` の各要素）**
@@ -238,6 +240,51 @@ operations:
 これにより `{service_name="payment"} | event_name="provider_call.timeout"` のような
 LogQL がヒットします。
 
+#### `services.<id>.metrics`
+
+サービス単位の observable メトリクスは、オペレーション完了時ではなく OTel SDK の
+callback 経路で収集されます。queue の consumer lag のように、自然な実行ノードを
+持たないサービスまたは依存コンポーネントの値に使います。
+
+| フィールド | 型 | 必須 | 既定値 | 説明 |
+|---|---|---|---|---|
+| `name` | string | **はい** | — | インストルメント名 |
+| `type` | enum | **はい** | — | `observable_gauge` / `observable_counter` |
+| `unit` | string | いいえ | — | UCUM 形式の単位 |
+| `baseline` | number | いいえ | `0` | source/fault 補正前の基準値 |
+| `attributes` | map | いいえ | — | データポイントへの追加属性 |
+| `source` | object | いいえ | — | accumulator source `{ accumulator, minus? }` |
+| `when_fault` | object | いいえ | — | 決定的なサービス fault による補正 |
+
+`source.minus` は `observable_gauge` でのみ有効です。`observable_counter` は累積値として
+単一の accumulator key を読みます。
+
+```yaml
+services:
+  kafka:
+    kind: queue
+    metrics:
+      - name: kafka.consumer.lag
+        type: observable_gauge
+        unit: "{message}"
+        source:
+          accumulator: kafka.orders.produced
+          minus: kafka.orders.consumed
+    operations:
+      - name: publish_order
+        state_updates:
+          - key: kafka.orders.produced
+            delta: 1
+            condition: on_success
+          - key: kafka.orders.consumed
+            delta: 0.8
+            condition: on_success
+```
+
+サービスメトリクスの `when_fault` は、決定的なサービス fault
+（`target: node:<service>` かつ `probability >= 1`）だけを評価します。
+OTel callback からはイテレーションごとのランダムな fault 状態を読みません。
+
 #### `operations[].metrics`
 
 オペレーション完了時に記録するカスタムメトリクスのデータポイントです。任意で
@@ -278,6 +325,21 @@ operations:
 fault 連動はオペレーションに適用された fault 状態と同じものに基づいて評価されるため、
 fault 発動時に値が決定的に動きます。`condition: on_success` で供給する counter は、OTLP の
 累積（cumulative）temporality と組み合わさって増え続ける合計（例: 決済合計金額）になります。
+
+#### `operations[].state_updates`
+
+state update は、オペレーション完了後に process-wide な accumulator を加算します。
+サービス単位の observable メトリクスは、各収集インターバルでこの値を読みます。
+
+| フィールド | 型 | 必須 | 既定値 | 説明 |
+|---|---|---|---|---|
+| `key` | string | **はい** | — | accumulator key |
+| `delta` | number | いいえ | `0` | accumulator に加算する量 |
+| `condition` | enum | いいえ | `always` | `always` / `on_success` / `on_error` |
+| `when_fault` | object | いいえ | — | オペレーション fault が active な間の delta 補正 |
+
+`when_fault` では、`delta` は通常の更新量に加算され、`value` はそのオペレーション完了時の
+更新量を上書きします。
 
 #### `operations[].profile`
 

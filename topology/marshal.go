@@ -58,6 +58,7 @@ func marshalService(svc *Service, schemaNamespace string) *rawService {
 		Language:   svc.Language,
 		Framework:  svc.Framework,
 		Version:    svc.Version,
+		Metrics:    marshalObservableMetrics(svc.Metrics),
 		Operations: marshalOperations(svc.Operations),
 	}
 	if svc.Namespace != "" && svc.Namespace != schemaNamespace {
@@ -86,11 +87,12 @@ func marshalOperations(ops map[string]*Operation) []*rawOperation {
 			continue
 		}
 		out = append(out, &rawOperation{
-			Name:      op.Name,
-			Calls:     marshalCallNodes(op.Calls),
-			LogEvents: marshalLogEvents(op.LogEvents),
-			Metrics:   marshalMetrics(op.Metrics),
-			Profile:   marshalProfile(op.Profile),
+			Name:         op.Name,
+			Calls:        marshalCallNodes(op.Calls),
+			LogEvents:    marshalLogEvents(op.LogEvents),
+			Metrics:      marshalMetrics(op.Metrics),
+			StateUpdates: marshalStateUpdates(op.StateUpdates),
+			Profile:      marshalProfile(op.Profile),
 		})
 	}
 	return out
@@ -180,6 +182,71 @@ func marshalMetrics(metrics []MetricSpec) []*rawMetric {
 		out = append(out, raw)
 	}
 	return out
+}
+
+func marshalObservableMetrics(metrics []ObservableMetricSpec) []*rawMetric {
+	if len(metrics) == 0 {
+		return nil
+	}
+	out := make([]*rawMetric, 0, len(metrics))
+	for _, m := range metrics {
+		raw := &rawMetric{
+			Name:       m.Name,
+			Type:       m.Type.String(),
+			Unit:       m.Unit,
+			Attributes: m.Attributes,
+		}
+		if m.Baseline != 0 {
+			raw.Baseline = ptrFloat64(m.Baseline)
+		}
+		if m.WhenFault != nil {
+			raw.WhenFault = marshalMetricFaultLink(m.WhenFault)
+		}
+		if m.Source != nil {
+			raw.Source = &rawMetricSource{
+				Accumulator: m.Source.Accumulator,
+				Minus:       m.Source.Minus,
+			}
+		}
+		out = append(out, raw)
+	}
+	return out
+}
+
+func marshalStateUpdates(updates []MetricStateUpdateSpec) []*rawStateUpdate {
+	if len(updates) == 0 {
+		return nil
+	}
+	out := make([]*rawStateUpdate, 0, len(updates))
+	for _, update := range updates {
+		raw := &rawStateUpdate{
+			Key: update.Key,
+		}
+		if update.Delta != 0 {
+			raw.Delta = ptrFloat64(update.Delta)
+		}
+		if update.Condition != ConditionAlways {
+			raw.Condition = update.Condition.String()
+		}
+		if update.WhenFault != nil {
+			raw.WhenFault = marshalMetricFaultLink(update.WhenFault)
+		}
+		out = append(out, raw)
+	}
+	return out
+}
+
+func marshalMetricFaultLink(link *MetricFaultLink) *rawMetricFaultLink {
+	if link == nil {
+		return nil
+	}
+	raw := &rawMetricFaultLink{Kind: link.Kind.String()}
+	if link.HasValue {
+		raw.Value = ptrFloat64(link.Value)
+	} else if link.Delta != 0 {
+		raw.Delta = ptrFloat64(link.Delta)
+	}
+	return raw
 }
 
 func marshalCallNodes(nodes []*CallNode) []*rawCallNode {

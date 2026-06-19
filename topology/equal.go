@@ -42,6 +42,7 @@ func equalService(a, b *Service) bool {
 		a.Language == b.Language &&
 		a.Framework == b.Framework &&
 		a.Version == b.Version &&
+		equalObservableMetrics(a.Metrics, b.Metrics) &&
 		equalOperations(a.Operations, b.Operations)
 }
 
@@ -61,7 +62,7 @@ func equalOperation(a, b *Operation) bool {
 	if a == nil || b == nil {
 		return a == b
 	}
-	return identifyOp(a) == identifyOp(b) && equalCalls(a.Calls, b.Calls) && equalLogEvents(a.LogEvents, b.LogEvents) && equalMetrics(a.Metrics, b.Metrics) && equalProfile(a.Profile, b.Profile)
+	return identifyOp(a) == identifyOp(b) && equalCalls(a.Calls, b.Calls) && equalLogEvents(a.LogEvents, b.LogEvents) && equalMetrics(a.Metrics, b.Metrics) && equalStateUpdates(a.StateUpdates, b.StateUpdates) && equalProfile(a.Profile, b.Profile)
 }
 
 func equalProfile(a, b *ProfileSpec) bool {
@@ -121,6 +122,65 @@ func equalMetricSpec(a, b MetricSpec) bool {
 		a.WhenFault.Delta == b.WhenFault.Delta &&
 		a.WhenFault.Value == b.WhenFault.Value &&
 		a.WhenFault.HasValue == b.WhenFault.HasValue
+}
+
+func equalObservableMetrics(a, b []ObservableMetricSpec) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if !equalObservableMetricSpec(a[i], b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func equalObservableMetricSpec(a, b ObservableMetricSpec) bool {
+	if a.Name != b.Name || a.Type != b.Type || a.Unit != b.Unit || a.Baseline != b.Baseline {
+		return false
+	}
+	if !reflect.DeepEqual(a.Attributes, b.Attributes) {
+		return false
+	}
+	if (a.WhenFault == nil) != (b.WhenFault == nil) || (a.Source == nil) != (b.Source == nil) {
+		return false
+	}
+	if a.WhenFault != nil && !equalMetricFaultLink(a.WhenFault, b.WhenFault) {
+		return false
+	}
+	if a.Source != nil && (a.Source.Accumulator != b.Source.Accumulator || a.Source.Minus != b.Source.Minus) {
+		return false
+	}
+	return true
+}
+
+func equalStateUpdates(a, b []MetricStateUpdateSpec) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].Key != b[i].Key || a[i].Delta != b[i].Delta || a[i].Condition != b[i].Condition {
+			return false
+		}
+		if (a[i].WhenFault == nil) != (b[i].WhenFault == nil) {
+			return false
+		}
+		if a[i].WhenFault != nil && !equalMetricFaultLink(a[i].WhenFault, b[i].WhenFault) {
+			return false
+		}
+	}
+	return true
+}
+
+func equalMetricFaultLink(a, b *MetricFaultLink) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	return a.Kind == b.Kind &&
+		a.Delta == b.Delta &&
+		a.Value == b.Value &&
+		a.HasValue == b.HasValue
 }
 
 func equalLogEvents(a, b []LogEventSpec) bool {

@@ -106,6 +106,8 @@ func (phase2Synth) EmitLog(context.Context, synth.LogInput) {}
 
 func (phase2Synth) RecordCustom(context.Context, synth.CustomMetricInput) {}
 
+func (phase2Synth) UpdateState(context.Context, synth.StateUpdateInput) {}
+
 func (phase2Synth) EmitProfile(context.Context, synth.ProfileInput) {}
 
 type recordingInstanceSynth struct {
@@ -125,6 +127,8 @@ func (s *recordingInstanceSynth) RecordMetric(context.Context, synth.MetricInput
 func (s *recordingInstanceSynth) EmitLog(context.Context, synth.LogInput) {}
 
 func (s *recordingInstanceSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}
+
+func (s *recordingInstanceSynth) UpdateState(context.Context, synth.StateUpdateInput) {}
 
 func (s *recordingInstanceSynth) EmitProfile(context.Context, synth.ProfileInput) {}
 

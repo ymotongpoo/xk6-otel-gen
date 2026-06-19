@@ -358,6 +358,26 @@ func (e *engineImpl) finishAndEmitAt(ctx context.Context, node *Node, instanceId
 				Attributes:  cloneAttrs(m.Attributes),
 			})
 		}
+		for _, update := range node.StateUpdates {
+			if !logEventMatches(update.Condition, outcome.Success) {
+				continue
+			}
+			delta := update.Delta
+			if update.WhenFault != nil && faultActiveForKind(ff, update.WhenFault.Kind) {
+				if update.WhenFault.HasValue {
+					delta = update.WhenFault.Value
+				} else {
+					delta += update.WhenFault.Delta
+				}
+			}
+			e.synth.UpdateState(ctx, synth.StateUpdateInput{
+				Service:     node.Service,
+				Operation:   node.Operation,
+				InstanceIdx: instanceIdx,
+				Key:         update.Key,
+				Delta:       delta,
+			})
+		}
 	}
 	if profileID != "" {
 		e.synth.EmitProfile(ctx, synth.ProfileInput{

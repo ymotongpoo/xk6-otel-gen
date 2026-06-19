@@ -20,14 +20,15 @@ type Plan struct {
 // for sequential execution or Parallel for fan-out execution. Virtual nodes use
 // a nil Service and an empty Operation.
 type Node struct {
-	Service   *topology.Service
-	Operation string
-	Edge      *topology.Edge
-	Parallel  []*Node
-	Children  []*Node
-	LogEvents []topology.LogEventSpec
-	Metrics   []topology.MetricSpec
-	Profile   *topology.ProfileSpec
+	Service      *topology.Service
+	Operation    string
+	Edge         *topology.Edge
+	Parallel     []*Node
+	Children     []*Node
+	LogEvents    []topology.LogEventSpec
+	Metrics      []topology.MetricSpec
+	StateUpdates []topology.MetricStateUpdateSpec
+	Profile      *topology.ProfileSpec
 }
 
 // BuildPlan returns the cached immutable Plan for journeyName.
@@ -94,12 +95,13 @@ func (e *engineImpl) buildOperationNode(op *topology.Operation, edge *topology.E
 	defer delete(visiting, op)
 
 	node := &Node{
-		Service:   op.Service,
-		Operation: op.Name,
-		Edge:      edge,
-		LogEvents: op.LogEvents,
-		Metrics:   op.Metrics,
-		Profile:   op.Profile,
+		Service:      op.Service,
+		Operation:    op.Name,
+		Edge:         edge,
+		LogEvents:    op.LogEvents,
+		Metrics:      op.Metrics,
+		StateUpdates: op.StateUpdates,
+		Profile:      op.Profile,
 	}
 	for i, call := range op.Calls {
 		child, err := e.buildCallNode(call, visiting, appendPath(path, fmt.Sprintf("call[%d]", i)))

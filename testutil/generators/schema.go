@@ -69,6 +69,13 @@ func buildServicesAndOperations(t *rapid.T, schema *topology.Schema, o schemaOpt
 			Operations: make(map[string]*topology.Operation),
 		}
 		schema.Services[name] = svc
+		if rapid.Float64Range(0, 1).Draw(t, fmt.Sprintf("service_%d_metrics_roll", svcIndex)) < 0.35 {
+			count := rapid.IntRange(1, 3).Draw(t, fmt.Sprintf("service_%d_n_metrics", svcIndex))
+			svc.Metrics = make([]topology.ObservableMetricSpec, 0, count)
+			for i := 0; i < count; i++ {
+				svc.Metrics = append(svc.Metrics, ValidObservableMetricSpec().Draw(t, fmt.Sprintf("service_%d_metric_%d", svcIndex, i)))
+			}
+		}
 
 		opCount := rapid.IntRange(1, o.maxOpsPerService).Draw(t, fmt.Sprintf("service_%d_n_ops", svcIndex))
 		opNames := rapid.SliceOfNDistinct(
@@ -81,6 +88,13 @@ func buildServicesAndOperations(t *rapid.T, schema *topology.Schema, o schemaOpt
 			op := &topology.Operation{
 				Name:    opName,
 				Service: svc,
+			}
+			if rapid.Float64Range(0, 1).Draw(t, fmt.Sprintf("service_%d_op_%s_state_roll", svcIndex, opName)) < 0.35 {
+				count := rapid.IntRange(1, 3).Draw(t, fmt.Sprintf("service_%d_op_%s_n_state_updates", svcIndex, opName))
+				op.StateUpdates = make([]topology.MetricStateUpdateSpec, 0, count)
+				for i := 0; i < count; i++ {
+					op.StateUpdates = append(op.StateUpdates, ValidMetricStateUpdateSpec().Draw(t, fmt.Sprintf("service_%d_op_%s_state_update_%d", svcIndex, opName, i)))
+				}
 			}
 			svc.Operations[opName] = op
 			topoOrder = append(topoOrder, op)

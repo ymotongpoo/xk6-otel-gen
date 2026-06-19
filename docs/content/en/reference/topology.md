@@ -58,6 +58,7 @@ calls (edges) to other services.
 | `language` | string | no | — | Implementation language metadata |
 | `framework` | string | no | — | Framework metadata |
 | `version` | string | no | — | Version metadata |
+| `metrics` | list | no | `[]` | Service-scoped observable custom metrics (ObservableMetric) |
 
 **Operation (`operations[]`)**
 
@@ -67,6 +68,7 @@ calls (edges) to other services.
 | `calls` | list | no | `[]` | Ordered outgoing calls made by this operation (CallNode) |
 | `log_events` | list | no | `[]` | Structured log events emitted when this operation completes (LogEvent) |
 | `metrics` | list | no | `[]` | Custom metric data points recorded when this operation completes (Metric) |
+| `state_updates` | list | no | `[]` | Accumulator updates for service-scoped observable metrics |
 | `profile` | object | no | — | Synthetic flamegraph pushed to Pyroscope (Profile) |
 
 **Call (CallNode — items of `calls[]` / `parallel[]`)**
@@ -246,6 +248,52 @@ operations:
 This powers LogQL such as
 `{service_name="payment"} | event_name="provider_call.timeout"`.
 
+#### `services.<id>.metrics`
+
+Service-scoped observable metrics are collected by the OTel SDK callback path,
+not when an operation completes. They are useful for values owned by a service
+or dependency node that is not naturally an operation, such as queue consumer
+lag.
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `name` | string | **yes** | — | Instrument name |
+| `type` | enum | **yes** | — | `observable_gauge` / `observable_counter` |
+| `unit` | string | no | — | UCUM-style unit |
+| `baseline` | number | no | `0` | Base value before source/fault adjustment |
+| `attributes` | map | no | — | Extra data-point attributes |
+| `source` | object | no | — | Accumulator source `{ accumulator, minus? }` |
+| `when_fault` | object | no | — | Deterministic service fault adjustment |
+
+`source.minus` is valid only for `observable_gauge`. `observable_counter`
+sources are cumulative and use a single accumulator key.
+
+```yaml
+services:
+  kafka:
+    kind: queue
+    metrics:
+      - name: kafka.consumer.lag
+        type: observable_gauge
+        unit: "{message}"
+        source:
+          accumulator: kafka.orders.produced
+          minus: kafka.orders.consumed
+    operations:
+      - name: publish_order
+        state_updates:
+          - key: kafka.orders.produced
+            delta: 1
+            condition: on_success
+          - key: kafka.orders.consumed
+            delta: 0.8
+            condition: on_success
+```
+
+`when_fault` on service metrics is evaluated only for deterministic service
+faults (`target: node:<service>` with `probability >= 1`). Per-iteration random
+fault state is intentionally not read from OTel callbacks.
+
 #### `operations[].metrics`
 
 Custom metric data points recorded when the operation completes. Optionally
@@ -287,6 +335,21 @@ The fault linkage is evaluated against the same fault state applied to the
 operation, so the value moves deterministically when the fault fires. A counter
 fed on `condition: on_success` plus OTLP cumulative temporality yields a
 continuously growing total (e.g. a settlement amount).
+
+#### `operations[].state_updates`
+
+State updates increment process-wide accumulators after an operation completes.
+Observable service metrics can read these values on each collection interval.
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `key` | string | **yes** | — | Accumulator key |
+| `delta` | number | no | `0` | Amount added to the accumulator |
+| `condition` | enum | no | `always` | `always` / `on_success` / `on_error` |
+| `when_fault` | object | no | — | Adjust the delta while the operation fault is active |
+
+For `when_fault`, `delta` is added to the normal update amount; `value`
+overrides the update amount for that operation completion.
 
 #### `operations[].profile`
 

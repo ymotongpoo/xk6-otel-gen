@@ -114,6 +114,59 @@ func TestExecute_CustomMetrics_FaultInactiveUsesBaseline(t *testing.T) {
 	}
 }
 
+func TestExecute_StateUpdates_ConditionGating(t *testing.T) {
+	t.Parallel()
+
+	schema := newStateUpdateSchema()
+	engine, plan, mock := newExecutablePlan(t, schema)
+	if err := engine.Execute(context.Background(), plan); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	calls := mock.snapshotStateUpdates()
+	if len(calls) != 1 {
+		t.Fatalf("state updates = %d, want 1", len(calls))
+	}
+	update := calls[0].Input
+	if update.Key != "checkout.success" || update.Delta != 1 {
+		t.Fatalf("state update = %#v, want checkout.success delta 1", update)
+	}
+}
+
+func TestExecute_StateUpdates_FaultLinkedValue(t *testing.T) {
+	t.Parallel()
+
+	schema := newStateUpdateSchema()
+	op := schema.Services["api"].Operations["GET /checkout"]
+	op.StateUpdates = []topology.MetricStateUpdateSpec{{
+		Key:       "checkout.fault",
+		Delta:     1,
+		Condition: topology.ConditionAlways,
+		WhenFault: &topology.MetricFaultLink{
+			Kind:     topology.FaultErrorRateOverride,
+			Value:    7,
+			HasValue: true,
+		},
+	}}
+	engine, plan, mock := newExecutablePlanWithFaults(
+		t,
+		schema,
+		faultOnOperation(op, topology.FaultErrorRateOverride, 1, 1, 0),
+	)
+	if err := engine.Execute(context.Background(), plan); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	calls := mock.snapshotStateUpdates()
+	if len(calls) != 1 {
+		t.Fatalf("state updates = %d, want 1", len(calls))
+	}
+	update := calls[0].Input
+	if update.Key != "checkout.fault" || update.Delta != 7 {
+		t.Fatalf("state update = %#v, want checkout.fault delta 7", update)
+	}
+}
+
 func newMetricsSchema() *topology.Schema {
 	schema := newPlanTestSchema()
 	checkout := schema.Services["api"].Operations["GET /checkout"]
@@ -121,6 +174,16 @@ func newMetricsSchema() *topology.Schema {
 		{Name: "checkout.always", Type: topology.MetricCounter, Baseline: 1, Condition: topology.ConditionAlways},
 		{Name: "checkout.on_success", Type: topology.MetricCounter, Baseline: 10, Condition: topology.ConditionOnSuccess},
 		{Name: "checkout.on_error", Type: topology.MetricGauge, Baseline: 99, Condition: topology.ConditionOnError},
+	}
+	return schema
+}
+
+func newStateUpdateSchema() *topology.Schema {
+	schema := newPlanTestSchema()
+	checkout := schema.Services["api"].Operations["GET /checkout"]
+	checkout.StateUpdates = []topology.MetricStateUpdateSpec{
+		{Key: "checkout.success", Delta: 1, Condition: topology.ConditionOnSuccess},
+		{Key: "checkout.errors", Delta: 1, Condition: topology.ConditionOnError},
 	}
 	return schema
 }

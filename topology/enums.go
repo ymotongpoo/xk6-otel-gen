@@ -181,6 +181,10 @@ const (
 	MetricGauge
 	// MetricHistogram is a histogram instrument.
 	MetricHistogram
+	// MetricObservableGauge is an asynchronous point-in-time gauge instrument.
+	MetricObservableGauge
+	// MetricObservableCounter is an asynchronous cumulative counter instrument.
+	MetricObservableCounter
 )
 
 // String returns the topology YAML token for t.
@@ -192,6 +196,10 @@ func (t MetricType) String() string {
 		return "gauge"
 	case MetricHistogram:
 		return "histogram"
+	case MetricObservableGauge:
+		return "observable_gauge"
+	case MetricObservableCounter:
+		return "observable_counter"
 	default:
 		return "unknown"
 	}

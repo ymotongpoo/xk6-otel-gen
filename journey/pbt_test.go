@@ -211,6 +211,8 @@ func (m *pbtSynth) EmitLog(context.Context, synth.LogInput) {}
 
 func (m *pbtSynth) RecordCustom(context.Context, synth.CustomMetricInput) {}
 
+func (m *pbtSynth) UpdateState(context.Context, synth.StateUpdateInput) {}
+
 func (m *pbtSynth) EmitProfile(context.Context, synth.ProfileInput) {}
 
 func (m *pbtSynth) snapshot() []pbtSpan {

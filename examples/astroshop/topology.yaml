@@ -336,8 +336,25 @@ services:
     language: java
     framework: kafka
     version: "3.8"
+    metrics:
+      - name: kafka.consumer.lag
+        type: observable_gauge
+        unit: "{message}"
+        attributes:
+          topic: orders
+          consumer_group: accounting
+        source:
+          accumulator: kafka.orders.produced
+          minus: kafka.orders.consumed
     operations:
       - name: publish_order
+        state_updates:
+          - key: kafka.orders.produced
+            delta: 1
+            condition: on_success
+          - key: kafka.orders.consumed
+            delta: 0.8
+            condition: on_success
 
   flagd:
     # Feature flag service.

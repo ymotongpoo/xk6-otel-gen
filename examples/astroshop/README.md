@@ -115,6 +115,9 @@ that adds 80 on each successful order; with OTLP cumulative temporality this
 becomes a settlement-total time series. `shipping.quote_shipping` declares a
 fault-linked gauge (`shipping.quote.backlog`) that jumps from 5 to 45 while the
 existing `latency_inflation` fault is active on that operation.
+`kafka` declares a service-scoped observable gauge (`kafka.consumer.lag`) backed
+by `state_updates` on `kafka.publish_order`, so queue lag is recalculated during
+OTel collection even though the metric itself is not emitted by an operation.
 
 Messaging edges (for example `checkout.place_order` → `kafka.publish_order`)
 emit a PRODUCER (publish) span on the sender and a CONSUMER (receive) span on
