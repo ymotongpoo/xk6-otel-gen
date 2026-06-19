@@ -63,9 +63,22 @@ func containsFaultSpec(faults []topology.FaultSpec, want topology.FaultSpec) boo
 			got.Target.Kind == want.Target.Kind &&
 			got.Target.Service == want.Target.Service &&
 			got.Target.Operation == want.Target.Operation &&
-			got.Target.Edge == want.Target.Edge {
+			got.Target.Edge == want.Target.Edge &&
+			equalFaultSchedule(got.Schedule, want.Schedule) {
 			return true
 		}
 	}
 	return false
+}
+
+func equalFaultSchedule(a, b []topology.FaultSchedulePoint) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

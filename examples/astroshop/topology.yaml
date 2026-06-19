@@ -399,17 +399,45 @@ faults:
     severity:
       probability: 1.0
       value: 0.10
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 1m
+        intensity: 1
+      - at: 3m
+        intensity: 0
   - target: operation:shipping.quote_shipping
     kind: latency_inflation
     severity:
       probability: 1.0
       multiplier: 2.0
       add: 150ms
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 1m
+        intensity: 1
+      - at: 3m
+        intensity: 0
   - target: node:recommendation
     kind: crash
     severity:
       probability: 0.05
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 1m
+        intensity: 1
+      - at: 3m
+        intensity: 0
   - target: edge:checkout.place_order->email.send_confirmation
     kind: disconnect
     severity:
       probability: 0.05
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 1m
+        intensity: 1
+      - at: 3m
+        intensity: 0

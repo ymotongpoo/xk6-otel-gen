@@ -47,6 +47,7 @@ performs the final pipeline shutdown).
 | `handle.runJourney(name)` | Execute a named journey |
 | `handle.runRandomJourney()` | Pick a journey by YAML weight, execute it, and return its name |
 | `handle.setFaultIntensity(x)` | Scale injected-fault intensity for this VU (`0` disables faults, `1` is full); drive from k6 stages for burn→recover |
+| `handle.setFaultIntensity(target, x)` | Override intensity for one YAML fault target such as `operation:payment.authorize_card` |
 | `handle.journeyWeights()` | Return `{ name: weight }` for custom JS selection |
 | `otelgen.flush()` | Force-flush queued telemetry (call in `teardown()` so root spans are delivered) |
 | `otelgen.stats()` | Return exporter success/failure counters |
@@ -55,10 +56,11 @@ performs the final pipeline shutdown).
 
 ## Time-varying faults
 
-`handle.setFaultIntensity(x)` scales injected-fault probability and
-`error_rate_override` values for this VU (`0` disables injected faults, `1`
-is full intensity). Set it from `default()` before each journey call to script
-a burn→recover timeline from the elapsed test time:
+`handle.setFaultIntensity(x)` scales injected-fault probability,
+`error_rate_override` values, and `latency_inflation` amplitude for this VU
+(`0` disables injected faults, `1` is full intensity). Set it from `default()`
+before each journey call to script a burn→recover timeline from the elapsed
+test time:
 
 ```javascript
 import otelgen from "k6/x/otel-gen";
@@ -83,6 +85,32 @@ export default function () {
 export function teardown() {
   otelgen.flush();
 }
+```
+
+Pass a YAML fault target as the first argument to override one target instead
+of the whole VU:
+
+```javascript
+topology.setFaultIntensity("operation:payment.authorize_card", 0.5);
+```
+
+You can also declare the same kind of burn→recover timeline directly on a
+fault. A schedule is evaluated as a step function from engine start; before the
+first point, the scheduled fault intensity is `0`. A target override from
+`setFaultIntensity(target, x)` takes precedence over the YAML schedule.
+
+```yaml
+faults:
+  - target: operation:payment.authorize_card
+    kind: error_rate_override
+    severity: { probability: 1.0, value: 0.10 }
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 1m
+        intensity: 1
+      - at: 3m
+        intensity: 0
 ```
 
 ## Signals and features

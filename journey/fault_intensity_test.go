@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 )
@@ -92,6 +93,104 @@ func TestFaultIntensityHalf_DoesNotScaleEdgeErrorRate(t *testing.T) {
 	ff := engine.impl.foldFaults(plan.Root.Children[0])
 	if ff.errorRate != 0.8 {
 		t.Fatalf("foldFaults().errorRate = %f, want native edge error rate 0.8", ff.errorRate)
+	}
+}
+
+func TestFaultTargetIntensity_OverridesSingleTarget(t *testing.T) {
+	t.Parallel()
+
+	engine, node := newFaultTestEngine(t, func(schema *topology.Schema) []topology.FaultSpec {
+		apiOp := schema.Services["api"].Operations["GET /checkout"]
+		paymentsOp := schema.Services["payments"].Operations["POST /charge"]
+		return []topology.FaultSpec{
+			faultOnOperation(apiOp, topology.FaultErrorRateOverride, 1, 1, 0),
+			faultOnOperation(paymentsOp, topology.FaultErrorRateOverride, 1, 1, 0),
+		}
+	})
+	engine.SetFaultIntensity(0)
+	if err := engine.SetFaultTargetIntensity("operation:payments.POST /charge", 1); err != nil {
+		t.Fatalf("SetFaultTargetIntensity() error = %v", err)
+	}
+
+	rootFF := engine.impl.foldFaults(node)
+	if rootFF.errorRate != 0 {
+		t.Fatalf("root errorRate = %f, want global intensity to keep api target disabled", rootFF.errorRate)
+	}
+	childFF := engine.impl.foldFaults(node.Children[0])
+	if childFF.errorRate != 1 {
+		t.Fatalf("child errorRate = %f, want target override to enable payments target", childFF.errorRate)
+	}
+}
+
+func TestFaultTargetIntensity_UnknownTargetReturnsError(t *testing.T) {
+	t.Parallel()
+
+	engine, _ := newFaultTestEngine(t, func(schema *topology.Schema) []topology.FaultSpec {
+		op := schema.Services["api"].Operations["GET /checkout"]
+		return []topology.FaultSpec{faultOnOperation(op, topology.FaultErrorRateOverride, 1, 1, 0)}
+	})
+
+	if err := engine.SetFaultTargetIntensity("operation:payments.POST /charge", 1); err == nil {
+		t.Fatal("SetFaultTargetIntensity() error = nil, want unknown target error")
+	}
+}
+
+func TestFaultSchedule_OverridesGlobalIntensity(t *testing.T) {
+	t.Parallel()
+
+	engine, node := newFaultTestEngine(t, func(schema *topology.Schema) []topology.FaultSpec {
+		op := schema.Services["api"].Operations["GET /checkout"]
+		spec := faultOnOperation(op, topology.FaultErrorRateOverride, 1, 1, 0)
+		spec.Schedule = []topology.FaultSchedulePoint{
+			{At: 0, Intensity: 0},
+			{At: time.Minute, Intensity: 0.7},
+		}
+		return []topology.FaultSpec{spec}
+	})
+	engine.SetFaultIntensity(0)
+	engine.impl.startedAt = time.Now().Add(-90 * time.Second)
+
+	ff := engine.impl.foldFaults(node)
+	if ff.errorRate != 0.7 {
+		t.Fatalf("scheduled errorRate = %f, want 0.7", ff.errorRate)
+	}
+}
+
+func TestFaultTargetIntensity_OverridesSchedule(t *testing.T) {
+	t.Parallel()
+
+	engine, node := newFaultTestEngine(t, func(schema *topology.Schema) []topology.FaultSpec {
+		op := schema.Services["api"].Operations["GET /checkout"]
+		spec := faultOnOperation(op, topology.FaultErrorRateOverride, 1, 1, 0)
+		spec.Schedule = []topology.FaultSchedulePoint{{At: 0, Intensity: 0}}
+		return []topology.FaultSpec{spec}
+	})
+	if err := engine.SetFaultTargetIntensity("operation:api.GET /checkout", 1); err != nil {
+		t.Fatalf("SetFaultTargetIntensity() error = %v", err)
+	}
+
+	ff := engine.impl.foldFaults(node)
+	if ff.errorRate != 1 {
+		t.Fatalf("target override errorRate = %f, want 1", ff.errorRate)
+	}
+}
+
+func TestLatencyInflationIntensityScalesAmplitude(t *testing.T) {
+	t.Parallel()
+
+	engine := NewEngineWithSeed(&topology.Schema{}, &topology.FaultOverlay{}, phase2Synth{}, 1)
+	spec := topology.FaultSpec{
+		Kind: topology.FaultLatencyInflation,
+		Severity: topology.SeverityParams{
+			Multiplier: 2,
+			Add:        100 * time.Millisecond,
+		},
+	}
+
+	got := engine.impl.sampleInflation(spec, 0.5)
+	want := 55 * time.Millisecond
+	if got != want {
+		t.Fatalf("sampleInflation() = %s, want %s", got, want)
 	}
 }
 

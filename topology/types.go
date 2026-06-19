@@ -191,9 +191,10 @@ type FaultTarget struct {
 
 // FaultSpec describes one fault injection rule.
 type FaultSpec struct {
-	Target   FaultTarget    `yaml:"target"`
-	Kind     FaultKind      `yaml:"kind"`
-	Severity SeverityParams `yaml:"severity"`
+	Target   FaultTarget          `yaml:"target"`
+	Kind     FaultKind            `yaml:"kind"`
+	Severity SeverityParams       `yaml:"severity"`
+	Schedule []FaultSchedulePoint `yaml:"schedule,omitempty"`
 }
 
 // SeverityParams holds fault severity fields used by different FaultKind values.
@@ -202,6 +203,13 @@ type SeverityParams struct {
 	Multiplier  float64       `yaml:"multiplier"`
 	Add         time.Duration `yaml:"add"`
 	Value       float64       `yaml:"value"`
+}
+
+// FaultSchedulePoint sets a fault intensity at an elapsed time from engine
+// construction. Schedule points are evaluated as step functions.
+type FaultSchedulePoint struct {
+	At        time.Duration `yaml:"at"`
+	Intensity float64       `yaml:"intensity"`
 }
 
 // FaultOverlay is an opaque computed fault lookup.

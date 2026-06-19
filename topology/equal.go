@@ -309,7 +309,8 @@ func equalFaults(a, b []FaultSpec) bool {
 func equalFaultSpec(a, b FaultSpec) bool {
 	return a.Kind == b.Kind &&
 		equalFaultTarget(a.Target, b.Target) &&
-		equalSeverity(a.Severity, b.Severity)
+		equalSeverity(a.Severity, b.Severity) &&
+		equalFaultSchedule(a.Schedule, b.Schedule)
 }
 
 func equalFaultTarget(a, b FaultTarget) bool {
@@ -339,6 +340,18 @@ func equalSeverity(a, b SeverityParams) bool {
 		a.Multiplier == b.Multiplier &&
 		a.Add == b.Add &&
 		a.Value == b.Value
+}
+
+func equalFaultSchedule(a, b []FaultSchedulePoint) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func serviceID(svc *Service) ServiceID {

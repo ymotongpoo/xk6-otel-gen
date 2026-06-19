@@ -191,6 +191,7 @@ func resolveReferences(schema *Schema, raw *rawSchema) error {
 			Target:   target,
 			Kind:     parseFaultKind(rf.Kind),
 			Severity: resolveSeverity(rf.Severity),
+			Schedule: resolveFaultSchedule(rf.Schedule),
 		})
 	}
 
@@ -483,6 +484,24 @@ func resolveSeverity(rs *rawSeverity) SeverityParams {
 		Add:         durationDefault(rs.Add, 0),
 		Value:       float64Default(rs.Value, 0),
 	}
+}
+
+func resolveFaultSchedule(raw []*rawFaultSchedule) []FaultSchedulePoint {
+	if len(raw) == 0 {
+		return nil
+	}
+	out := make([]FaultSchedulePoint, 0, len(raw))
+	for _, point := range raw {
+		if point == nil {
+			out = append(out, FaultSchedulePoint{Intensity: 1})
+			continue
+		}
+		out = append(out, FaultSchedulePoint{
+			At:        durationDefault(point.At, 0),
+			Intensity: float64Default(point.Intensity, 1),
+		})
+	}
+	return out
 }
 
 func intDefault(p *int, def int) int {

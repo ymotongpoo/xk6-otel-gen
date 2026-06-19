@@ -46,6 +46,7 @@ export function teardown() {
 | `handle.runJourney(name)` | 名前付きジャーニーを実行 |
 | `handle.runRandomJourney()` | YAML の weight に従ってジャーニーを選んで実行し、その名前を返す |
 | `handle.setFaultIntensity(x)` | この VU の注入 fault 強度をスケール（`0` で無効、`1` で full）。k6 のステージから駆動してバーン→回復を台本化 |
+| `handle.setFaultIntensity(target, x)` | `operation:payment.authorize_card` のような YAML fault target 1 つの強度を上書き |
 | `handle.journeyWeights()` | カスタム JS 選択用に `{ name: weight }` を返す |
 | `otelgen.flush()` | キュー済みテレメトリを強制フラッシュ(`teardown()` で呼びルートスパンを確実に送信) |
 | `otelgen.stats()` | エクスポーターの成功/失敗カウンタを返す |
@@ -54,10 +55,11 @@ export function teardown() {
 
 ## 時間変化 fault
 
-`handle.setFaultIntensity(x)` はこの VU の注入 fault 確率と
-`error_rate_override` の値をスケールします（`0` で注入 fault 無効、`1` で
-full intensity）。`default()` 内で各ジャーニー実行の前に設定し、テスト開始からの
-経過時間に応じてバーン→回復タイムラインを台本化できます。
+`handle.setFaultIntensity(x)` はこの VU の注入 fault 確率、
+`error_rate_override` の値、`latency_inflation` の振幅をスケールします
+（`0` で注入 fault 無効、`1` で full intensity）。`default()` 内で各ジャーニー
+実行の前に設定し、テスト開始からの経過時間に応じてバーン→回復タイムラインを
+台本化できます。
 
 ```javascript
 import otelgen from "k6/x/otel-gen";
@@ -82,6 +84,32 @@ export default function () {
 export function teardown() {
   otelgen.flush();
 }
+```
+
+YAML の fault target を第 1 引数に渡すと、VU 全体ではなく 1 つの target だけを
+上書きできます。
+
+```javascript
+topology.setFaultIntensity("operation:payment.authorize_card", 0.5);
+```
+
+同じバーン→回復タイムラインは、fault の `schedule` として YAML に直接宣言する
+こともできます。schedule は engine 開始からの経過時間に対するステップ関数として
+評価され、最初の点より前の強度は `0` です。`setFaultIntensity(target, x)` による
+target override は YAML schedule より優先されます。
+
+```yaml
+faults:
+  - target: operation:payment.authorize_card
+    kind: error_rate_override
+    severity: { probability: 1.0, value: 0.10 }
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 1m
+        intensity: 1
+      - at: 3m
+        intensity: 0
 ```
 
 ## シグナルと機能

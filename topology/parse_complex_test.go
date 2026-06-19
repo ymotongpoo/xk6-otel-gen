@@ -5,6 +5,7 @@ package topology_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 )
@@ -60,6 +61,11 @@ faults:
   - target: edge:frontend.Root->backend.Fetch
     kind: latency_inflation
     severity: { probability: 0.3, multiplier: 2 }
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 1m
+        intensity: 1
 `
 	s := mustParse(t, src)
 	if got := len(s.Journeys["fanout"].Steps[0].Parallel); got != 2 {
@@ -78,5 +84,8 @@ faults:
 	}
 	if s.Faults[0].Target.Service == nil || s.Faults[1].Target.Operation == nil || s.Faults[2].Target.Edge == nil {
 		t.Fatalf("fault targets not fully resolved: %+v", s.Faults)
+	}
+	if got := s.Faults[2].Schedule; len(got) != 2 || got[0].At != 0 || got[0].Intensity != 0 || got[1].At != time.Minute || got[1].Intensity != 1 {
+		t.Fatalf("fault schedule = %+v, want 0s/0 then 1m/1", got)
 	}
 }

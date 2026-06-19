@@ -4,6 +4,8 @@
 package generators
 
 import (
+	"time"
+
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 	"pgregory.net/rapid"
 )
@@ -175,7 +177,31 @@ func ValidFaultSpec(schema *topology.Schema, opts ...FaultOption) *rapid.Generat
 				Add:         ValidTimeout().Draw(t, "add"),
 				Value:       ValidProbability().Draw(t, "value"),
 			},
+			Schedule: ValidFaultSchedule().Draw(t, "schedule"),
 		}
+	})
+}
+
+// ValidFaultSchedule returns a generator producing sorted non-negative
+// elapsed-time intensity schedules.
+func ValidFaultSchedule() *rapid.Generator[[]topology.FaultSchedulePoint] {
+	return rapid.Custom(func(t *rapid.T) []topology.FaultSchedulePoint {
+		count := rapid.IntRange(0, 4).Draw(t, "n_schedule_points")
+		if count == 0 {
+			return nil
+		}
+		out := make([]topology.FaultSchedulePoint, 0, count)
+		var at time.Duration
+		for i := 0; i < count; i++ {
+			if i > 0 {
+				at += time.Duration(rapid.IntRange(1, 60_000).Draw(t, "schedule_step_ms")) * time.Millisecond
+			}
+			out = append(out, topology.FaultSchedulePoint{
+				At:        at,
+				Intensity: rapid.Float64Range(0, 2).Draw(t, "schedule_intensity"),
+			})
+		}
+		return out
 	})
 }
 
@@ -183,7 +209,7 @@ func ValidFaultSpec(schema *topology.Schema, opts ...FaultOption) *rapid.Generat
 func AnyFaultSpec(schema *topology.Schema, opts ...FaultOption) *rapid.Generator[topology.FaultSpec] {
 	return rapid.Custom(func(t *rapid.T) topology.FaultSpec {
 		spec := ValidFaultSpec(schema, opts...).Draw(t, "valid_fault")
-		switch rapid.IntRange(0, 3).Draw(t, "fault_mutation") {
+		switch rapid.IntRange(0, 4).Draw(t, "fault_mutation") {
 		case 0:
 			spec.Severity.Probability = AnyProbability().Draw(t, "any_probability")
 		case 1:
@@ -192,6 +218,11 @@ func AnyFaultSpec(schema *topology.Schema, opts ...FaultOption) *rapid.Generator
 			spec.Target = AnyFaultTarget(schema).Draw(t, "any_target")
 		case 3:
 			spec.Kind = topology.FaultKind(rapid.IntRange(10, 20).Draw(t, "invalid_kind"))
+		case 4:
+			spec.Schedule = []topology.FaultSchedulePoint{
+				{At: time.Second, Intensity: 1},
+				{At: 500 * time.Millisecond, Intensity: 1},
+			}
 		}
 		return spec
 	})

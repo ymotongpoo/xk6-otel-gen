@@ -480,6 +480,7 @@ fault has a target, a kind, and severity parameters.
 | `target` | string | **yes** | — | Target in `node:` / `operation:` / `edge:` form |
 | `kind` | enum | **yes** | — | Fault kind. `latency_inflation` / `error_rate_override` / `disconnect` / `crash` |
 | `severity` | object | no | — | Severity parameters (below) |
+| `schedule` | list | no | `[]` | Elapsed-time intensity schedule for this fault |
 
 **SeverityParams (`severity`)**
 
@@ -489,6 +490,13 @@ fault has a target, a kind, and severity parameters.
 | `multiplier` | number | **required** for `latency_inflation` | `0` | Latency multiplier (> 0) |
 | `add` | duration | no | `0` | Fixed delay to add (`latency_inflation`) |
 | `value` | number | used by `error_rate_override` | `0` | Overriding error rate `[0,1]` |
+
+**FaultSchedulePoint (`schedule[]`)**
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `at` | duration | no | `0s` | Elapsed time from engine start |
+| `intensity` | number | no | `1` | Non-negative intensity active at and after `at` |
 
 ### Field details
 
@@ -531,6 +539,26 @@ Severity parameters. Which fields apply depends on `kind`.
 - **`add`** — fixed delay to add (`latency_inflation`).
 - **`value`** — overriding error rate (`error_rate_override`); clamped to `[0,1]`.
 
+The effective runtime intensity multiplies `probability` and `value`.
+For `latency_inflation`, it also scales the configured `add` and
+`(multiplier - 1)` amplitude after the fault activates. For example, intensity
+`0.5` halves both the activation probability and the added latency magnitude.
+
+#### `schedule`
+
+`schedule` declares a per-fault intensity timeline. Points must be in strictly
+increasing `at` order, and `intensity` must be finite and >= 0. The engine
+evaluates the schedule as a step function: before the first point intensity is
+`0`, then the most recent point at or before the elapsed engine time applies.
+The schedule does not consume random values; it only changes the effective
+probability, error-rate override, and latency amplitude applied to the seeded
+fault decisions.
+
+If JavaScript calls `handle.setFaultIntensity(target, x)`, that target-specific
+override takes precedence over the YAML schedule. The global
+`handle.setFaultIntensity(x)` is used only for faults without a schedule or
+target override.
+
 ```yaml
 faults:
   - target: node:payment
@@ -539,6 +567,13 @@ faults:
   - target: operation:checkout.place_order
     kind: error_rate_override
     severity: { probability: 1.0, value: 0.05 }
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 1m
+        intensity: 1
+      - at: 3m
+        intensity: 0
   - target: edge:frontend.checkout->payment.authorize_card
     kind: disconnect
     severity: { probability: 0.01 }

@@ -234,6 +234,7 @@ func buildFaults(t *rapid.T, schema *topology.Schema, topoOrder []*topology.Oper
 				Add:         ValidTimeout().Draw(t, fmt.Sprintf("fault_%d_add", i)),
 				Value:       ValidProbability().Draw(t, fmt.Sprintf("fault_%d_value", i)),
 			},
+			Schedule: ValidFaultSchedule().Draw(t, fmt.Sprintf("fault_%d_schedule", i)),
 		})
 	}
 }

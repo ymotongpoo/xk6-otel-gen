@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"time"
 )
 
 // Validate checks structural invariants and domain ranges for a schema.
@@ -505,8 +506,28 @@ func validateDomainRanges(s *Schema) []error {
 		if fault.Kind == FaultLatencyInflation && fault.Severity.Multiplier <= 0 {
 			errs = append(errs, newValidationErrorf(path+".severity.multiplier", "D-9", "must be > 0 for latency_inflation, got %g", fault.Severity.Multiplier))
 		}
+		errs = append(errs, validateFaultSchedule(fault.Schedule, path+".schedule")...)
 	}
 
+	return errs
+}
+
+func validateFaultSchedule(schedule []FaultSchedulePoint, path string) []error {
+	errs := make([]error, 0)
+	var previous time.Duration
+	for i, point := range schedule {
+		pointPath := fmt.Sprintf("%s[%d]", path, i)
+		if point.At < 0 {
+			errs = append(errs, newValidationErrorf(pointPath+".at", "D-15", "must be >= 0, got %s", point.At))
+		}
+		if i > 0 && point.At <= previous {
+			errs = append(errs, newValidationErrorf(pointPath+".at", "D-15", "must be strictly greater than previous schedule point %s, got %s", previous, point.At))
+		}
+		if math.IsNaN(point.Intensity) || math.IsInf(point.Intensity, 0) || point.Intensity < 0 {
+			errs = append(errs, newValidationErrorf(pointPath+".intensity", "D-15", "must be finite and >= 0, got %g", point.Intensity))
+		}
+		previous = point.At
+	}
 	return errs
 }
 

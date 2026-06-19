@@ -4,6 +4,8 @@
 package k6otelgen
 
 import (
+	"fmt"
+
 	"github.com/grafana/sobek"
 
 	"github.com/ymotongpoo/xk6-otel-gen/journey"
@@ -63,12 +65,78 @@ func (h *TopologyHandle) JourneyWeights() map[string]float64 {
 	return h.engine.JourneyWeights()
 }
 
-// SetFaultIntensity scales injected-fault probability and error-rate overrides
-// for this VU's engine. 0 disables injected faults, 1 is full intensity. Drive
-// it from k6 stages to script a burn->recover timeline.
-func (h *TopologyHandle) SetFaultIntensity(x float64) {
+// SetFaultIntensity scales injected-fault probability and error-rate overrides.
+// Use setFaultIntensity(x) for the VU's global intensity or
+// setFaultIntensity(target, x) to override one topology fault target.
+func (h *TopologyHandle) SetFaultIntensity(args ...any) {
 	if h.engine == nil {
 		throwJSException(h.runtime, &ConfigError{Kind: "not_loaded"})
 	}
-	h.engine.SetFaultIntensity(x)
+	switch len(args) {
+	case 1:
+		x, err := faultIntensityNumber(args[0])
+		if err != nil {
+			throwJSException(h.runtime, &ConfigError{Kind: "invalid_fault_intensity", Inner: err})
+		}
+		h.engine.SetFaultIntensity(x)
+	case 2:
+		target, err := faultIntensityTarget(args[0])
+		if err != nil {
+			throwJSException(h.runtime, &ConfigError{Kind: "invalid_fault_intensity", Inner: err})
+		}
+		x, err := faultIntensityNumber(args[1])
+		if err != nil {
+			throwJSException(h.runtime, &ConfigError{Kind: "invalid_fault_intensity", Inner: err})
+		}
+		if err := h.engine.SetFaultTargetIntensity(target, x); err != nil {
+			throwJSException(h.runtime, err)
+		}
+	default:
+		throwJSException(h.runtime, &ConfigError{Kind: "invalid_fault_intensity", Inner: fmt.Errorf("want setFaultIntensity(x) or setFaultIntensity(target, x), got %d arguments", len(args))})
+	}
+}
+
+func faultIntensityTarget(v any) (string, error) {
+	if value, ok := v.(sobek.Value); ok {
+		return faultIntensityTarget(value.Export())
+	}
+	target, ok := v.(string)
+	if !ok || target == "" {
+		return "", fmt.Errorf("target must be a non-empty string")
+	}
+	return target, nil
+}
+
+func faultIntensityNumber(v any) (float64, error) {
+	if value, ok := v.(sobek.Value); ok {
+		return faultIntensityNumber(value.Export())
+	}
+	switch n := v.(type) {
+	case float64:
+		return n, nil
+	case float32:
+		return float64(n), nil
+	case int:
+		return float64(n), nil
+	case int8:
+		return float64(n), nil
+	case int16:
+		return float64(n), nil
+	case int32:
+		return float64(n), nil
+	case int64:
+		return float64(n), nil
+	case uint:
+		return float64(n), nil
+	case uint8:
+		return float64(n), nil
+	case uint16:
+		return float64(n), nil
+	case uint32:
+		return float64(n), nil
+	case uint64:
+		return float64(n), nil
+	default:
+		return 0, fmt.Errorf("intensity must be numeric")
+	}
 }

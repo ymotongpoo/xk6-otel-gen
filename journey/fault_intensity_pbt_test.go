@@ -5,6 +5,7 @@ package journey
 
 import (
 	"testing"
+	"time"
 
 	"github.com/ymotongpoo/xk6-otel-gen/topology"
 	"pgregory.net/rapid"
@@ -34,6 +35,35 @@ func TestFaultIntensityErrorRateOverride_Property(t *testing.T) {
 		want := clampProbability(value * engine.impl.faultIntensityValue())
 		if ff.errorRate != want {
 			t.Fatalf("foldFaults().errorRate = %f, want %f (value=%f intensity=%f)", ff.errorRate, want, value, engine.impl.faultIntensityValue())
+		}
+	})
+}
+
+func TestFaultScheduleErrorRateOverride_Property(t *testing.T) {
+	t.Parallel()
+
+	rapid.Check(t, func(t *rapid.T) {
+		intensity := rapid.Float64Range(0, 2).Draw(t, "scheduled_intensity")
+		value := rapid.Float64Range(0, 1).Draw(t, "value")
+		elapsed := time.Duration(rapid.IntRange(0, 120_000).Draw(t, "elapsed_ms")) * time.Millisecond
+
+		schema := newPlanTestSchema()
+		op := schema.Services["api"].Operations["GET /checkout"]
+		spec := faultOnOperation(op, topology.FaultErrorRateOverride, 1, value, 0)
+		spec.Schedule = []topology.FaultSchedulePoint{{At: 0, Intensity: intensity}}
+		schema.Faults = []topology.FaultSpec{spec}
+		engine := NewEngineWithSeed(schema, schema.ApplyFaults(), phase2Synth{}, 1)
+		engine.SetFaultIntensity(0)
+		engine.impl.startedAt = time.Now().Add(-elapsed)
+		plan, err := engine.BuildPlan("checkout")
+		if err != nil {
+			t.Fatalf("BuildPlan() error = %v", err)
+		}
+
+		ff := engine.impl.foldFaults(plan.Root)
+		want := clampProbability(value * intensity)
+		if ff.errorRate != want {
+			t.Fatalf("foldFaults().errorRate = %f, want %f (value=%f scheduled_intensity=%f)", ff.errorRate, want, value, intensity)
 		}
 	})
 }

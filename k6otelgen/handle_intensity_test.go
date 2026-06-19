@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/grafana/sobek"
+	"go.k6.io/k6/js/common"
 
 	"github.com/ymotongpoo/xk6-otel-gen/journey"
 	"github.com/ymotongpoo/xk6-otel-gen/synth"
@@ -46,6 +47,60 @@ func TestHandle_SetFaultIntensity_NotLoaded_Throws(t *testing.T) {
 		}
 	}()
 	handle.SetFaultIntensity(0.5)
+}
+
+func TestHandle_SetFaultIntensity_TargetOverride(t *testing.T) {
+	t.Parallel()
+
+	schema := faultIntensityTestSchema()
+	syn := newOutcomeRecordingSynth()
+	handle := newTestHandleFromSchema(t, context.Background(), syn, schema, 7)
+
+	handle.SetFaultIntensity("operation:api.GET /", 0)
+	handle.RunJourney("checkout")
+	if syn.hasErrorOutcome() {
+		t.Fatal("RunJourney() with target intensity 0 produced an error outcome")
+	}
+
+	syn.resetOutcomes()
+	handle.SetFaultIntensity("operation:api.GET /", 1)
+	handle.RunJourney("checkout")
+	if !syn.hasErrorOutcome() {
+		t.Fatal("RunJourney() with target intensity 1 did not produce an error outcome")
+	}
+}
+
+func TestHandle_SetFaultIntensity_TargetOverrideFromJS(t *testing.T) {
+	t.Parallel()
+
+	schema := faultIntensityTestSchema()
+	syn := newOutcomeRecordingSynth()
+	handle := newTestHandleFromSchema(t, context.Background(), syn, schema, 7)
+	handle.runtime.SetFieldNameMapper(common.FieldNameMapper{})
+	if err := handle.runtime.Set("topology", handle.runtime.ToValue(handle)); err != nil {
+		t.Fatalf("Runtime.Set() error = %v", err)
+	}
+	if _, err := handle.runtime.RunString(`topology.setFaultIntensity("operation:api.GET /", 0);`); err != nil {
+		t.Fatalf("RunString() error = %v", err)
+	}
+
+	handle.RunJourney("checkout")
+	if syn.hasErrorOutcome() {
+		t.Fatal("RunJourney() after JS target intensity 0 produced an error outcome")
+	}
+}
+
+func TestHandle_SetFaultIntensity_UnknownTarget_Throws(t *testing.T) {
+	t.Parallel()
+
+	schema := faultIntensityTestSchema()
+	handle := newTestHandleFromSchema(t, context.Background(), newOutcomeRecordingSynth(), schema, 7)
+	defer func() {
+		if recover() == nil {
+			t.Fatal("SetFaultIntensity() did not throw")
+		}
+	}()
+	handle.SetFaultIntensity("operation:missing.GET /", 1)
 }
 
 func faultIntensityTestSchema() *topology.Schema {

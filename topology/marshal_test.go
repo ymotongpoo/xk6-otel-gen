@@ -91,6 +91,41 @@ func TestMarshal_OmitsZeroValues(t *testing.T) {
 	}
 }
 
+func TestMarshal_PreservesFaultSchedule(t *testing.T) {
+	t.Parallel()
+
+	const src = `
+services:
+  api:
+    kind: application
+    operations:
+      - name: GET /
+journeys:
+  home:
+    steps:
+      - service: api
+        operation: GET /
+faults:
+  - target: operation:api.GET /
+    kind: error_rate_override
+    severity: { probability: 1, value: 1 }
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 30s
+        intensity: 1
+`
+	s := mustParse(t, src)
+	yamlBytes, err := yaml.Marshal(s)
+	if err != nil {
+		t.Fatalf("yaml.Marshal() error = %v", err)
+	}
+	out := string(yamlBytes)
+	if !strings.Contains(out, "schedule:") || !strings.Contains(out, "intensity: 0") || !strings.Contains(out, "at: 30s") {
+		t.Fatalf("marshal output did not preserve fault schedule:\n%s", out)
+	}
+}
+
 func assertOrdered(t *testing.T, text, first, second string) {
 	t.Helper()
 	firstIndex := strings.Index(text, first)

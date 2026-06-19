@@ -227,6 +227,7 @@ func cloneSchema(s *topology.Schema) *topology.Schema {
 			Target:   cloneFaultTarget(fault.Target, serviceMap, opMap, edgeMap),
 			Kind:     fault.Kind,
 			Severity: fault.Severity,
+			Schedule: append([]topology.FaultSchedulePoint(nil), fault.Schedule...),
 		}
 	}
 	return clone

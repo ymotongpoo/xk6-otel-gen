@@ -23,14 +23,16 @@ type Engine struct {
 }
 
 type engineImpl struct {
-	schema         *topology.Schema
-	overlay        *topology.FaultOverlay
-	synth          synth.Synthesizer
-	plans          map[string]*Plan
-	journeyKeys    []string
-	rand           *rand.Rand
-	rmu            sync.Mutex
-	faultIntensity atomic.Uint64
+	schema                 *topology.Schema
+	overlay                *topology.FaultOverlay
+	synth                  synth.Synthesizer
+	plans                  map[string]*Plan
+	journeyKeys            []string
+	rand                   *rand.Rand
+	rmu                    sync.Mutex
+	faultIntensity         atomic.Uint64
+	targetFaultIntensities sync.Map
+	startedAt              time.Time
 }
 
 // NewEngine constructs an Engine and eagerly builds all journey plans.
@@ -52,11 +54,12 @@ func NewEngineWithSeed(schema *topology.Schema, overlay *topology.FaultOverlay, 
 	}
 
 	impl := &engineImpl{
-		schema:  schema,
-		overlay: overlay,
-		synth:   syn,
-		plans:   make(map[string]*Plan, len(schema.Journeys)),
-		rand:    newRandWithSeed(seed),
+		schema:    schema,
+		overlay:   overlay,
+		synth:     syn,
+		plans:     make(map[string]*Plan, len(schema.Journeys)),
+		rand:      newRandWithSeed(seed),
+		startedAt: time.Now(),
 	}
 	impl.faultIntensity.Store(math.Float64bits(1.0))
 	for name := range schema.Journeys {
@@ -137,10 +140,40 @@ func (e *engineImpl) faultIntensityValue() float64 {
 	return math.Float64frombits(e.faultIntensity.Load())
 }
 
+func (e *engineImpl) setFaultTargetIntensity(target string, x float64) error {
+	if x < 0 {
+		x = 0
+	}
+	if !e.hasFaultTarget(target) {
+		return fmt.Errorf("journey: SetFaultIntensity: unknown fault target %q", target)
+	}
+	e.targetFaultIntensities.Store(target, math.Float64bits(x))
+	return nil
+}
+
+func (e *engineImpl) hasFaultTarget(target string) bool {
+	if target == "" || e == nil || e.schema == nil {
+		return false
+	}
+	for _, spec := range e.schema.Faults {
+		if faultTargetString(spec.Target) == target {
+			return true
+		}
+	}
+	return false
+}
+
 // SetFaultIntensity scales injected-fault probability and error-rate overrides
 // for this VU's engine. 0 disables injected faults, 1 is full intensity. Drive
 // it from k6 stages to script a burn->recover timeline. Safe for concurrent
 // use from parallel goroutines.
 func (e *Engine) SetFaultIntensity(x float64) {
 	e.impl.setFaultIntensity(x)
+}
+
+// SetFaultTargetIntensity scales faults attached to target for this VU's
+// engine. The target string uses the same node:/operation:/edge: syntax as the
+// topology YAML and overrides any declarative schedule for that target.
+func (e *Engine) SetFaultTargetIntensity(target string, x float64) error {
+	return e.impl.setFaultTargetIntensity(target, x)
 }

@@ -142,6 +142,25 @@ func TestValidate_DomainRanges(t *testing.T) {
 		{"D-12 operations", "D-12", func(s *topology.Schema) { s.Services["frontend"].Operations = map[string]*topology.Operation{} }},
 		{"D-13 services", "D-13", func(s *topology.Schema) { s.Services = map[topology.ServiceID]*topology.Service{} }},
 		{"D-14 journeys", "D-14", func(s *topology.Schema) { s.Journeys = map[string]*topology.Journey{} }},
+		{"D-15 unsorted fault schedule", "D-15", func(s *topology.Schema) {
+			s.Faults = []topology.FaultSpec{{
+				Target:   topology.FaultTarget{Kind: topology.TargetNode, Service: s.Services["frontend"]},
+				Kind:     topology.FaultCrash,
+				Severity: topology.SeverityParams{Probability: 1},
+				Schedule: []topology.FaultSchedulePoint{
+					{At: time.Second, Intensity: 1},
+					{At: 500 * time.Millisecond, Intensity: 0},
+				},
+			}}
+		}},
+		{"D-15 negative fault schedule intensity", "D-15", func(s *topology.Schema) {
+			s.Faults = []topology.FaultSpec{{
+				Target:   topology.FaultTarget{Kind: topology.TargetNode, Service: s.Services["frontend"]},
+				Kind:     topology.FaultCrash,
+				Severity: topology.SeverityParams{Probability: 1},
+				Schedule: []topology.FaultSchedulePoint{{At: 0, Intensity: -1}},
+			}}
+		}},
 	}
 
 	for _, tt := range tests {

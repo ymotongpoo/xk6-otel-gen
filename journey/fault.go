@@ -27,14 +27,15 @@ func (e *engineImpl) foldFaults(node *Node) foldedFault {
 	}
 
 	for _, spec := range e.overlay.NodeFaults(node.Service) {
+		intensity := e.faultIntensityFor(spec)
 		switch spec.Kind {
 		case topology.FaultCrash:
-			if e.faultActive(spec) {
+			if e.faultActiveWithIntensity(spec, intensity) {
 				ff.crashed = true
 			}
 		case topology.FaultLatencyInflation:
-			if e.faultActive(spec) {
-				ff.latencyInflate += e.sampleInflation(spec)
+			if e.faultActiveWithIntensity(spec, intensity) {
+				ff.latencyInflate += e.sampleInflation(spec, intensity)
 			}
 		}
 	}
@@ -45,14 +46,15 @@ func (e *engineImpl) foldFaults(node *Node) foldedFault {
 			ff.errorType = defaultFaultErrorType(node)
 		}
 		for _, spec := range e.overlay.EdgeFaults(node.Edge) {
+			intensity := e.faultIntensityFor(spec)
 			switch spec.Kind {
 			case topology.FaultDisconnect:
-				if e.faultActive(spec) {
+				if e.faultActiveWithIntensity(spec, intensity) {
 					ff.disconnected = true
 				}
 			case topology.FaultLatencyInflation:
-				if e.faultActive(spec) {
-					ff.latencyInflate += e.sampleInflation(spec)
+				if e.faultActiveWithIntensity(spec, intensity) {
+					ff.latencyInflate += e.sampleInflation(spec, intensity)
 				}
 			}
 		}
@@ -63,13 +65,14 @@ func (e *engineImpl) foldFaults(node *Node) foldedFault {
 	}
 	if op := node.Service.Operations[node.Operation]; op != nil {
 		for _, spec := range e.overlay.OperationFaults(op) {
+			intensity := e.faultIntensityFor(spec)
 			switch spec.Kind {
 			case topology.FaultErrorRateOverride:
-				ff.errorRate = clampProbability(spec.Severity.Value * e.faultIntensityValue())
+				ff.errorRate = clampProbability(spec.Severity.Value * intensity)
 				ff.errorType = defaultFaultErrorType(node)
 			case topology.FaultLatencyInflation:
-				if e.faultActive(spec) {
-					ff.latencyInflate += e.sampleInflation(spec)
+				if e.faultActiveWithIntensity(spec, intensity) {
+					ff.latencyInflate += e.sampleInflation(spec, intensity)
 				}
 			}
 		}
@@ -78,15 +81,22 @@ func (e *engineImpl) foldFaults(node *Node) foldedFault {
 	return ff
 }
 
-func (e *engineImpl) sampleInflation(spec topology.FaultSpec) time.Duration {
+func (e *engineImpl) sampleInflation(spec topology.FaultSpec, intensity float64) time.Duration {
 	add := spec.Severity.Add
 	if add < 0 {
 		add = 0
 	}
-	if spec.Severity.Multiplier <= 1 {
-		return add
+	if intensity < 0 {
+		intensity = 0
 	}
-	return add + time.Duration((spec.Severity.Multiplier-1)*float64(defaultEntryLatency))
+	if math.IsNaN(intensity) || math.IsInf(intensity, 0) {
+		intensity = 0
+	}
+	if spec.Severity.Multiplier <= 1 {
+		return time.Duration(float64(add) * intensity)
+	}
+	base := add + time.Duration((spec.Severity.Multiplier-1)*float64(defaultEntryLatency))
+	return time.Duration(float64(base) * intensity)
 }
 
 func (e *engineImpl) sampleEdgeLatency(edge *topology.Edge) time.Duration {
@@ -133,7 +143,11 @@ func (e *engineImpl) sampleUniform(p50, p95 time.Duration) time.Duration {
 }
 
 func (e *engineImpl) faultActive(spec topology.FaultSpec) bool {
-	eff := clampProbability(spec.Severity.Probability * e.faultIntensityValue())
+	return e.faultActiveWithIntensity(spec, e.faultIntensityFor(spec))
+}
+
+func (e *engineImpl) faultActiveWithIntensity(spec topology.FaultSpec, intensity float64) bool {
+	eff := clampProbability(spec.Severity.Probability * intensity)
 	switch {
 	case eff <= 0:
 		return false
@@ -144,8 +158,43 @@ func (e *engineImpl) faultActive(spec topology.FaultSpec) bool {
 	}
 }
 
+func (e *engineImpl) faultIntensityFor(spec topology.FaultSpec) float64 {
+	target := faultTargetString(spec.Target)
+	if target != "" {
+		if raw, ok := e.targetFaultIntensities.Load(target); ok {
+			if bits, ok := raw.(uint64); ok {
+				return math.Float64frombits(bits)
+			}
+		}
+	}
+	if len(spec.Schedule) > 0 {
+		return e.scheduledFaultIntensity(spec.Schedule)
+	}
+	return e.faultIntensityValue()
+}
+
+func (e *engineImpl) scheduledFaultIntensity(schedule []topology.FaultSchedulePoint) float64 {
+	elapsed := time.Since(e.startedAt)
+	intensity := 0.0
+	for _, point := range schedule {
+		if elapsed < point.At {
+			break
+		}
+		intensity = point.Intensity
+	}
+	if intensity < 0 {
+		return 0
+	}
+	if math.IsNaN(intensity) || math.IsInf(intensity, 0) {
+		return 0
+	}
+	return intensity
+}
+
 func clampProbability(v float64) float64 {
 	switch {
+	case math.IsNaN(v):
+		return 0
 	case v < 0:
 		return 0
 	case v > 1:
@@ -163,4 +212,36 @@ func defaultFaultErrorType(node *Node) string {
 		return "grpc.unavailable"
 	}
 	return "http.500"
+}
+
+func faultTargetString(target topology.FaultTarget) string {
+	switch target.Kind {
+	case topology.TargetNode:
+		if target.Service == nil {
+			return ""
+		}
+		return "node:" + string(target.Service.Name)
+	case topology.TargetOperation:
+		if target.Operation == nil {
+			return ""
+		}
+		return "operation:" + operationString(target.Operation)
+	case topology.TargetEdge:
+		if target.Edge == nil {
+			return ""
+		}
+		return "edge:" + operationString(target.Edge.From) + "->" + operationString(target.Edge.To)
+	default:
+		return ""
+	}
+}
+
+func operationString(op *topology.Operation) string {
+	if op == nil {
+		return ""
+	}
+	if op.Service == nil {
+		return "." + op.Name
+	}
+	return string(op.Service.Name) + "." + op.Name
 }

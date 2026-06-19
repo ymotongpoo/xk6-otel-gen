@@ -469,6 +469,7 @@ steps:
 | `target` | string | **はい** | — | 対象。`node:` / `operation:` / `edge:` のいずれかの形式 |
 | `kind` | enum | **はい** | — | 障害種別。`latency_inflation` / `error_rate_override` / `disconnect` / `crash` |
 | `severity` | object | いいえ | — | 深刻度パラメータ（下記） |
+| `schedule` | list | いいえ | `[]` | この fault の経過時間ベースの強度 schedule |
 
 **SeverityParams（`severity`）**
 
@@ -478,6 +479,13 @@ steps:
 | `multiplier` | number | `latency_inflation` で**必須** | `0` | レイテンシ倍率（0 より大） |
 | `add` | duration | いいえ | `0` | 加算する固定遅延（`latency_inflation`） |
 | `value` | number | `error_rate_override` で使用 | `0` | 上書きするエラー率 `[0,1]` |
+
+**FaultSchedulePoint（`schedule[]`）**
+
+| フィールド | 型 | 必須 | 既定値 | 説明 |
+|---|---|---|---|---|
+| `at` | duration | いいえ | `0s` | engine 開始からの経過時間 |
+| `intensity` | number | いいえ | `1` | `at` 以降に有効になる 0 以上の強度 |
 
 ### 各設定の詳細
 
@@ -520,6 +528,24 @@ steps:
 - **`add`** — 加算する固定遅延（`latency_inflation`）。
 - **`value`** — 上書きするエラー率（`error_rate_override`）。`[0,1]` にクランプされます。
 
+実行時の effective intensity は `probability` と `value` に掛けられます。
+`latency_inflation` では、fault が発動した後の `add` と
+`(multiplier - 1)` 由来の振幅にも同じ intensity が掛かります。たとえば
+intensity `0.5` は、発動確率と追加レイテンシ量の両方を半分にします。
+
+#### `schedule`
+
+`schedule` は fault ごとの intensity タイムラインです。各点の `at` は厳密な昇順で、
+`intensity` は有限かつ 0 以上でなければなりません。engine は schedule をステップ関数
+として評価します。最初の点より前の intensity は `0` で、その後は engine 開始からの
+経過時間以前にある最新の点が適用されます。schedule 自体は乱数を消費せず、seed 済みの
+fault 判定に掛ける effective probability、error-rate override、latency amplitude だけを
+変えます。
+
+JavaScript から `handle.setFaultIntensity(target, x)` を呼ぶと、その target override が
+YAML schedule より優先されます。global な `handle.setFaultIntensity(x)` は、schedule も
+target override もない fault にだけ使われます。
+
 ```yaml
 faults:
   - target: node:payment
@@ -528,6 +554,13 @@ faults:
   - target: operation:checkout.place_order
     kind: error_rate_override
     severity: { probability: 1.0, value: 0.05 }
+    schedule:
+      - at: 0s
+        intensity: 0
+      - at: 1m
+        intensity: 1
+      - at: 3m
+        intensity: 0
   - target: edge:frontend.checkout->payment.authorize_card
     kind: disconnect
     severity: { probability: 0.01 }

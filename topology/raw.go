@@ -116,9 +116,10 @@ type rawStep struct {
 }
 
 type rawFault struct {
-	Target   string       `yaml:"target"`
-	Kind     string       `yaml:"kind"`
-	Severity *rawSeverity `yaml:"severity,omitempty"`
+	Target   string              `yaml:"target"`
+	Kind     string              `yaml:"kind"`
+	Severity *rawSeverity        `yaml:"severity,omitempty"`
+	Schedule []*rawFaultSchedule `yaml:"schedule,omitempty"`
 }
 
 type rawRecoveryPolicy struct {
@@ -138,4 +139,9 @@ type rawSeverity struct {
 	Multiplier  *float64       `yaml:"multiplier,omitempty"`
 	Add         *time.Duration `yaml:"add,omitempty"`
 	Value       *float64       `yaml:"value,omitempty"`
+}
+
+type rawFaultSchedule struct {
+	At        *time.Duration `yaml:"at,omitempty"`
+	Intensity *float64       `yaml:"intensity,omitempty"`
 }

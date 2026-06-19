@@ -556,7 +556,31 @@
           "type": "string",
           "enum": ["latency_inflation", "error_rate_override", "disconnect", "crash"]
         },
-        "severity": { "$ref": "#/$defs/SeverityParams" }
+        "severity": { "$ref": "#/$defs/SeverityParams" },
+        "schedule": {
+          "description": "Optional elapsed-time intensity schedule for this fault. Points are evaluated as a step function from engine start.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/FaultSchedulePoint" },
+          "default": []
+        }
+      }
+    },
+    "FaultSchedulePoint": {
+      "description": "Fault intensity value active at or after a specific elapsed time.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "at": {
+          "description": "Elapsed time from engine start at which this intensity becomes active.",
+          "$ref": "#/$defs/Duration",
+          "default": "0s"
+        },
+        "intensity": {
+          "description": "Non-negative intensity. 0 disables this scheduled fault; 1 is configured severity.",
+          "type": "number",
+          "minimum": 0,
+          "default": 1
+        }
       }
     },
     "FaultTarget": {

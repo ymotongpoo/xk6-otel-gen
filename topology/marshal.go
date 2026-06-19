@@ -392,6 +392,7 @@ func marshalFault(f FaultSpec) *rawFault {
 		Target:   marshalFaultTarget(f.Target),
 		Kind:     f.Kind.String(),
 		Severity: marshalSeverity(f.Severity),
+		Schedule: marshalFaultSchedule(f.Schedule),
 	}
 }
 
@@ -432,6 +433,20 @@ func marshalSeverity(severity SeverityParams) *rawSeverity {
 		raw.Value = ptrFloat64(severity.Value)
 	}
 	return raw
+}
+
+func marshalFaultSchedule(schedule []FaultSchedulePoint) []*rawFaultSchedule {
+	if len(schedule) == 0 {
+		return nil
+	}
+	out := make([]*rawFaultSchedule, 0, len(schedule))
+	for _, point := range schedule {
+		out = append(out, &rawFaultSchedule{
+			At:        ptrDuration(point.At),
+			Intensity: ptrFloat64(point.Intensity),
+		})
+	}
+	return out
 }
 
 func ptrInt(v int) *int {
