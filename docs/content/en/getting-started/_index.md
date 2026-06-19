@@ -34,6 +34,7 @@ also forward k6 output metrics through the `otel-gen` output.
 | OTLP egress | gRPC on `localhost:4317` or HTTP on `localhost:4318`; profiles via `profilesEndpoint` |
 | k6 output integration | `--out otel-gen=endpoint=localhost:4317` forwards k6 output |
 | JSON Schema export | `go run ./cmd/xk6-otel-gen-schema > topology.schema.json` |
+| Topology visualization | `go run ./cmd/xk6-otel-gen-viz -input topology.yaml -output topology.html` |
 
 Example fault:
 

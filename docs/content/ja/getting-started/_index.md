@@ -34,6 +34,7 @@ journeys:
 | OTLP 送信 | `localhost:4317`(gRPC) または `localhost:4318`(HTTP)。プロファイルは `profilesEndpoint` 経由 |
 | k6 出力連携 | `--out otel-gen=endpoint=localhost:4317` で k6 出力を転送 |
 | JSON Schema 出力 | `go run ./cmd/xk6-otel-gen-schema > topology.schema.json` |
+| トポロジ可視化 | `go run ./cmd/xk6-otel-gen-viz -input topology.yaml -output topology.html` |
 
 障害の例:
 
