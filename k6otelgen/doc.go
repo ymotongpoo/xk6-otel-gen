@@ -13,11 +13,15 @@
 //	        protocol: "grpc",
 //	        insecure: true,
 //	    });
-//	    return { topology: otelgen.load("./topology.yaml") };
 //	}
 //
-//	export default function (data) {
-//	    data.topology.runJourney("checkout");
+//	export default function () {
+//	    const topology = otelgen.load("./topology.yaml");
+//	    topology.runJourney("checkout");
+//	}
+//
+//	export function teardown() {
+//	    otelgen.flush();
 //	}
 //
 // IMPORTANT: run k6 with --out otel-gen=... so the exporter Pipeline is shut
