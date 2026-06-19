@@ -5,7 +5,7 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-06-07T00:00:00Z
 - **Completion Date**: 2026-06-11 (initial delivery)
-- **Current Stage**: COMPLETE — initial delivery plus Per-Signal Endpoint Support change request
+- **Current Stage**: CHANGE REQUEST — Per-Signal Endpoint Support (see "Active Change Request" below)
 - **Description**: A k6 extension that consumes a declarative description of microservice component relationships (YAML / Mermaid) and synthesizes pseudo OpenTelemetry telemetry signals (metrics, logs, distributed traces), sending them to an OTLP endpoint — without requiring real microservices to exist.
 
 ## Workspace State
@@ -14,7 +14,7 @@
 - **Workspace Root**: /home/ymotongpoo/repos/xk6-otel-gen
 - **Programming Languages**: Go 1.25+
 - **Build System**: Go modules + xk6 + kustomize
-- **Project Structure**: Delivered Go module with `topology/`, `journey/`, `synth/`, `exporter/`, `k6otelgen/`, `k6output/`, `testutil/generators/`, `examples/`, and `docs/`
+- **Project Structure**: Empty
 
 ## Code Location Rules
 - **Application Code**: Workspace root (NEVER in aidlc-docs/)
@@ -47,8 +47,8 @@
 - [x] Requirements Analysis
 - [x] User Stories — SKIPPED
 - [x] Workflow Planning
-- [x] Application Design
-- [x] Units Generation
+- [ ] Application Design — EXECUTE
+- [ ] Units Generation — EXECUTE
 
 ### 🟢 CONSTRUCTION PHASE (per unit)
 - [x] Functional Design
@@ -62,10 +62,10 @@
 - [ ] Operations — PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: COMPLETE
+- **Lifecycle Phase**: BUILD AND TEST (complete)
 - **Completed Units**: U7, U1, U4, U3, U2, U5, U6, U8
 - **Construction Progress**: [✓ U7 complete] → [✓ U1 complete] → [✓ U4 complete] → [✓ U3 complete] → [✓ U2 complete] → [✓ U5 complete] → [✓ U6 complete] → [✓ U8 complete]
-- **Status**: Initial delivery and the Per-Signal Endpoint Support change request are complete. Operations remains a placeholder per the AI-DLC workflow.
+- **Status**: All CONSTRUCTION units complete. Build and Test stage produced 5 instruction files (build / unit-test / integration-test / performance-test / summary) under aidlc-docs/construction/build-and-test/. Next stage is Operations (PLACEHOLDER per AIDLC workflow).
 
 ## Unit Inventory
 - **U1**: Topology Schema & Parser (`topology/`)
@@ -89,11 +89,11 @@ U7 (skeleton) → U1 → U4 → U3 → U2 → U5 → U6 → U8 (Q2=A bottom-up +
 - [x] Requirements Analysis
 - [x] User Stories — SKIPPED (single-stakeholder config feature)
 - [x] Workflow Planning — approved 2026-06-12
-- [x] Application Design — SKIPPED (no new components)
-- [x] Units Generation — SKIPPED (existing unit inventory reused)
+- [ ] Application Design — SKIP (no new components)
+- [ ] Units Generation — SKIP (existing unit inventory reused)
 - [x] Functional Design (U4 only) — approved 2026-06-12
-- [x] NFR Requirements — SKIPPED (NFRs captured in requirements doc)
-- [x] NFR Design — SKIPPED
-- [x] Infrastructure Design — SKIPPED (no infra)
+- [ ] NFR Requirements — SKIP (NFRs captured in requirements doc)
+- [ ] NFR Design — SKIP
+- [ ] Infrastructure Design — SKIP (no infra)
 - [x] Code Generation (U4 → U5 → U6 → U8) — done 2026-06-12 (commits 5700235, 7e54832, 5cc32d2, 9495211)
 - [x] Build and Test — done 2026-06-12 (go build/test green, PBT TP-U4-5/6/7 pass, xk6 build + live base-/otlp e2e: paths now /otlp/v1/{signal}, no 404)
