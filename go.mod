@@ -10,7 +10,7 @@ require (
 	github.com/grafana/sobek v0.0.0-20260609103628-24345224533c
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/sirupsen/logrus v1.9.4
-	go.k6.io/k6 v1.8.0
+	go.k6.io/k6 v1.8.1
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.21.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.21.0
