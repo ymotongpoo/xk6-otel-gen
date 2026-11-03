@@ -52,7 +52,7 @@ jobs:
           name: gitleaks.sarif
           path: gitleaks-report_sarif.json
           if-no-files-found: error
-      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         continue-on-error: true
         with:
           sarif_file: gitleaks-report_sarif.json
@@ -77,7 +77,7 @@ jobs:
           fetch-depth: 0
       - run: |
           echo "semgrep==$SEMGREP_VERSION" > requirements.txt
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.x'
           cache: 'pip'
@@ -154,7 +154,7 @@ jobs:
           name: semgrep.sarif
           path: semgrep-report_sarif.json
           if-no-files-found: error
-      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         continue-on-error: true
         with:
           sarif_file: semgrep-report_sarif.json
@@ -195,7 +195,7 @@ jobs:
           name: grype.sarif
           path: grype-report_sarif.json
           if-no-files-found: error
-      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         continue-on-error: true
         with:
           sarif_file: grype-report_sarif.json
@@ -218,7 +218,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: |
           echo "bandit[sarif]==$BANDIT_VERSION" > requirements.txt
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.x'
           cache: 'pip'
@@ -245,7 +245,7 @@ jobs:
           name: bandit.sarif
           path: bandit-report_sarif.json
           if-no-files-found: error
-      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         continue-on-error: true
         with:
           sarif_file: bandit-report_sarif.json
@@ -268,7 +268,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: |
           echo "checkov==$CHECKOV_VERSION" > requirements.txt
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.x'
           cache: 'pip'
@@ -298,7 +298,7 @@ jobs:
           name: checkov.sarif
           path: checkov-report_sarif.json
           if-no-files-found: error
-      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         continue-on-error: true
         with:
           sarif_file: checkov-report_sarif.json
